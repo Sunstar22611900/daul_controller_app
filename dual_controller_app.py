@@ -142,6 +142,12 @@ TEXTS = {
         "WARNING_READ_DATA_INSUFFICIENT": "警告: 讀取到的寄存器數據不足以更新所有可寫入參數。",
         "PARAM_SAVE_PROMPT_TITLE": "參數儲存",
         "CONTROLLER_MODE_CHART_FRAME_TEXT": "控制器模式圖表",
+        "OUTPUT_CHARACTERISTICS": "輸出特性",
+        "LINKED_MODE_OUTPUT_CHARACTERISTICS": "連動模式輸出特性 (A組 & B組)",
+        "CURRENT": "電流",
+        "TIME": "時間",
+        "A_GROUP_LEGEND": "A組曲線",
+        "B_GROUP_LEGEND": "B組曲線",
         
         # 寄存器值映射表 (用於本地化顯示)
         "STATUS_MAP_VALUES": {
@@ -309,6 +315,12 @@ TEXTS = {
         "WARNING_READ_DATA_INSUFFICIENT": "Warning: Insufficient register data read to update all writable parameters.",
         "PARAM_SAVE_PROMPT_TITLE": "Save Parameters",
         "CONTROLLER_MODE_CHART_FRAME_TEXT": "Controller Mode Chart",
+        "OUTPUT_CHARACTERISTICS": "Output Characteristics",
+        "LINKED_MODE_OUTPUT_CHARACTERISTICS": "Linked Mode Output Characteristics (Group A & B)",
+        "CURRENT": "Current",
+        "TIME": "Time",
+        "A_GROUP_LEGEND": "Group A Curve",
+        "B_GROUP_LEGEND": "Group B Curve",
         
         # Register value maps (for localized display)
         "STATUS_MAP_VALUES": {
@@ -898,128 +910,122 @@ class ModbusMonitorApp:
         canvas_height = self.chart_canvas.winfo_height()
 
         # 繪製A組圖表
-        self.chart_canvas.create_text(canvas_width * 0.25, 20, text="A組輸出特性", font=("Arial", 12, "bold"))
+        self.chart_canvas.create_text(canvas_width * 0.25, 20, text=self.get_current_translation("A_GROUP_PARAMS_FRAME_TEXT") + " " + self.get_current_translation("OUTPUT_CHARACTERISTICS"), font=("Arial", 12, "bold"))
         # 繪製B組圖表
-        self.chart_canvas.create_text(canvas_width * 0.75, 20, text="B組輸出特性", font=("Arial", 12, "bold"))
+        self.chart_canvas.create_text(canvas_width * 0.75, 20, text=self.get_current_translation("B_GROUP_PARAMS_FRAME_TEXT") + " " + self.get_current_translation("OUTPUT_CHARACTERISTICS"), font=("Arial", 12, "bold"))
 
-        # 這裡將根據參數繪製具體的曲線，目前先留空
-        # 例如：獲取A組參數
+        max_display_current = 3.0 # Max current for scaling Y axis (from writable_params_config)
+
+        # Helper function to draw a single chart
+        def draw_single_chart(x_start, y_start, chart_w, chart_h, max_curr, min_curr, rise_t, fall_t, dither_amp, line_color, dither_color, group_label):
+            # 繪製Y軸 (電流)
+            self.chart_canvas.create_line(x_start, y_start + chart_h, x_start, y_start, arrow=tk.LAST)
+            self.chart_canvas.create_text(x_start - 10, y_start, text=f"{max_display_current:.1f}A", anchor=tk.E)
+            self.chart_canvas.create_text(x_start - 10, y_start + chart_h * (1 - (min_curr / max_display_current)), text=f"{min_curr:.1f}A", anchor=tk.E)
+            self.chart_canvas.create_text(x_start - 10, y_start + chart_h, text="0A", anchor=tk.E)
+            self.chart_canvas.create_text(x_start - 30, y_start + chart_h / 2, text=self.get_current_translation("CURRENT"), anchor=tk.CENTER, angle=90)
+
+            # 繪製X軸 (時間)
+            self.chart_canvas.create_line(x_start, y_start + chart_h, x_start + chart_w, y_start + chart_h, arrow=tk.LAST)
+            self.chart_canvas.create_text(x_start + chart_w / 2, y_start + chart_h + 20, text=self.get_current_translation("TIME"), anchor=tk.N)
+
+            if max_curr > 0:
+                # Calculate points for trapezoidal wave
+                total_time_for_shape = rise_t + fall_t + 1.0 # Add a small flat top if rise/fall are 0
+                if total_time_for_shape == 0: total_time_for_shape = 1.0
+
+                # Scale times to chart width
+                rise_x = chart_w * (rise_t / total_time_for_shape)
+                fall_x = chart_w * (fall_t / total_time_for_shape)
+                flat_x = chart_w - rise_x - fall_x
+                if flat_x < 0: # Adjust if rise/fall times are too long
+                    flat_x = 0
+                    scale_factor = chart_w / (rise_x + fall_x)
+                    rise_x *= scale_factor
+                    fall_x *= scale_factor
+
+                # Y coordinates (inverted for canvas)
+                y_max = y_start + chart_h * (1 - (max_curr / max_display_current))
+                y_min = y_start + chart_h * (1 - (min_curr / max_display_current))
+                y_zero = y_start + chart_h
+
+                points = []
+                # Start at (0, min_current)
+                points.append((x_start, y_min))
+                # Rise to (rise_time, max_current)
+                points.append((x_start + rise_x, y_max))
+                # Flat top (if any)
+                points.append((x_start + rise_x + flat_x, y_max))
+                # Fall to (total_time, min_current)
+                points.append((x_start + chart_w, y_min))
+                
+                # Draw the current profile
+                self.chart_canvas.create_line(points, fill=line_color, width=2, smooth=True)
+
+                # Draw dither amplitude band
+                if dither_amp > 0:
+                    dither_pixel_height = chart_h * (dither_amp / 100.0) * (max_curr / max_display_current)
+                    
+                    dither_points_upper = []
+                    dither_points_lower = []
+
+                    # Upper band points
+                    dither_points_upper.append((x_start, y_min - dither_pixel_height / 2))
+                    dither_points_upper.append((x_start + rise_x, y_max - dither_pixel_height / 2))
+                    dither_points_upper.append((x_start + rise_x + flat_x, y_max - dither_pixel_height / 2))
+                    dither_points_upper.append((x_start + chart_w, y_min - dither_pixel_height / 2))
+
+                    # Lower band points (reversed for polygon fill)
+                    dither_points_lower.append((x_start + chart_w, y_min + dither_pixel_height / 2))
+                    dither_points_lower.append((x_start + rise_x + flat_x, y_max + dither_pixel_height / 2))
+                    dither_points_lower.append((x_start + rise_x, y_max + dither_pixel_height / 2))
+                    dither_points_lower.append((x_start, y_min + dither_pixel_height / 2))
+
+                    # Combine for polygon
+                    all_dither_points = dither_points_upper + dither_points_lower
+                    self.chart_canvas.create_polygon(all_dither_points, fill=dither_color, stipple="gray50", outline=dither_color, width=1)
+
+
+        # A組參數
         a_max_current = float(self.writable_entries['0010H'].get()) if self.writable_entries['0010H'].get() else 0.0
         a_min_current = float(self.writable_entries['0011H'].get()) if self.writable_entries['0011H'].get() else 0.0
         a_rise_time = float(self.writable_entries['0012H'].get()) if self.writable_entries['0012H'].get() else 0.0
         a_fall_time = float(self.writable_entries['0013H'].get()) if self.writable_entries['0013H'].get() else 0.0
         a_dither_amplitude = float(self.writable_entries['0017H'].get()) if self.writable_entries['0017H'].get() else 0.0
 
-        # 繪製A組的示意曲線 (簡化)
-        # 假設X軸是時間，Y軸是電流
         x_offset_a = canvas_width * 0.1
         y_offset_a = canvas_height * 0.5
-        chart_width_a = canvas_width * 0.3
+        chart_width_a = canvas_width * 0.35
         chart_height_a = canvas_height * 0.4
 
-        # 繪製Y軸 (電流)
-        self.chart_canvas.create_line(x_offset_a, y_offset_a + chart_height_a, x_offset_a, y_offset_a, arrow=tk.LAST)
-        self.chart_canvas.create_text(x_offset_a - 10, y_offset_a, text=f"{a_max_current:.1f}A", anchor=tk.E)
-        self.chart_canvas.create_text(x_offset_a - 10, y_offset_a + chart_height_a * (1 - (a_min_current / a_max_current if a_max_current else 0)), text=f"{a_min_current:.1f}A", anchor=tk.E)
-        self.chart_canvas.create_text(x_offset_a - 10, y_offset_a + chart_height_a, text="0A", anchor=tk.E)
+        draw_single_chart(x_offset_a, y_offset_a, chart_width_a, chart_height_a,
+                          a_max_current, a_min_current, a_rise_time, a_fall_time, a_dither_amplitude,
+                          "blue", "lightblue", "A")
 
-        # 繪製X軸 (時間)
-        self.chart_canvas.create_line(x_offset_a, y_offset_a + chart_height_a, x_offset_a + chart_width_a, y_offset_a + chart_height_a, arrow=tk.LAST)
-        self.chart_canvas.create_text(x_offset_a + chart_width_a, y_offset_a + chart_height_a + 10, text="時間", anchor=tk.N)
-
-        # 繪製電流曲線 (簡化為上升和下降)
-        if a_max_current > 0:
-            # 上升段
-            if a_rise_time > 0:
-                self.chart_canvas.create_line(
-                    x_offset_a,
-                    y_offset_a + chart_height_a,
-                    x_offset_a + chart_width_a * (a_rise_time / (a_rise_time + a_fall_time + 1)), # 簡化時間比例
-                    y_offset_a + chart_height_a * (1 - (a_max_current / a_max_current)),
-                    fill="blue", width=2
-                )
-            # 下降段
-            if a_fall_time > 0:
-                self.chart_canvas.create_line(
-                    x_offset_a + chart_width_a * (a_rise_time / (a_rise_time + a_fall_time + 1)),
-                    y_offset_a + chart_height_a * (1 - (a_max_current / a_max_current)),
-                    x_offset_a + chart_width_a,
-                    y_offset_a + chart_height_a,
-                    fill="red", width=2
-                )
-            
-            # 繪製震顫幅度示意 (簡化為上下波動)
-            if a_dither_amplitude > 0:
-                # 繪製一個矩形表示震顫範圍
-                dither_height = chart_height_a * (a_dither_amplitude / 100.0) * (a_max_current / (a_max_current if a_max_current else 1))
-                self.chart_canvas.create_rectangle(
-                    x_offset_a,
-                    y_offset_a + chart_height_a * (1 - (a_max_current / a_max_current)) - dither_height / 2,
-                    x_offset_a + chart_width_a,
-                    y_offset_a + chart_height_a * (1 - (a_max_current / a_max_current)) + dither_height / 2,
-                    outline="green", dash=(4, 2)
-                )
-
-        # 繪製B組的示意曲線 (類似A組，但位置不同)
+        # B組參數
         b_max_current = float(self.writable_entries['001AH'].get()) if self.writable_entries['001AH'].get() else 0.0
         b_min_current = float(self.writable_entries['001BH'].get()) if self.writable_entries['001BH'].get() else 0.0
         b_rise_time = float(self.writable_entries['001CH'].get()) if self.writable_entries['001CH'].get() else 0.0
         b_fall_time = float(self.writable_entries['001DH'].get()) if self.writable_entries['001DH'].get() else 0.0
         b_dither_amplitude = float(self.writable_entries['0021H'].get()) if self.writable_entries['0021H'].get() else 0.0
 
-        x_offset_b = canvas_width * 0.6
+        x_offset_b = canvas_width * 0.55
         y_offset_b = canvas_height * 0.5
-        chart_width_b = canvas_width * 0.3
+        chart_width_b = canvas_width * 0.35
         chart_height_b = canvas_height * 0.4
 
-        # 繪製Y軸 (電流)
-        self.chart_canvas.create_line(x_offset_b, y_offset_b + chart_height_b, x_offset_b, y_offset_b, arrow=tk.LAST)
-        self.chart_canvas.create_text(x_offset_b - 10, y_offset_b, text=f"{b_max_current:.1f}A", anchor=tk.E)
-        self.chart_canvas.create_text(x_offset_b - 10, y_offset_b + chart_height_b * (1 - (b_min_current / b_max_current if b_max_current else 0)), text=f"{b_min_current:.1f}A", anchor=tk.E)
-        self.chart_canvas.create_text(x_offset_b - 10, y_offset_b + chart_height_b, text="0A", anchor=tk.E)
-
-        # 繪製X軸 (時間)
-        self.chart_canvas.create_line(x_offset_b, y_offset_b + chart_height_b, x_offset_b + chart_width_b, y_offset_b + chart_height_b, arrow=tk.LAST)
-        self.chart_canvas.create_text(x_offset_b + chart_width_b, y_offset_b + chart_height_b + 10, text="時間", anchor=tk.N)
-
-        # 繪製電流曲線 (簡化為上升和下降)
-        if b_max_current > 0:
-            # 上升段
-            if b_rise_time > 0:
-                self.chart_canvas.create_line(
-                    x_offset_b,
-                    y_offset_b + chart_height_b,
-                    x_offset_b + chart_width_b * (b_rise_time / (b_rise_time + b_fall_time + 1)),
-                    y_offset_b + chart_height_b * (1 - (b_max_current / b_max_current)),
-                    fill="blue", width=2
-                )
-            # 下降段
-            if b_fall_time > 0:
-                self.chart_canvas.create_line(
-                    x_offset_b + chart_width_b * (b_rise_time / (b_rise_time + b_fall_time + 1)),
-                    y_offset_b + chart_height_b * (1 - (b_max_current / b_max_current)),
-                    x_offset_b + chart_width_b,
-                    y_offset_b + chart_height_b,
-                    fill="red", width=2
-                )
-            
-            # 繪製震顫幅度示意 (簡化為上下波動)
-            if b_dither_amplitude > 0:
-                dither_height = chart_height_b * (b_dither_amplitude / 100.0) * (b_max_current / (b_max_current if b_max_current else 1))
-                self.chart_canvas.create_rectangle(
-                    x_offset_b,
-                    y_offset_b + chart_height_b * (1 - (b_max_current / b_max_current)) - dither_height / 2,
-                    x_offset_b + chart_width_b,
-                    y_offset_b + chart_height_b * (1 - (b_max_current / b_max_current)) + dither_height / 2,
-                    outline="green", dash=(4, 2)
-                )
+        draw_single_chart(x_offset_b, y_offset_b, chart_width_b, chart_height_b,
+                          b_max_current, b_min_current, b_rise_time, b_fall_time, b_dither_amplitude,
+                          "red", "pink", "B")
 
     def _draw_linked_chart(self):
         # 繪製連動模式的圖表
         canvas_width = self.chart_canvas.winfo_width()
         canvas_height = self.chart_canvas.winfo_height()
 
-        self.chart_canvas.create_text(canvas_width / 2, 20, text="連動模式輸出特性 (A組 & B組)", font=("Arial", 12, "bold"))
+        self.chart_canvas.create_text(canvas_width / 2, 20, text=self.get_current_translation("LINKED_MODE_OUTPUT_CHARACTERISTICS"), font=("Arial", 12, "bold"))
+
+        max_display_current = 3.0 # Max current for scaling Y axis
 
         # 獲取A組和B組的參數
         a_max_current = float(self.writable_entries['0010H'].get()) if self.writable_entries['0010H'].get() else 0.0
@@ -1034,86 +1040,107 @@ class ModbusMonitorApp:
         b_fall_time = float(self.writable_entries['001DH'].get()) if self.writable_entries['001DH'].get() else 0.0
         b_dither_amplitude = float(self.writable_entries['0021H'].get()) if self.writable_entries['0021H'].get() else 0.0
 
-        # 繪製連動模式的示意曲線 (簡化)
         x_offset = canvas_width * 0.1
         y_offset = canvas_height * 0.5
         chart_width = canvas_width * 0.8
         chart_height = canvas_height * 0.4
 
         # 繪製Y軸 (電流)
-        max_combined_current = max(a_max_current, b_max_current)
-        min_combined_current = min(a_min_current, b_min_current)
-
         self.chart_canvas.create_line(x_offset, y_offset + chart_height, x_offset, y_offset, arrow=tk.LAST)
-        self.chart_canvas.create_text(x_offset - 10, y_offset, text=f"{max_combined_current:.1f}A", anchor=tk.E)
-        self.chart_canvas.create_text(x_offset - 10, y_offset + chart_height * (1 - (min_combined_current / max_combined_current if max_combined_current else 0)), text=f"{min_combined_current:.1f}A", anchor=tk.E)
+        self.chart_canvas.create_text(x_offset - 10, y_offset, text=f"{max_display_current:.1f}A", anchor=tk.E)
+        self.chart_canvas.create_text(x_offset - 10, y_offset + chart_height * (1 - (min(a_min_current, b_min_current) / max_display_current)), text=f"{min(a_min_current, b_min_current):.1f}A", anchor=tk.E)
         self.chart_canvas.create_text(x_offset - 10, y_offset + chart_height, text="0A", anchor=tk.E)
+        self.chart_canvas.create_text(x_offset - 30, y_offset + chart_height / 2, text=self.get_current_translation("CURRENT"), anchor=tk.CENTER, angle=90)
 
         # 繪製X軸 (時間)
         self.chart_canvas.create_line(x_offset, y_offset + chart_height, x_offset + chart_width, y_offset + chart_height, arrow=tk.LAST)
-        self.chart_canvas.create_text(x_offset + chart_width, y_offset + chart_height + 10, text="時間", anchor=tk.N)
+        self.chart_canvas.create_text(x_offset + chart_width / 2, y_offset + chart_height + 20, text=self.get_current_translation("TIME"), anchor=tk.N)
 
-        # 繪製A組曲線
+        # Draw A group curve
         if a_max_current > 0:
-            # 上升段
-            if a_rise_time > 0:
-                self.chart_canvas.create_line(
-                    x_offset,
-                    y_offset + chart_height,
-                    x_offset + chart_width * (a_rise_time / (a_rise_time + a_fall_time + 1)),
-                    y_offset + chart_height * (1 - (a_max_current / max_combined_current)),
-                    fill="blue", width=2, tags="a_chart"
-                )
-            # 下降段
-            if a_fall_time > 0:
-                self.chart_canvas.create_line(
-                    x_offset + chart_width * (a_rise_time / (a_rise_time + a_fall_time + 1)),
-                    y_offset + chart_height * (1 - (a_max_current / max_combined_current)),
-                    x_offset + chart_width,
-                    y_offset + chart_height,
-                    fill="blue", width=2, tags="a_chart"
-                )
-            # 震顫幅度
-            if a_dither_amplitude > 0:
-                dither_height = chart_height * (a_dither_amplitude / 100.0) * (a_max_current / (max_combined_current if max_combined_current else 1))
-                self.chart_canvas.create_rectangle(
-                    x_offset,
-                    y_offset + chart_height * (1 - (a_max_current / max_combined_current)) - dither_height / 2,
-                    x_offset + chart_width,
-                    y_offset + chart_height * (1 - (a_max_current / max_combined_current)) + dither_height / 2,
-                    outline="light blue", dash=(4, 2), tags="a_chart"
-                )
+            total_time_for_shape_a = a_rise_time + a_fall_time + 1.0
+            if total_time_for_shape_a == 0: total_time_for_shape_a = 1.0
+            rise_x_a = chart_width * (a_rise_time / total_time_for_shape_a)
+            fall_x_a = chart_width * (a_fall_time / total_time_for_shape_a)
+            flat_x_a = chart_width - rise_x_a - fall_x_a
+            if flat_x_a < 0:
+                flat_x_a = 0
+                scale_factor = chart_width / (rise_x_a + fall_x_a)
+                rise_x_a *= scale_factor
+                fall_x_a *= scale_factor
 
-        # 繪製B組曲線
+            y_max_a = y_offset + chart_height * (1 - (a_max_current / max_display_current))
+            y_min_a = y_offset + chart_height * (1 - (a_min_current / max_display_current))
+
+            points_a = []
+            points_a.append((x_offset, y_min_a))
+            points_a.append((x_offset + rise_x_a, y_max_a))
+            points_a.append((x_offset + rise_x_a + flat_x_a, y_max_a))
+            points_a.append((x_offset + chart_width, y_min_a))
+            self.chart_canvas.create_line(points_a, fill="blue", width=2, tags="a_chart", smooth=True)
+
+            if a_dither_amplitude > 0:
+                dither_pixel_height_a = chart_height * (a_dither_amplitude / 100.0) * (a_max_current / max_display_current)
+                dither_points_upper_a = []
+                dither_points_lower_a = []
+
+                dither_points_upper_a.append((x_offset, y_min_a - dither_pixel_height_a / 2))
+                dither_points_upper_a.append((x_offset + rise_x_a, y_max_a - dither_pixel_height_a / 2))
+                dither_points_upper_a.append((x_offset + rise_x_a + flat_x_a, y_max_a - dither_pixel_height_a / 2))
+                dither_points_upper_a.append((x_offset + chart_width, y_min_a - dither_pixel_height_a / 2))
+
+                dither_points_lower_a.append((x_offset + chart_width, y_min_a + dither_pixel_height_a / 2))
+                dither_points_lower_a.append((x_offset + rise_x_a + flat_x_a, y_max_a + dither_pixel_height_a / 2))
+                dither_points_lower_a.append((x_offset + rise_x_a, y_max_a + dither_pixel_height_a / 2))
+                dither_points_lower_a.append((x_offset, y_min_a + dither_pixel_height_a / 2))
+
+                all_dither_points_a = dither_points_upper_a + dither_points_lower_a
+                self.chart_canvas.create_polygon(all_dither_points_a, fill="lightblue", stipple="gray50", outline="lightblue", width=1, tags="a_chart")
+
+        # Draw B group curve
         if b_max_current > 0:
-            # 上升段
-            if b_rise_time > 0:
-                self.chart_canvas.create_line(
-                    x_offset,
-                    y_offset + chart_height,
-                    x_offset + chart_width * (b_rise_time / (b_rise_time + b_fall_time + 1)),
-                    y_offset + chart_height * (1 - (b_max_current / max_combined_current)),
-                    fill="red", width=2, tags="b_chart"
-                )
-            # 下降段
-            if b_fall_time > 0:
-                self.chart_canvas.create_line(
-                    x_offset + chart_width * (b_rise_time / (b_rise_time + b_fall_time + 1)),
-                    y_offset + chart_height * (1 - (b_max_current / max_combined_current)),
-                    x_offset + chart_width,
-                    y_offset + chart_height,
-                    fill="red", width=2, tags="b_chart"
-                )
-            # 震顫幅度
+            total_time_for_shape_b = b_rise_time + b_fall_time + 1.0
+            if total_time_for_shape_b == 0: total_time_for_shape_b = 1.0
+            rise_x_b = chart_width * (b_rise_time / total_time_for_shape_b)
+            fall_x_b = chart_width * (b_fall_time / total_time_for_shape_b)
+            flat_x_b = chart_width - rise_x_b - fall_x_b
+            if flat_x_b < 0:
+                flat_x_b = 0
+                scale_factor = chart_width / (rise_x_b + fall_x_b)
+                rise_x_b *= scale_factor
+                fall_x_b *= scale_factor
+
+            y_max_b = y_offset + chart_height * (1 - (b_max_current / max_display_current))
+            y_min_b = y_offset + chart_height * (1 - (b_min_current / max_display_current))
+
+            points_b = []
+            points_b.append((x_offset, y_min_b))
+            points_b.append((x_offset + rise_x_b, y_max_b))
+            points_b.append((x_offset + rise_x_b + flat_x_b, y_max_b))
+            points_b.append((x_offset + chart_width, y_min_b))
+            self.chart_canvas.create_line(points_b, fill="red", width=2, tags="b_chart", smooth=True)
+
             if b_dither_amplitude > 0:
-                dither_height = chart_height * (b_dither_amplitude / 100.0) * (b_max_current / (max_combined_current if max_combined_current else 1))
-                self.chart_canvas.create_rectangle(
-                    x_offset,
-                    y_offset + chart_height * (1 - (b_max_current / max_combined_current)) - dither_height / 2,
-                    x_offset + chart_width,
-                    y_offset + chart_height * (1 - (b_max_current / max_combined_current)) + dither_height / 2,
-                    outline="pink", dash=(4, 2), tags="b_chart"
-                )
+                dither_pixel_height_b = chart_height * (b_dither_amplitude / 100.0) * (b_max_current / max_display_current)
+                dither_points_upper_b = []
+                dither_points_lower_b = []
+
+                dither_points_upper_b.append((x_offset, y_min_b - dither_pixel_height_b / 2))
+                dither_points_upper_b.append((x_offset + rise_x_b, y_max_b - dither_pixel_height_b / 2))
+                dither_points_upper_b.append((x_offset + rise_x_b + flat_x_b, y_max_b - dither_pixel_height_b / 2))
+                dither_points_upper_b.append((x_offset + chart_width, y_min_b - dither_pixel_height_b / 2))
+
+                dither_points_lower_b.append((x_offset + chart_width, y_min_b + dither_pixel_height_b / 2))
+                dither_points_lower_b.append((x_offset + rise_x_b + flat_x_b, y_max_b + dither_pixel_height_b / 2))
+                dither_points_lower_b.append((x_offset + rise_x_b, y_max_b + dither_pixel_height_b / 2))
+                dither_points_lower_b.append((x_offset, y_min_b + dither_pixel_height_b / 2))
+
+                all_dither_points_b = dither_points_upper_b + dither_points_lower_b
+                self.chart_canvas.create_polygon(all_dither_points_b, fill="pink", stipple="gray50", outline="pink", width=1, tags="b_chart")
+
+        # Add legend for linked mode
+        self.chart_canvas.create_text(canvas_width / 2, y_offset + chart_height + 50, text=self.get_current_translation("A_GROUP_LEGEND"), fill="blue", font=("Arial", 10))
+        self.chart_canvas.create_text(canvas_width / 2, y_offset + chart_height + 70, text=self.get_current_translation("B_GROUP_LEGEND"), fill="red", font=("Arial", 10))
 
     def _refresh_ports(self):
         """刷新電腦目前可用的串口。"""
@@ -1205,6 +1232,7 @@ class ModbusMonitorApp:
                 
                 self._update_monitor_area(registers) 
                 self._update_writable_params_area(registers) 
+                self._draw_chart() # Call draw chart after updating all parameters
 
             except Exception as e:
                 messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("READ_REGISTERS_FAIL").format(e=e))
@@ -1456,6 +1484,7 @@ class ModbusMonitorApp:
         if write_value is not None:
             if write_modbus_register(slave_id, register_address, write_value):
                 self._read_all_registers_and_update_gui()
+                self._draw_chart() # Update chart after single register write
                 messagebox.showinfo(self.get_current_translation("INFO_TITLE"),
                                     self.get_current_translation("MODBUS_WRITE_SUCCESS").format(value_str=value_str, register_address=register_address))
         else:
@@ -1758,6 +1787,7 @@ class ModbusMonitorApp:
                                                                      self.get_current_translation("BATCH_WRITE_PARTIAL_FAIL").format(success_count=success_count, total_registers=actual_total_to_write, failed_registers_list=', '.join(failed_registers))))
             
             self.master.after(0, self._read_all_registers_and_update_gui)
+            self.master.after(0, self._draw_chart) # Update chart after batch write
 
         threading.Thread(target=do_batch_write, daemon=True).start()
 
