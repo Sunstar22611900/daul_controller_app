@@ -11,6 +11,7 @@ import threading
 import time
 import sys
 import os
+import math
 
 # --- 全局變量 ---
 # 用於儲存Modbus Master物件，方便在不同函數中存取
@@ -197,8 +198,8 @@ TEXTS = {
         },
         "FEEDBACK_SIGNAL_MAP_VALUES": { # For 000FH, 0019H
             0: "關閉",
-            1: "信號1",
-            2: "信號2"
+            1: "信號 1",
+            2: "信號 2"
         }
     },
     "en": {
@@ -481,9 +482,9 @@ class ModbusMonitorApp:
         {'reg': '0006H', 'title_key': 'SIGNAL_SELECTION_1', 'type': 'combobox', 'map_key': 'SIGNAL_SELECTION_MAP_VALUES', 'group': 'common'},
         {'reg': '0007H', 'title_key': 'SIGNAL_SELECTION_2', 'type': 'combobox', 'map_key': 'SIGNAL_SELECTION_MAP_VALUES', 'group': 'common'},
         {'reg': '0008H', 'title_key': 'PANEL_DISPLAY_MODE', 'type': 'combobox', 'map_key': 'PANEL_DISPLAY_MODE_MAP_VALUES', 'group': 'common'},
-        {'reg': '0009H', 'title_key': 'RS485_CONTROL_SIGNAL_1', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 10, 'is_int': False, 'group': 'common'},
-        {'reg': '000AH', 'title_key': 'RS485_CONTROL_SIGNAL_2', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 10, 'is_int': False, 'group': 'common'},
-        {'reg': '000BH', 'title_key': 'DEVICE_ADDRESS_ADJUSTMENT', 'type': 'spinbox', 'min': 1, 'max': 247, 'group': 'common'},
+        {'reg': '0009H', 'title_key': 'RS485_CONTROL_SIGNAL_1', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 1, 'is_int': False, 'group': 'common'},
+        {'reg': '000AH', 'title_key': 'RS485_CONTROL_SIGNAL_2', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 1, 'is_int': False, 'group': 'common'},
+        {'reg': '000BH', 'title_key': 'DEVICE_ADDRESS_ADJUSTMENT', 'type': 'entry', 'min': 1, 'max': 247, 'scale': 1, 'is_int': False, 'group': 'common'},
         {'reg': '000CH', 'title_key': 'DEVICE_BAUDRATE_ADJUSTMENT', 'type': 'combobox', 'map_key': 'DEVICE_BAUDRATE_MAP_VALUES', 'group': 'common'},
         {'reg': '000DH', 'title_key': 'FACTORY_RESET', 'type': 'combobox', 'map_key': 'FACTORY_RESET_MAP_VALUES', 'group': 'common'},
         # --- A組參數 ---
@@ -491,11 +492,11 @@ class ModbusMonitorApp:
         {'reg': '000FH', 'title_key': 'A_FEEDBACK_SIGNAL', 'type': 'combobox', 'map_key': 'FEEDBACK_SIGNAL_MAP_VALUES', 'group': 'a_group'},
         {'reg': '0010H', 'title_key': 'A_MAX_CURRENT', 'type': 'entry', 'min': 0.20, 'max': 3.00, 'scale': 100, 'is_int': False, 'group': 'a_group'},
         {'reg': '0011H', 'title_key': 'A_MIN_CURRENT', 'type': 'entry', 'min': 0.00, 'max': 1.00, 'scale': 100, 'is_int': False, 'group': 'a_group'},
-        {'reg': '0012H', 'title_key': 'A_CURRENT_RISE_TIME', 'type': 'entry', 'min': 0.1, 'max': 5.0, 'scale': 10, 'is_int': False, 'group': 'a_group'},
-        {'reg': '0013H', 'title_key': 'A_CURRENT_FALL_TIME', 'type': 'entry', 'min': 0.1, 'max': 5.0, 'scale': 10, 'is_int': False, 'group': 'a_group'},
-        {'reg': '0014H', 'title_key': 'A_COMMAND_DEAD_ZONE', 'type': 'entry', 'min': 0, 'max': 5, 'scale': 10, 'is_int': False, 'group': 'a_group'},
-        {'reg': '0015H', 'title_key': 'A_PWM_FREQUENCY', 'type': 'entry_scaled', 'min': 70, 'max': 1000, 'scale': 1, 'unit_step': 10, 'group': 'a_group'},
-        {'reg': '0016H', 'title_key': 'A_TREMOR_FREQUENCY', 'type': 'entry_scaled', 'min': 70, 'max': 500, 'scale': 1, 'unit_step': 10, 'group': 'a_group'},
+        {'reg': '0012H', 'title_key': 'A_CURRENT_RISE_TIME', 'type': 'entry', 'min': 0.1, 'max': 5.0, 'scale': 10, 'unit_step': 0.1, 'is_int': False, 'group': 'a_group'},
+        {'reg': '0013H', 'title_key': 'A_CURRENT_FALL_TIME', 'type': 'entry', 'min': 0.1, 'max': 5.0, 'scale': 10, 'unit_step': 0.1, 'is_int': False, 'group': 'a_group'},
+        {'reg': '0014H', 'title_key': 'A_COMMAND_DEAD_ZONE', 'type': 'entry', 'min': 0, 'max': 5, 'scale': 1, 'is_int': True, 'group': 'a_group'},
+        {'reg': '0015H', 'title_key': 'A_PWM_FREQUENCY', 'type': 'entry_scaled', 'min': 70, 'max': 1000, 'scale': 10, 'unit_step': 10, 'group': 'a_group'},
+        {'reg': '0016H', 'title_key': 'A_TREMOR_FREQUENCY', 'type': 'entry_scaled', 'min': 70, 'max': 500, 'scale': 10, 'unit_step': 10, 'group': 'a_group'},
         {'reg': '0017H', 'title_key': 'A_DITHER_AMPLITUDE', 'type': 'entry', 'min': 0, 'max': 25, 'scale': 1, 'is_int': True, 'group': 'a_group'},
         # --- B組參數 ---
         {'reg': '0018H', 'title_key': 'B_INPUT_SIGNAL_SELECTION', 'type': 'combobox', 'map_key': 'B_INPUT_SIGNAL_SELECTION_MAP_VALUES', 'group': 'b_group'},
@@ -504,9 +505,9 @@ class ModbusMonitorApp:
         {'reg': '001BH', 'title_key': 'B_MIN_CURRENT', 'type': 'entry', 'min': 0.00, 'max': 1.00, 'scale': 100, 'is_int': False, 'group': 'b_group'},
         {'reg': '001CH', 'title_key': 'B_CURRENT_RISE_TIME', 'type': 'entry', 'min': 0.1, 'max': 5.0, 'scale': 10, 'is_int': False, 'group': 'b_group'},
         {'reg': '001DH', 'title_key': 'B_CURRENT_FALL_TIME', 'type': 'entry', 'min': 0.1, 'max': 5.0, 'scale': 10, 'is_int': False, 'group': 'b_group'},
-        {'reg': '001EH', 'title_key': 'B_COMMAND_DEAD_ZONE', 'type': 'entry', 'min': 0, 'max': 5, 'scale': 10, 'is_int': False, 'group': 'b_group'},
-        {'reg': '001FH', 'title_key': 'B_PWM_FREQUENCY', 'type': 'entry_scaled', 'min': 70, 'max': 1000, 'scale': 1, 'unit_step': 10, 'group': 'b_group'},
-        {'reg': '0020H', 'title_key': 'B_TREMOR_FREQUENCY', 'type': 'entry_scaled', 'min': 70, 'max': 500, 'scale': 1, 'unit_step': 10, 'group': 'b_group'},
+        {'reg': '001EH', 'title_key': 'B_COMMAND_DEAD_ZONE', 'type': 'entry', 'min': 0, 'max': 5, 'scale': 1, 'is_int': True, 'group': 'b_group'},
+        {'reg': '001FH', 'title_key': 'B_PWM_FREQUENCY', 'type': 'entry_scaled', 'min': 70, 'max': 1000, 'scale': 10, 'unit_step': 10, 'group': 'b_group'},
+        {'reg': '0020H', 'title_key': 'B_TREMOR_FREQUENCY', 'type': 'entry_scaled', 'min': 70, 'max': 500, 'scale': 10, 'unit_step': 10, 'group': 'b_group'},
         {'reg': '0021H', 'title_key': 'B_DITHER_AMPLITUDE', 'type': 'entry', 'min': 0, 'max': 25, 'scale': 1, 'is_int': True, 'group': 'b_group'},
         # --- PID參數 ---
         {'reg': '0022H', 'title_key': 'SIGNAL_1_P', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 1, 'is_int': True, 'group': 'pid'},
@@ -529,7 +530,7 @@ class ModbusMonitorApp:
         self.translations = self._current_translations # Initialize instance-level translations here
         
         master.title(self.get_current_translation("APP_TITLE"))
-        master.geometry("1200x1000") 
+        master.geometry("1200x800") 
         master.resizable(True, True) 
 
         self.modbus_master = None
@@ -692,70 +693,116 @@ class ModbusMonitorApp:
                 canvas.itemconfig(window, width=event.width)
             canvas.bind("<Configure>", on_canvas_configure)
 
-            # *** THE FIX ***
-            scrollable_frame.grid_columnconfigure(1, weight=1)
+            # Configure columns for two-column layout
+            scrollable_frame.grid_columnconfigure(0, weight=1) # First column for label
+            scrollable_frame.grid_columnconfigure(1, weight=1) # First column for control
+            scrollable_frame.grid_columnconfigure(2, weight=1) # Second column for label
+            scrollable_frame.grid_columnconfigure(3, weight=1) # Second column for control
 
             frame.scrollable_frame = scrollable_frame # Store for later access
 
         # 遍歷參數配置，創建GUI元件
-        for i, param in enumerate(self.writable_params_config):
-            reg_hex = param['reg']
+        # Group parameters by their 'group' key
+        grouped_params = {}
+        for param in self.writable_params_config:
             group = param['group']
-            parent_frame = tab_frames[group].scrollable_frame
+            if group not in grouped_params:
+                grouped_params[group] = []
+            grouped_params[group].append(param)
 
-            label = ttk.Label(parent_frame, text=f"{reg_hex}: {self.get_current_translation(param['title_key'])}")
-            label.grid(row=i, column=0, padx=5, pady=5, sticky=tk.W)
-            self.writable_labels[reg_hex] = label
+        for group_name, frame in tab_frames.items():
+            params_in_group = grouped_params.get(group_name, [])
+            parent_frame = frame.scrollable_frame
+            
+            num_params = len(params_in_group)
+            midpoint = math.ceil(num_params / 2) # Calculate midpoint for splitting into two columns
 
-            var = tk.StringVar()
-            self.writable_entries[reg_hex] = var
-            control = None
+            # Left column (column 0 and 1)
+            for i in range(midpoint):
+                param = params_in_group[i]
+                reg_hex = param['reg']
+                row_num = i
+                col_offset = 0
 
-            if param['type'] == 'combobox':
-                param['map'] = self.translations.get(param['map_key'], {})
-                param['rev_map'] = {v: k for k, v in param['map'].items()}
-                control = ttk.Combobox(parent_frame, textvariable=var, values=list(param['map'].values()), state="readonly", width=20)
-            elif param['type'] == 'spinbox':
-                control = ttk.Spinbox(parent_frame, from_=param['min'], to=param['max'], increment=1, width=23, textvariable=var)
-            elif param['type'] == 'entry' or param['type'] == 'entry_scaled':
-                control = ttk.Entry(parent_frame, textvariable=var, width=25)
+                label = ttk.Label(parent_frame, text=f"{reg_hex}: {self.get_current_translation(param['title_key'])}")
+                label.grid(row=row_num, column=col_offset, padx=5, pady=5, sticky=tk.W)
+                self.writable_labels[reg_hex] = label
 
-            if control:
-                control.grid(row=i, column=1, padx=5, pady=5, sticky=tk.W)
-                self.writable_controls[reg_hex] = control
+                var = tk.StringVar()
+                self.writable_entries[reg_hex] = var
+                control = None
 
-            write_button = ttk.Button(parent_frame, text=self.get_current_translation("WRITE_BUTTON"), width=8,
-                                      command=lambda p=param: self._write_single_register(
-                                          p['reg'], self.writable_entries[p['reg']], p['type'],
-                                          map_dict=p.get('rev_map'), min_val=p.get('min'), max_val=p.get('max'),
-                                          scale=p.get('scale', 1), unit_step=p.get('unit_step'), is_int=p.get('is_int', False)))
-            write_button.grid(row=i, column=2, padx=5, pady=5)
-            self.writable_write_buttons[reg_hex] = write_button
+                if param['type'] == 'combobox':
+                    param['map'] = self.translations.get(param['map_key'], {})
+                    param['rev_map'] = {v: k for k, v in param['map'].items()}
+                    control = ttk.Combobox(parent_frame, textvariable=var, values=list(param['map'].values()), state="readonly", width=15)
+                elif param['type'] == 'spinbox':
+                    control = ttk.Spinbox(parent_frame, from_=param['min'], to=param['max'], increment=1, width=15, textvariable=var)
+                elif param['type'] == 'entry' or param['type'] == 'entry_scaled':
+                    control = ttk.Entry(parent_frame, textvariable=var, width=18)
+
+                if control:
+                    control.grid(row=row_num, column=col_offset + 1, padx=5, pady=5, sticky=tk.W)
+                    self.writable_controls[reg_hex] = control
+
+            # Right column (column 2 and 3)
+            for i in range(midpoint, num_params):
+                param = params_in_group[i]
+                reg_hex = param['reg']
+                row_num = i - midpoint # Adjust row number for the right column
+                col_offset = 2
+
+                label = ttk.Label(parent_frame, text=f"{reg_hex}: {self.get_current_translation(param['title_key'])}")
+                label.grid(row=row_num, column=col_offset, padx=5, pady=5, sticky=tk.W)
+                self.writable_labels[reg_hex] = label
+
+                var = tk.StringVar()
+                self.writable_entries[reg_hex] = var
+                control = None
+
+                if param['type'] == 'combobox':
+                    param['map'] = self.translations.get(param['map_key'], {})
+                    param['rev_map'] = {v: k for k, v in param['map'].items()}
+                    control = ttk.Combobox(parent_frame, textvariable=var, values=list(param['map'].values()), state="readonly", width=15)
+                elif param['type'] == 'spinbox':
+                    control = ttk.Spinbox(parent_frame, from_=param['min'], to=param['max'], increment=1, width=15, textvariable=var)
+                elif param['type'] == 'entry' or param['type'] == 'entry_scaled':
+                    control = ttk.Entry(parent_frame, textvariable=var, width=18)
+
+                if control:
+                    control.grid(row=row_num, column=col_offset + 1, padx=5, pady=5, sticky=tk.W)
+                    self.writable_controls[reg_hex] = control # Store the control in the dictionary
+                    self.writable_controls[reg_hex] = control # Add this line to store the control
 
         # --- 圖表區 ---
-        chart_area_frame = ttk.Frame(self.master)
-        chart_area_frame.grid(row=4, column=1, sticky='ew', padx=10, pady=5)
-        chart_area_frame.grid_rowconfigure(0, weight=1)
-        chart_area_frame.grid_columnconfigure(0, weight=1)
-        self.chart_frame = ttk.LabelFrame(chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
+        # --- 圖表區 ---
+        # 調整圖表區的grid row，因為批量操作按鈕已經移動
+        # --- 圖表區 ---
+        # 調整圖表區的grid row，因為批量操作按鈕已經移動
+        self.chart_area_frame = ttk.Frame(self.master)
+        self.chart_area_frame.grid(row=4, column=1, sticky='nsew', padx=10, pady=5) # 保持在row 4 # 保持在row 4
+        self.chart_area_frame.grid_rowconfigure(0, weight=1)
+        self.chart_area_frame.grid_columnconfigure(0, weight=1)
+        self.chart_frame = ttk.LabelFrame(self.chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
         self.chart_frame.grid(row=0, column=0, sticky="nsew")
         self.chart_frame.grid_rowconfigure(0, weight=1)
         self.chart_frame.grid_columnconfigure(0, weight=1)
         self.chart_canvas = tk.Canvas(self.chart_frame, bg='white', highlightthickness=0)
         self.chart_canvas.grid(row=0, column=0, sticky="nsew")
 
-        # --- 底部批量操作區 ---
-        btm_frame = ttk.Frame(self.master)
-        btm_frame.grid(row=5, column=1, sticky='ew', padx=10, pady=5)
-        self.batch_params_frame = ttk.LabelFrame(btm_frame, text=self.get_current_translation("BATCH_PARAMS_FRAME_TEXT"), padding="10")
-        self.batch_params_frame.pack(fill=tk.X)
+        # --- 底部批量操作按鈕 (移至可寫入參數區底部) ---
+        self.writable_params_buttons_frame = ttk.Frame(writable_params_area_frame)
+        self.writable_params_buttons_frame.grid(row=1, column=0, sticky='ew', pady=(10,0))
+        self.writable_params_buttons_frame.grid_columnconfigure(0, weight=1)
+        self.writable_params_buttons_frame.grid_columnconfigure(1, weight=1)
+        self.writable_params_buttons_frame.grid_columnconfigure(2, weight=1)
 
-        self.save_params_button = ttk.Button(self.batch_params_frame, text=self.get_current_translation("SAVE_PARAMS_BUTTON"), command=self._save_parameters_to_file)
-        self.save_params_button.pack(side=tk.LEFT, padx=10, pady=5)
-        self.load_params_button = ttk.Button(self.batch_params_frame, text=self.get_current_translation("LOAD_PARAMS_BUTTON"), command=self._load_parameters_from_file)
-        self.load_params_button.pack(side=tk.LEFT, padx=10, pady=5)
-        self.batch_write_button = ttk.Button(self.batch_params_frame, text=self.get_current_translation("BATCH_WRITE_BUTTON"), command=self._batch_write_parameters)
-        self.batch_write_button.pack(side=tk.LEFT, padx=10, pady=5)
+        self.save_params_button = ttk.Button(self.writable_params_buttons_frame, text=self.get_current_translation("SAVE_PARAMS_BUTTON"), command=self._save_parameters_to_file, width=15)
+        self.save_params_button.grid(row=0, column=0, padx=5, pady=5, sticky='ew')
+        self.load_params_button = ttk.Button(self.writable_params_buttons_frame, text=self.get_current_translation("LOAD_PARAMS_BUTTON"), command=self._load_parameters_from_file, width=15)
+        self.load_params_button.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
+        self.batch_write_button = ttk.Button(self.writable_params_buttons_frame, text=self.get_current_translation("BATCH_WRITE_BUTTON"), command=self._batch_write_parameters, width=15)
+        self.batch_write_button.grid(row=0, column=2, padx=5, pady=5, sticky='ew')
 
     def _create_monitor_widgets(self, parent_frame, config):
         parent_frame.grid_columnconfigure(list(range(len(config))), weight=1)
@@ -799,7 +846,7 @@ class ModbusMonitorApp:
         self.monitor_frame_a.config(text=self.translations["MONITOR_AREA_A_FRAME_TEXT"])
         self.monitor_frame_b.config(text=self.translations["MONITOR_AREA_B_FRAME_TEXT"])
         
-        self.batch_params_frame.config(text=self.translations["BATCH_PARAMS_FRAME_TEXT"])
+        
 
         # Update Notebook tabs
         if hasattr(self, 'common_params_frame'): # Check if frames exist before updating
@@ -873,8 +920,7 @@ class ModbusMonitorApp:
                 else: # If no value was previously set or couldn't be translated, clear it
                     self.writable_entries[reg_hex].set("")
 
-            # Update single write button text
-            self.writable_write_buttons[reg_hex].config(text=self.translations["WRITE_BUTTON"])
+            # Individual write buttons removed
             
         # Update batch operation buttons
         self.save_params_button.config(text=self.translations["SAVE_PARAMS_BUTTON"])
@@ -1412,7 +1458,10 @@ class ModbusMonitorApp:
                 if 'scale' in param_config and param_config['scale'] != 1:
                     display_value = convert_to_float(value, param_config['scale'])
                     if display_value is not None:
-                        if param_config.get('is_int', False):
+                        # Special handling for 0012H, 0013H, 001CH, 001DH to display 1 decimal place
+                        if reg_hex in ['0012H', '0013H', '001CH', '001DH']:
+                            self.writable_entries[reg_hex].set(f"{display_value:.1f}")
+                        elif param_config.get('is_int', False):
                             self.writable_entries[reg_hex].set(f"{display_value:.0f}")
                         else:
                             self.writable_entries[reg_hex].set(f"{display_value:.2f}") # Default to 2 decimal places for floats
@@ -1884,12 +1933,9 @@ class ModbusMonitorApp:
                 else: 
                     control_widget.config(state="readonly")
         
-        for btn in self.writable_write_buttons.values():
-            btn.config(state=state)
+        
                                         
-        self.save_params_button.config(state=state)
-        self.load_params_button.config(state=state)
-        self.batch_write_button.config(state=state)
+        
 
 
 def resource_path(relative_path):
