@@ -42,9 +42,9 @@ TEXTS = {
         "WRITABLE_PARAMS_FRAME_TEXT": "可寫入參數",
         "WRITE_BUTTON": "寫入",
         "BATCH_PARAMS_FRAME_TEXT": "儲存/讀取/寫入",
-        "SAVE_PARAMS_BUTTON": "儲存",
-        "LOAD_PARAMS_BUTTON": "讀取",
-        "BATCH_WRITE_BUTTON": "批次寫入",
+        "SAVE_PARAMS_BUTTON": "本地儲存",
+        "LOAD_PARAMS_BUTTON": "本地讀取",
+        "BATCH_WRITE_BUTTON": "套用至控制器",
         "COM_PORT_NOT_FOUND_WARNING": "未找到可用端口。請確認設備已連接且驅動已安裝。",
         "COM_PORT_SELECT_ERROR": "請選擇一個通訊端口。",
         "COM_PORT_OPEN_FAIL": "無法打開端口 {port}。可能原因：\n1. 端口已被其他程式佔用。\n2. 串口名稱不正確。\n3. 驅動問題。\n錯誤: {e}",
@@ -78,11 +78,11 @@ TEXTS = {
         "SELECT_ITEM_ERROR": "請選擇一個參數方案。",
         "LOAD_BUTTON": "讀取",
         "CANCEL_BUTTON": "取消",
-        "BATCH_WRITE_PROGRESS_TITLE": "批次寫入進度",
+        "BATCH_WRITE_PROGRESS_TITLE": "寫入進度",
         "BATCH_WRITE_PREPARING": "準備寫入...",
         "BATCH_WRITE_IN_PROGRESS": "正在寫入寄存器 0x{register_address:04X} ({i}/{total_registers})...",
         "BATCH_WRITE_SUCCESS_ALL": "所有參數已成功寫入控制器！",
-        "BATCH_WRITE_PARTIAL_FAIL": "批次寫入部分失敗。成功寫入 {success_count}/{total_registers} 個參數。\n失敗寄存器: {failed_registers_list}",
+        "BATCH_WRITE_PARTIAL_FAIL": "寫入部分失敗。成功寫入 {success_count}/{total_registers} 個參數。\n失敗寄存器: {failed_registers_list}",
         "INFO_TITLE": "資訊",
         "WARNING_TITLE": "警告",
         "ERROR_TITLE": "錯誤",
@@ -219,9 +219,9 @@ TEXTS = {
         "WRITABLE_PARAMS_FRAME_TEXT": "Writable Parameters",
         "WRITE_BUTTON": "Write",
         "BATCH_PARAMS_FRAME_TEXT": "Batch SAVE/LOAD/WRITE",
-        "SAVE_PARAMS_BUTTON": "SAVE",
-        "LOAD_PARAMS_BUTTON": "LOAD",
-        "BATCH_WRITE_BUTTON": "Batch Write",
+        "SAVE_PARAMS_BUTTON": "SAVE locally",
+        "LOAD_PARAMS_BUTTON": "LOAD locally",
+        "BATCH_WRITE_BUTTON": "APPLY to Controller",
         "COM_PORT_NOT_FOUND_WARNING": "No available COM ports found. Please ensure the device is connected and drivers are installed.",
         "COM_PORT_SELECT_ERROR": "Please select a communication port.",
         "COM_PORT_OPEN_FAIL": "Failed to open COM port {port}. Possible reasons:\n1. Port is in use by another program.\n2. Incorrect port name.\n3. Driver issues.\nError: {e}",
@@ -255,11 +255,11 @@ TEXTS = {
         "SELECT_ITEM_ERROR": "Please select an item.",
         "LOAD_BUTTON": "Load",
         "CANCEL_BUTTON": "Cancel",
-        "BATCH_WRITE_PROGRESS_TITLE": "Batch Write Progress",
+        "BATCH_WRITE_PROGRESS_TITLE": "Write Progress",
         "BATCH_WRITE_PREPARING": "Preparing to write...",
         "BATCH_WRITE_IN_PROGRESS": "Writing register 0x{register_address:04X} ({i}/{total_registers})...",
         "BATCH_WRITE_SUCCESS_ALL": "All parameters successfully written to controller!",
-        "BATCH_WRITE_PARTIAL_FAIL": "Batch write partially failed. Successfully wrote {success_count}/{total_registers} parameters.\nFailed Registers: {failed_registers_list}",
+        "BATCH_WRITE_PARTIAL_FAIL": "write partially failed. Successfully wrote {success_count}/{total_registers} parameters.\nFailed Registers: {failed_registers_list}",
         "INFO_TITLE": "Information",
         "WARNING_TITLE": "Warning",
         "ERROR_TITLE": "Error",
@@ -530,7 +530,7 @@ class ModbusMonitorApp:
         self.translations = self._current_translations # Initialize instance-level translations here
         
         master.title(self.get_current_translation("APP_TITLE"))
-        master.geometry("1200x800") 
+        master.geometry("1200x850") 
         master.resizable(True, True) 
 
         self.modbus_master = None
@@ -644,12 +644,12 @@ class ModbusMonitorApp:
         self._clear_monitor_area()
 
         # --- 可寫入參數區 (Notebook) ---
-        writable_params_area_frame = ttk.Frame(self.master)
-        writable_params_area_frame.grid(row=3, column=1, sticky='nsew', padx=10, pady=(5,5))
-        writable_params_area_frame.grid_rowconfigure(0, weight=1)
-        writable_params_area_frame.grid_columnconfigure(0, weight=1)
+        self.writable_params_area_frame = ttk.LabelFrame(self.master, text=self.get_current_translation("WRITABLE_PARAMS_FRAME_TEXT"), padding="10")
+        self.writable_params_area_frame.grid(row=3, column=1, sticky='nsew', padx=10, pady=(5,5))
+        self.writable_params_area_frame.grid_rowconfigure(0, weight=1)
+        self.writable_params_area_frame.grid_columnconfigure(0, weight=1)
 
-        self.writable_params_notebook = ttk.Notebook(writable_params_area_frame)
+        self.writable_params_notebook = ttk.Notebook(self.writable_params_area_frame)
         self.writable_params_notebook.grid(row=0, column=0, sticky="nsew")
 
         # 創建標籤頁
@@ -791,7 +791,7 @@ class ModbusMonitorApp:
         self.chart_canvas.grid(row=0, column=0, sticky="nsew")
 
         # --- 底部批量操作按鈕 (移至可寫入參數區底部) ---
-        self.writable_params_buttons_frame = ttk.Frame(writable_params_area_frame)
+        self.writable_params_buttons_frame = ttk.Frame(self.writable_params_area_frame)
         self.writable_params_buttons_frame.grid(row=1, column=0, sticky='ew', pady=(10,0))
         self.writable_params_buttons_frame.grid_columnconfigure(0, weight=1)
         self.writable_params_buttons_frame.grid_columnconfigure(1, weight=1)
@@ -845,9 +845,8 @@ class ModbusMonitorApp:
         self.modbus_params_frame.config(text=self.translations["MODBUS_PARAMS_FRAME_TEXT"])
         self.monitor_frame_a.config(text=self.translations["MONITOR_AREA_A_FRAME_TEXT"])
         self.monitor_frame_b.config(text=self.translations["MONITOR_AREA_B_FRAME_TEXT"])
+        self.writable_params_area_frame.config(text=self.translations["WRITABLE_PARAMS_FRAME_TEXT"])
         
-        
-
         # Update Notebook tabs
         if hasattr(self, 'common_params_frame'): # Check if frames exist before updating
             self.writable_params_notebook.tab(self.common_params_frame, text=self.translations["COMMON_PARAMS_FRAME_TEXT"])
@@ -1508,7 +1507,7 @@ class ModbusMonitorApp:
     def _write_single_register(self, reg_hex, tk_var, control_type, map_dict=None, min_val=None, max_val=None, scale=1, unit_step=1, is_int=False):
         """
         處理單個寄存器的寫入邏輯，包含輸入驗證和數據轉換。
-        修改: 特殊處理000CH寫入邏輯。
+        修改: 特殊處理000DH寫入邏輯。
         """
         slave_id = int(self.slave_id_spinbox.get())
         register_address = int(reg_hex.replace('H', ''), 16) 
@@ -1601,7 +1600,7 @@ class ModbusMonitorApp:
                     self.master.after(2000, self._read_all_registers_and_update_gui)
                 return # 已處理，退出函數
 
-        # 對於其他寄存器，或000CH但不是0或5的值，執行正常寫入
+        # 對於其他寄存器，或000DH但不是0或5的值，執行正常寫入
         if write_value is not None:
             if write_modbus_register(slave_id, register_address, write_value):
                 self._read_all_registers_and_update_gui()
@@ -1754,7 +1753,7 @@ class ModbusMonitorApp:
     def _batch_write_parameters(self):
         """
         批量將"可寫入檔案區"的所有參數依次寫入控制器。
-        修改: 跳過000CH不進行寫入動作。
+        修改: 跳過000DH不進行寫入動作。
         """
         if not self.modbus_master:
             messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("MODBUS_NOT_CONNECTED_WARNING"))
@@ -1767,8 +1766,8 @@ class ModbusMonitorApp:
         for param_entry_dict in params_to_write_list: # Iterate through the list of dictionaries
             reg_hex = param_entry_dict['reg']
             
-            # Skip validation for 000CH (Factory Reset)
-            if reg_hex == '000DH':
+            # Skip validation for 000DH (Factory Reset)
+            if reg_hex == '000EH':
                 continue 
             
             value_str = self.writable_entries[reg_hex].get().strip() # Get value from GUI entry for this reg_hex
@@ -1864,7 +1863,7 @@ class ModbusMonitorApp:
                 # Calculate progress for display, based on overall index
                 display_progress_count = i_idx + 1 
 
-                if reg_hex == '000CH': # Skip Factory Reset for batch write
+                if reg_hex == '000DH': # Skip Factory Reset for batch write
                     self.master.after(0, progress_label.config, {'text': self.get_current_translation("SKIP_REGISTER_BATCH_WRITE").format(register_address=int(reg_hex.replace('H', ''), 16), i=display_progress_count, total_registers=total_elements_in_batch)})
                     self.master.after(0, progress_bar.config, {'value': display_progress_count / total_elements_in_batch * 100 if total_elements_in_batch > 0 else 100})
                     self.master.update_idletasks()
@@ -1898,8 +1897,8 @@ class ModbusMonitorApp:
             self.master.after(0, progress_window.destroy)
             self.master.after(0, lambda: self._set_gui_state(tk.NORMAL)) 
 
-            # Calculate total registers that were *intended* to be written (excluding 000CH)
-            actual_total_to_write = len([p for p in params_to_write_list if p['reg'] != '000CH'])
+            # Calculate total registers that were *intended* to be written (excluding 000DH)
+            actual_total_to_write = len([p for p in params_to_write_list if p['reg'] != '000DH'])
 
             if success_count == actual_total_to_write:
                 self.master.after(0, lambda: messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("BATCH_WRITE_SUCCESS_ALL")))
