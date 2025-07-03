@@ -33,8 +33,8 @@ TEXTS = {
         "REFRESH_PORTS_BUTTON": "刷新端口",
         "CONNECT_BUTTON": "連接",
         "DISCONNECT_BUTTON": "斷開",
-        "MONITOR_AREA_A_FRAME_TEXT": "即時監控 (A組: 0000H~0002H)",
-        "MONITOR_AREA_B_FRAME_TEXT": "即時監控 (B組: 0003H~0005H)",
+        "MONITOR_AREA_A_FRAME_TEXT": "即時監控 (A組輸出: 0000H~0002H)",
+        "MONITOR_AREA_B_FRAME_TEXT": "即時監控 (B組輸出: 0003H~0005H)",
         "OUTPUT_CURRENT_LABEL": "輸出電流",
         "INPUT_SIGNAL_LABEL": "輸入信號",
         "CURRENT_STATUS_LABEL": "目前狀態",
@@ -99,38 +99,38 @@ TEXTS = {
         
         # 新增/修改的可寫入參數區的翻譯鍵
         "COMMON_PARAMS_FRAME_TEXT": "通用參數",
-        "A_GROUP_PARAMS_FRAME_TEXT": "A組參數",
-        "B_GROUP_PARAMS_FRAME_TEXT": "B組參數",
+        "A_GROUP_PARAMS_FRAME_TEXT": "A組輸出參數",
+        "B_GROUP_PARAMS_FRAME_TEXT": "B組輸出參數",
         "PID_PARAMS_FRAME_TEXT": "信號PID參數",
 
-        "SIGNAL_SELECTION_1": "信號選擇 1",
-        "SIGNAL_SELECTION_2": "信號選擇 2",
+        "SIGNAL_SELECTION_1": "信號 1 選擇",
+        "SIGNAL_SELECTION_2": "信號 2 選擇",
         "PANEL_DISPLAY_MODE": "面板顯示模式",
         "RS485_CONTROL_SIGNAL_1": "第一組485控制信號 (0~100%)",
         "RS485_CONTROL_SIGNAL_2": "第二組485控制信號 (0~100%)",
         "DEVICE_ADDRESS_ADJUSTMENT": "設備位址調整 (1~247)",
         "DEVICE_BAUDRATE_ADJUSTMENT": "設備鮑率調整",
         "FACTORY_RESET": "恢復出廠設置",
-        "A_INPUT_SIGNAL_SELECTION": "A組輸入信號選擇",
-        "A_FEEDBACK_SIGNAL": "A組反饋信號",
-        "A_MAX_CURRENT": "A組最大電流 (0.20~3.00A)",
-        "A_MIN_CURRENT": "A組最小電流 (0.00~1.00A)",
-        "A_CURRENT_RISE_TIME": "A組電流上升時間 (0.1~5.0s)",
-        "A_CURRENT_FALL_TIME": "A組電流下降時間 (0.1~5.0s)",
-        "A_COMMAND_DEAD_ZONE": "A組指令死區 (0~5%)",
-        "A_PWM_FREQUENCY": "A組PWM頻率 (70~1000Hz)",
-        "A_TREMOR_FREQUENCY": "A組震顫頻率 (70~500Hz)",
-        "A_DITHER_AMPLITUDE": "A組震顫幅度 (0~25%)",
-        "B_INPUT_SIGNAL_SELECTION": "B組輸入信號選擇",
-        "B_FEEDBACK_SIGNAL": "B組反饋信號",
-        "B_MAX_CURRENT": "B組最大電流 (0.20~3.00A)",
-        "B_MIN_CURRENT": "B組最小電流 (0.00~1.00A)",
-        "B_CURRENT_RISE_TIME": "B組電流上升時間 (0.1~5.0s)",
-        "B_CURRENT_FALL_TIME": "B組電流下降時間 (0.1~5.0s)",
-        "B_COMMAND_DEAD_ZONE": "B組指令死區 (0~5%)",
-        "B_PWM_FREQUENCY": "B組PWM頻率 (70~1000Hz)",
-        "B_TREMOR_FREQUENCY": "B組震顫頻率 (70~500Hz)",
-        "B_DITHER_AMPLITUDE": "B組震顫幅度 (0~25%)",
+        "A_INPUT_SIGNAL_SELECTION": "輸入信號選擇",
+        "A_FEEDBACK_SIGNAL": "反饋信號",
+        "A_MAX_CURRENT": "最大電流 (0.20~3.00A)",
+        "A_MIN_CURRENT": "最小電流 (0.00~1.00A)",
+        "A_CURRENT_RISE_TIME": "電流上升時間 (0.1~5.0s)",
+        "A_CURRENT_FALL_TIME": "電流下降時間 (0.1~5.0s)",
+        "A_COMMAND_DEAD_ZONE": "指令死區 (0~5%)",
+        "A_PWM_FREQUENCY": "PWM頻率 (70~1000Hz)",
+        "A_TREMOR_FREQUENCY": "震顫頻率 (70~500Hz)",
+        "A_DITHER_AMPLITUDE": "震顫幅度 (0~25%)",
+        "B_INPUT_SIGNAL_SELECTION": "輸入信號選擇",
+        "B_FEEDBACK_SIGNAL": "反饋信號",
+        "B_MAX_CURRENT": "最大電流 (0.20~3.00A)",
+        "B_MIN_CURRENT": "最小電流 (0.00~1.00A)",
+        "B_CURRENT_RISE_TIME": "電流上升時間 (0.1~5.0s)",
+        "B_CURRENT_FALL_TIME": "電流下降時間 (0.1~5.0s)",
+        "B_COMMAND_DEAD_ZONE": "指令死區 (0~5%)",
+        "B_PWM_FREQUENCY": "PWM頻率 (70~1000Hz)",
+        "B_TREMOR_FREQUENCY": "震顫頻率 (70~500Hz)",
+        "B_DITHER_AMPLITUDE": "震顫幅度 (0~25%)",
         "SIGNAL_1_P": "信號1 P (0~100)",
         "SIGNAL_1_I": "信號1 I (0~100)",
         "SIGNAL_1_D": "信號1 D (0~100)",
@@ -143,19 +143,23 @@ TEXTS = {
         "PARAM_SAVE_PROMPT_TITLE": "參數儲存",
         "CONTROLLER_MODE_CHART_FRAME_TEXT": "控制器模式圖表",
         "OUTPUT_CHARACTERISTICS": "輸出特性",
-        "LINKED_MODE_OUTPUT_CHARACTERISTICS": "連動模式輸出特性 (A組 & B組)",
+        "LINKED_MODE_OUTPUT_CHARACTERISTICS": "連動模式輸出特性 (A組輸出 & B組輸出)",
         "CURRENT": "電流",
         "TIME": "時間",
-        "A_GROUP_LEGEND": "A組曲線",
-        "B_GROUP_LEGEND": "B組曲線",
+        "A_GROUP_LEGEND": "A組輸出曲線",
+        "B_GROUP_LEGEND": "B組輸出曲線",
+        "INPUT_SIGNAL": "輸入信號",
+        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "雙組信號-雙組輸出",
+        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組輸出",
+        "SINGLE_OUTPUT_MODE_TEXT": "單組輸出",
         
-        # 寄存器值映射表 (用於本地化顯示)
+        # Register value maps (for localized display)
         "STATUS_MAP_VALUES": {
             0: "正常",
-            1: "電流控制信號斷路",
-            2: "電流控制信號過載",
-            3: "線圈開路",
-            4: "線圈短路"
+            1: "線圈開路",
+            2: "線圈短路",
+            3: "電流控制信號斷路",
+            4: "電流控制信號過載"
         },
         "SIGNAL_SELECTION_MAP_VALUES": { # For 0006H, 0007H
             0: "0~10V",
@@ -163,9 +167,9 @@ TEXTS = {
             2: "4~20mA"
         },
         "PANEL_DISPLAY_MODE_MAP_VALUES": { # For 0008H
-            0: "顯示A組電流",
+            0: "顯示A組輸出電流",
             1: "顯示A組輸入信號",
-            2: "顯示B組電流",
+            2: "顯示B組輸出電流",
             3: "顯示B組輸入信號",
             4: "不顯示"
         },
@@ -181,13 +185,13 @@ TEXTS = {
             5: "恢復出廠設置"
         },
         "A_INPUT_SIGNAL_SELECTION_MAP_VALUES": { # For 000EH
-            0: "信號1",
+            0: "信號 1",
             1: "第一組485"
         },
         "B_INPUT_SIGNAL_SELECTION_MAP_VALUES": { # For 0018H
             0: "無輸出",
-            1: "信號1",
-            2: "信號2",
+            1: "信號 1",
+            2: "信號 2",
             3: "第一組485",
             4: "第二組485"
         },
@@ -206,8 +210,8 @@ TEXTS = {
         "REFRESH_PORTS_BUTTON": "Refresh Ports",
         "CONNECT_BUTTON": "Connect",
         "DISCONNECT_BUTTON": "Disconnect",
-        "MONITOR_AREA_A_FRAME_TEXT": "Real-time Monitoring (Group A: 0000H~0002H)",
-        "MONITOR_AREA_B_FRAME_TEXT": "Real-time Monitoring (Group B: 0003H~0005H)",
+        "MONITOR_AREA_A_FRAME_TEXT": "Real-time Monitoring (Output A: 0000H~0002H)",
+        "MONITOR_AREA_B_FRAME_TEXT": "Real-time Monitoring (Output B: 0003H~0005H)",
         "OUTPUT_CURRENT_LABEL": "Output Current",
         "INPUT_SIGNAL_LABEL": "Input Signal",
         "CURRENT_STATUS_LABEL": "Status",
@@ -272,38 +276,38 @@ TEXTS = {
         
         # New/Modified writable parameter area translations
         "COMMON_PARAMS_FRAME_TEXT": "Common Parameters",
-        "A_GROUP_PARAMS_FRAME_TEXT": "Group A Parameters",
-        "B_GROUP_PARAMS_FRAME_TEXT": "Group B Parameters",
+        "A_GROUP_PARAMS_FRAME_TEXT": "Output A Parameters",
+        "B_GROUP_PARAMS_FRAME_TEXT": "Output B Parameters",
         "PID_PARAMS_FRAME_TEXT": "Signal PID Parameters",
 
-        "SIGNAL_SELECTION_1": "Signal Selection 1",
-        "SIGNAL_SELECTION_2": "Signal Selection 2",
+        "SIGNAL_SELECTION_1": "Signal 1 Selection",
+        "SIGNAL_SELECTION_2": "Signal 1 Selection",
         "PANEL_DISPLAY_MODE": "Panel Display Mode",
         "RS485_CONTROL_SIGNAL_1": "RS485 Control Signal 1 (0~100%)",
         "RS485_CONTROL_SIGNAL_2": "RS485 Control Signal 2 (0~100%)",
         "DEVICE_ADDRESS_ADJUSTMENT": "Device Address Adjustment (1~247)",
         "DEVICE_BAUDRATE_ADJUSTMENT": "Device Baud Rate Adjustment",
         "FACTORY_RESET": "Factory Reset",
-        "A_INPUT_SIGNAL_SELECTION": "Group A Input Signal Selection",
-        "A_FEEDBACK_SIGNAL": "Group A Feedback Signal",
-        "A_MAX_CURRENT": "Group A Max Output Current (0.20~3.00A)",
-        "A_MIN_CURRENT": "Group A Min Output Current (0.00~1.00A)",
-        "A_CURRENT_RISE_TIME": "Group A Ramp up Time (0.1~5.0s)",
-        "A_CURRENT_FALL_TIME": "Group A Ramp down Time (0.1~5.0s)",
-        "A_COMMAND_DEAD_ZONE": "Group A Command Deadband (0~5%)",
-        "A_PWM_FREQUENCY": "Group A PWM Frequency (70~1000Hz)",
-        "A_TREMOR_FREQUENCY": "Group A Dither Frequency (70~500Hz)",
-        "A_DITHER_AMPLITUDE": "Group A Dither Amplitude (0~25%)",
-        "B_INPUT_SIGNAL_SELECTION": "Group B Input Signal Selection",
-        "B_FEEDBACK_SIGNAL": "Group B Feedback Signal",
-        "B_MAX_CURRENT": "Group B Max Output Current (0.20~3.00A)",
-        "B_MIN_CURRENT": "Group B Min Output Current (0.00~1.00A)",
-        "B_CURRENT_RISE_TIME": "Group B Ramp up Time (0.1~5.0s)",
-        "B_CURRENT_FALL_TIME": "Group B Ramp down Time (0.1~5.0s)",
-        "B_COMMAND_DEAD_ZONE": "Group B Command Deadband (0~5%)",
-        "B_PWM_FREQUENCY": "Group B PWM Frequency (70~1000Hz)",
-        "B_TREMOR_FREQUENCY": "Group B Dither Frequency (70~500Hz)",
-        "B_DITHER_AMPLITUDE": "Group B Dither Amplitude (0~25%)",
+        "A_INPUT_SIGNAL_SELECTION": "Input Signal Selection",
+        "A_FEEDBACK_SIGNAL": "Feedback Signal",
+        "A_MAX_CURRENT": "Max Output Current (0.20~3.00A)",
+        "A_MIN_CURRENT": "Min Output Current (0.00~1.00A)",
+        "A_CURRENT_RISE_TIME": "Ramp up Time (0.1~5.0s)",
+        "A_CURRENT_FALL_TIME": "Ramp down Time (0.1~5.0s)",
+        "A_COMMAND_DEAD_ZONE": "Command Deadband (0~5%)",
+        "A_PWM_FREQUENCY": "PWM Frequency (70~1000Hz)",
+        "A_TREMOR_FREQUENCY": "Dither Frequency (70~500Hz)",
+        "A_DITHER_AMPLITUDE": "Dither Amplitude (0~25%)",
+        "B_INPUT_SIGNAL_SELECTION": "Input Signal Selection",
+        "B_FEEDBACK_SIGNAL": "Feedback Signal",
+        "B_MAX_CURRENT": "Max Output Current (0.20~3.00A)",
+        "B_MIN_CURRENT": "Min Output Current (0.00~1.00A)",
+        "B_CURRENT_RISE_TIME": "Ramp up Time (0.1~5.0s)",
+        "B_CURRENT_FALL_TIME": "Ramp down Time (0.1~5.0s)",
+        "B_COMMAND_DEAD_ZONE": "Command Deadband (0~5%)",
+        "B_PWM_FREQUENCY": "PWM Frequency (70~1000Hz)",
+        "B_TREMOR_FREQUENCY": "Dither Frequency (70~500Hz)",
+        "B_DITHER_AMPLITUDE": "Dither Amplitude (0~25%)",
         "SIGNAL_1_P": "Signal 1 P (0~100)",
         "SIGNAL_1_I": "Signal 1 I (0~100)",
         "SIGNAL_1_D": "Signal 1 D (0~100)",
@@ -316,19 +320,23 @@ TEXTS = {
         "PARAM_SAVE_PROMPT_TITLE": "Save Parameters",
         "CONTROLLER_MODE_CHART_FRAME_TEXT": "Controller Mode Chart",
         "OUTPUT_CHARACTERISTICS": "Output Characteristics",
-        "LINKED_MODE_OUTPUT_CHARACTERISTICS": "Linked Mode Output Characteristics (Group A & B)",
+        "LINKED_MODE_OUTPUT_CHARACTERISTICS": "Linked Mode Output Characteristics (Output A & B)",
         "CURRENT": "Current",
         "TIME": "Time",
-        "A_GROUP_LEGEND": "Group A Curve",
-        "B_GROUP_LEGEND": "Group B Curve",
+        "A_GROUP_LEGEND": "Output A Curve",
+        "B_GROUP_LEGEND": "Output B Curve",
+        "INPUT_SIGNAL": "Input Signal",
+        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "Dual Output Dual Slope",
+        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Output Single Slope",
+        "SINGLE_OUTPUT_MODE_TEXT": "Single Output",
         
         # Register value maps (for localized display)
         "STATUS_MAP_VALUES": {
             0: "Normal",
-            1: "Current control signal open circuit",
-            2: "Current control signal overload",
-            3: "Coil open circuit",
-            4: "Coil short circuit"
+            1: "Coil open circuit",
+            2: "Coil short circuit",
+            3: "Current control signal open circuit",
+            4: "Current control signal overload"
         },
         "SIGNAL_SELECTION_MAP_VALUES": { # For 0006H, 0007H
             0: "0~10V",
@@ -336,10 +344,10 @@ TEXTS = {
             2: "4~20mA"
         },
         "PANEL_DISPLAY_MODE_MAP_VALUES": { # For 0008H
-            0: "Display Group A Current",
-            1: "Display Group A Input Signal",
-            2: "Display Group B Current",
-            3: "Display Group B Input Signal",
+            0: "Display Output A Current",
+            1: "Display Input Signal for Output A",
+            2: "Display Output B Current",
+            3: "Display Input Signal for Output B",
             4: "Do Not Display"
         },
         "DEVICE_BAUDRATE_MAP_VALUES": { # For 000CH
@@ -521,7 +529,7 @@ class ModbusMonitorApp:
         self.translations = self._current_translations # Initialize instance-level translations here
         
         master.title(self.get_current_translation("APP_TITLE"))
-        master.geometry("1000x850") 
+        master.geometry("1200x1000") 
         master.resizable(True, True) 
 
         self.modbus_master = None
@@ -570,52 +578,55 @@ class ModbusMonitorApp:
         self.master.grid_rowconfigure(1, weight=0) # 分隔線
         self.master.grid_rowconfigure(2, weight=0) # 即時監控
         self.master.grid_rowconfigure(3, weight=1) # 可寫入參數 (給予較大權重)
-        self.master.grid_rowconfigure(4, weight=1) # 圖表區 (給予較大權重)
+        self.master.grid_rowconfigure(4, weight=0) # 圖表區
         self.master.grid_rowconfigure(5, weight=0) # 批量操作
+
         self.master.grid_columnconfigure(0, weight=1)
+        self.master.grid_columnconfigure(1, weight=0)
+        self.master.grid_columnconfigure(2, weight=1)
 
         # --- 頂部區域框架 ---
         top_frame = ttk.Frame(self.master)
-        top_frame.grid(row=0, column=0, sticky='ew', padx=10, pady=5)
+        top_frame.grid(row=0, column=1, sticky='ew', padx=10, pady=5)
 
         # Language Selection (Top Right)
-        self.language_frame = ttk.LabelFrame(top_frame, text=self.get_current_translation("LANGUAGE_LABEL"), padding="5")
-        self.language_frame.pack(side=tk.RIGHT, anchor='ne')
+        self.language_frame = ttk.LabelFrame(top_frame, text=self.get_current_translation("LANGUAGE_LABEL"), padding="10")
+        self.language_frame.pack(side=tk.RIGHT, pady=5)
         self.language_combobox_var = tk.StringVar(value="中文")
         self.language_combobox = ttk.Combobox(self.language_frame, values=["中文", "English"], state="readonly", width=7, textvariable=self.language_combobox_var)
-        self.language_combobox.pack(padx=5, pady=2)
+        self.language_combobox.pack(padx=5, pady=5)
         self.language_combobox.bind("<<ComboboxSelected>>", self._on_language_select)
 
         # A. Modbus通訊參數設置區域
         self.modbus_params_frame = ttk.LabelFrame(top_frame, text=self.get_current_translation("MODBUS_PARAMS_FRAME_TEXT"), padding="10")
-        self.modbus_params_frame.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.modbus_params_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
 
         # ... (內容與原版相同，保持緊湊)
         self.com_port_label = ttk.Label(self.modbus_params_frame, text=self.get_current_translation("COM_PORT_LABEL"))
-        self.com_port_label.grid(row=0, column=0, padx=5, pady=2, sticky=tk.W)
+        self.com_port_label.grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
         self.port_combobox = ttk.Combobox(self.modbus_params_frame, state="readonly", width=10)
-        self.port_combobox.grid(row=0, column=1, padx=5, pady=2, sticky=tk.W)
+        self.port_combobox.grid(row=0, column=1, padx=5, pady=5, sticky=tk.W)
         self.baudrate_label = ttk.Label(self.modbus_params_frame, text=self.get_current_translation("BAUDRATE_LABEL"))
-        self.baudrate_label.grid(row=0, column=2, padx=5, pady=2, sticky=tk.W)
+        self.baudrate_label.grid(row=0, column=2, padx=5, pady=5, sticky=tk.W)
         self.baudrate_combobox = ttk.Combobox(self.modbus_params_frame, values=[4800, 9600, 19200, 38400, 57600], state="readonly", width=8)
         self.baudrate_combobox.set(19200)
-        self.baudrate_combobox.grid(row=0, column=3, padx=5, pady=2, sticky=tk.W)
+        self.baudrate_combobox.grid(row=0, column=3, padx=5, pady=5, sticky=tk.W)
         self.slave_id_label = ttk.Label(self.modbus_params_frame, text=self.get_current_translation("SLAVE_ID_LABEL"))
-        self.slave_id_label.grid(row=0, column=4, padx=5, pady=2, sticky=tk.W)
+        self.slave_id_label.grid(row=0, column=4, padx=5, pady=5, sticky=tk.W)
         self.slave_id_var = tk.StringVar(value="1")
         self.slave_id_spinbox = ttk.Spinbox(self.modbus_params_frame, from_=1, to=247, increment=1, width=5, textvariable=self.slave_id_var)
-        self.slave_id_spinbox.grid(row=0, column=5, padx=5, pady=2, sticky=tk.W)
+        self.slave_id_spinbox.grid(row=0, column=5, padx=5, pady=5, sticky=tk.W)
         self.refresh_ports_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("REFRESH_PORTS_BUTTON"), command=self._refresh_ports)
-        self.refresh_ports_button.grid(row=0, column=6, padx=5, pady=2)
+        self.refresh_ports_button.grid(row=0, column=6, padx=5, pady=5)
         self.connect_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), command=self._toggle_connection)
-        self.connect_button.grid(row=0, column=7, padx=5, pady=2)
+        self.connect_button.grid(row=0, column=7, padx=5, pady=5)
 
         # --- 分隔線 ---
-        ttk.Separator(self.master, orient='horizontal').grid(row=1, column=0, pady=5, sticky='ew', padx=10)
+        ttk.Separator(self.master, orient='horizontal').grid(row=1, column=1, pady=5, sticky='ew', padx=10)
 
         # --- 即時監控區框架 ---
         monitor_area_frame = ttk.Frame(self.master)
-        monitor_area_frame.grid(row=2, column=0, sticky='ew', padx=10)
+        monitor_area_frame.grid(row=2, column=1, sticky='ew', padx=10)
         monitor_area_frame.grid_columnconfigure(0, weight=1)
         monitor_area_frame.grid_columnconfigure(1, weight=1)
 
@@ -633,7 +644,7 @@ class ModbusMonitorApp:
 
         # --- 可寫入參數區 (Notebook) ---
         writable_params_area_frame = ttk.Frame(self.master)
-        writable_params_area_frame.grid(row=3, column=0, sticky='nsew', padx=10, pady=(5,5))
+        writable_params_area_frame.grid(row=3, column=1, sticky='nsew', padx=10, pady=(5,5))
         writable_params_area_frame.grid_rowconfigure(0, weight=1)
         writable_params_area_frame.grid_columnconfigure(0, weight=1)
 
@@ -723,10 +734,10 @@ class ModbusMonitorApp:
 
         # --- 圖表區 ---
         chart_area_frame = ttk.Frame(self.master)
-        chart_area_frame.grid(row=4, column=0, sticky='nsew', padx=10, pady=(0,5))
+        chart_area_frame.grid(row=4, column=1, sticky='ew', padx=10, pady=5)
         chart_area_frame.grid_rowconfigure(0, weight=1)
         chart_area_frame.grid_columnconfigure(0, weight=1)
-        self.chart_frame = ttk.LabelFrame(chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"), padding="10")
+        self.chart_frame = ttk.LabelFrame(chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
         self.chart_frame.grid(row=0, column=0, sticky="nsew")
         self.chart_frame.grid_rowconfigure(0, weight=1)
         self.chart_frame.grid_columnconfigure(0, weight=1)
@@ -735,7 +746,7 @@ class ModbusMonitorApp:
 
         # --- 底部批量操作區 ---
         btm_frame = ttk.Frame(self.master)
-        btm_frame.grid(row=5, column=0, sticky='ew', padx=10, pady=5)
+        btm_frame.grid(row=5, column=1, sticky='ew', padx=10, pady=5)
         self.batch_params_frame = ttk.LabelFrame(btm_frame, text=self.get_current_translation("BATCH_PARAMS_FRAME_TEXT"), padding="10")
         self.batch_params_frame.pack(fill=tk.X)
 
@@ -757,7 +768,7 @@ class ModbusMonitorApp:
             title_label.pack(side=tk.TOP, anchor=tk.CENTER, pady=(0,2))
             value_frame = ttk.Frame(item_frame)
             value_frame.pack(side=tk.TOP, anchor=tk.CENTER)
-            display_label = ttk.Label(value_frame, text="----", anchor="center", font=('Arial', 16, 'bold'))
+            display_label = ttk.Label(value_frame, text="----", anchor="center", font=('Arial', 14, 'bold'))
             display_label.pack(side=tk.LEFT)
             if unit:
                 ttk.Label(value_frame, text=unit).pack(side=tk.LEFT, anchor=tk.S, pady=(0,3))
@@ -873,274 +884,335 @@ class ModbusMonitorApp:
         # Update language label
         self.language_frame.config(text=self.translations["LANGUAGE_LABEL"])
         self.chart_frame.config(text=self.translations["CONTROLLER_MODE_CHART_FRAME_TEXT"])
+        self._draw_chart() # Update chart after language change
 
     def _draw_chart(self):
         """
         根據控制器模式和參數繪製圖表。
         """
+        
         self.chart_canvas.delete("all") # 清除舊圖表
 
-        # 獲取A組和B組的輸入信號選擇值
+        # 獲取A組和B組的輸入信號選擇值 (顯示文字)
         a_input_signal_selection_str = self.writable_entries['000EH'].get()
         b_input_signal_selection_str = self.writable_entries['0018H'].get()
-
-        # 將顯示值轉換為實際的數值
-        a_input_signal_selection_map = self.translations["A_INPUT_SIGNAL_SELECTION_MAP_VALUES"]
+        
+        # 獲取B組輸入信號選擇的數值 (用於判斷是否為"無輸出")
         b_input_signal_selection_map = self.translations["B_INPUT_SIGNAL_SELECTION_MAP_VALUES"]
-
-        a_input_signal_selection_rev_map = {v: k for k, v in a_input_signal_selection_map.items()}
         b_input_signal_selection_rev_map = {v: k for k, v in b_input_signal_selection_map.items()}
-
-        a_input_signal_selection_val = a_input_signal_selection_rev_map.get(a_input_signal_selection_str)
         b_input_signal_selection_val = b_input_signal_selection_rev_map.get(b_input_signal_selection_str)
 
-        # 判斷控制器模式
-        is_independent_mode = (a_input_signal_selection_val != b_input_signal_selection_val)
-
-        if is_independent_mode:
-            # 獨立模式：繪製兩個獨立圖表
-            self._draw_independent_charts()
-        else:
-            # 連動模式：繪製一個連動圖表
+        # 判斷模式
+        mode_text = ""
+        if b_input_signal_selection_val == 0: # "無輸出"或"No Output"
+            mode_text = self.get_current_translation("SINGLE_OUTPUT_MODE_TEXT")
+            self._draw_single_output_chart()
+        elif a_input_signal_selection_str == b_input_signal_selection_str:
+            mode_text = self.get_current_translation("DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT")
             self._draw_linked_chart()
+        else:
+            mode_text = self.get_current_translation("DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT")
+            self._draw_independent_charts()
+
+        # 在圖表區最上方顯示模式名稱
+        canvas_width = self.chart_canvas.winfo_width()
+        self.chart_canvas.create_text(canvas_width / 2, 20, text=mode_text, font=("Arial", 14, "bold"), fill="navy")
 
     def _draw_independent_charts(self):
         # 繪製獨立模式的圖表 (A組和B組)
         canvas_width = self.chart_canvas.winfo_width()
         canvas_height = self.chart_canvas.winfo_height()
 
-        # 繪製A組圖表
-        self.chart_canvas.create_text(canvas_width * 0.25, 20, text=self.get_current_translation("A_GROUP_PARAMS_FRAME_TEXT") + " " + self.get_current_translation("OUTPUT_CHARACTERISTICS"), font=("Arial", 12, "bold"))
-        # 繪製B組圖表
-        self.chart_canvas.create_text(canvas_width * 0.75, 20, text=self.get_current_translation("B_GROUP_PARAMS_FRAME_TEXT") + " " + self.get_current_translation("OUTPUT_CHARACTERISTICS"), font=("Arial", 12, "bold"))
+        # Y軸最大電流值 (3.0A)
+        max_current_value = 3
 
-        max_display_current = 3.0 # Max current for scaling Y axis (from writable_params_config)
+        # 固定圖表寬度
+        fixed_chart_w = 250 
+        chart_h = canvas_height * 0.5 # Adjusted height for better visualization
+        chart_y_start = canvas_height * 0.25 # Adjusted start Y for better visualization
 
-        # Helper function to draw a single chart
-        def draw_single_chart(x_start, y_start, chart_w, chart_h, max_curr, min_curr, rise_t, fall_t, dither_amp, line_color, dither_color, group_label):
-            # 繪製Y軸 (電流)
-            self.chart_canvas.create_line(x_start, y_start + chart_h, x_start, y_start, arrow=tk.LAST)
-            self.chart_canvas.create_text(x_start - 10, y_start, text=f"{max_display_current:.1f}A", anchor=tk.E)
-            self.chart_canvas.create_text(x_start - 10, y_start + chart_h * (1 - (min_curr / max_display_current)), text=f"{min_curr:.1f}A", anchor=tk.E)
-            self.chart_canvas.create_text(x_start - 10, y_start + chart_h, text="0A", anchor=tk.E)
-            self.chart_canvas.create_text(x_start - 30, y_start + chart_h / 2, text=self.get_current_translation("CURRENT"), anchor=tk.CENTER, angle=90)
+        # Helper function to draw a single chart for independent mode
+        def draw_single_independent_chart(x_center_ratio, max_curr, min_curr, dead_zone, line_color, group_label):
+            chart_x_start = canvas_width * x_center_ratio - (fixed_chart_w / 2)
 
-            # 繪製X軸 (時間)
-            self.chart_canvas.create_line(x_start, y_start + chart_h, x_start + chart_w, y_start + chart_h, arrow=tk.LAST)
-            self.chart_canvas.create_text(x_start + chart_w / 2, y_start + chart_h + 20, text=self.get_current_translation("TIME"), anchor=tk.N)
+            # 繪製圖表外框
+            self.chart_canvas.create_rectangle(chart_x_start, chart_y_start, chart_x_start + fixed_chart_w, chart_y_start + chart_h, outline="black")
 
-            if max_curr > 0:
-                # Calculate points for trapezoidal wave
-                total_time_for_shape = rise_t + fall_t + 1.0 # Add a small flat top if rise/fall are 0
-                if total_time_for_shape == 0: total_time_for_shape = 1.0
+            # 繪製X軸 (輸入信號 0~100%)
+            self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start + fixed_chart_w, chart_y_start + chart_h)
+            self.chart_canvas.create_text(chart_x_start, chart_y_start + chart_h + 5, text="0%", anchor=tk.N)
+            self.chart_canvas.create_text(chart_x_start + fixed_chart_w, chart_y_start + chart_h + 5, text="100%", anchor=tk.N)
+            self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 20, text=self.get_current_translation("INPUT_SIGNAL"), anchor=tk.N)
 
-                # Scale times to chart width
-                rise_x = chart_w * (rise_t / total_time_for_shape)
-                fall_x = chart_w * (fall_t / total_time_for_shape)
-                flat_x = chart_w - rise_x - fall_x
-                if flat_x < 0: # Adjust if rise/fall times are too long
-                    flat_x = 0
-                    scale_factor = chart_w / (rise_x + fall_x)
-                    rise_x *= scale_factor
-                    fall_x *= scale_factor
+            # 繪製Y軸 (電流 0~3A)
+            self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start, chart_y_start)
+            self.chart_canvas.create_text(chart_x_start - 5, chart_y_start + chart_h, text="0A", anchor=tk.E)
+            self.chart_canvas.create_text(chart_x_start - 5, chart_y_start, text=f"{max_current_value}A", anchor=tk.E)
+            self.chart_canvas.create_text(chart_x_start - 20, chart_y_start + chart_h / 2, text=self.get_current_translation("CURRENT"), anchor=tk.CENTER, angle=90)
 
-                # Y coordinates (inverted for canvas)
-                y_max = y_start + chart_h * (1 - (max_curr / max_display_current))
-                y_min = y_start + chart_h * (1 - (min_curr / max_display_current))
-                y_zero = y_start + chart_h
+            # 將百分比和電流值映射到畫布座標
+            def map_x(percentage):
+                return chart_x_start + (percentage / 100.0) * fixed_chart_w
 
-                points = []
-                # Start at (0, min_current)
-                points.append((x_start, y_min))
-                # Rise to (rise_time, max_current)
-                points.append((x_start + rise_x, y_max))
-                # Flat top (if any)
-                points.append((x_start + rise_x + flat_x, y_max))
-                # Fall to (total_time, min_current)
-                points.append((x_start + chart_w, y_min))
-                
-                # Draw the current profile
-                self.chart_canvas.create_line(points, fill=line_color, width=2, smooth=True)
+            def map_y(current_val):
+                return chart_y_start + chart_h * (1 - (current_val / max_current_value))
 
-                # Draw dither amplitude band
-                if dither_amp > 0:
-                    dither_pixel_height = chart_h * (dither_amp / 100.0) * (max_curr / max_display_current)
-                    
-                    dither_points_upper = []
-                    dither_points_lower = []
+            # 繪製X軸格線 (每10%)
+            for p in range(10, 100, 10):
+                x_pos = map_x(p)
+                self.chart_canvas.create_line(x_pos, chart_y_start, x_pos, chart_y_start + chart_h, fill="lightgray", dash=(2, 2))
 
-                    # Upper band points
-                    dither_points_upper.append((x_start, y_min - dither_pixel_height / 2))
-                    dither_points_upper.append((x_start + rise_x, y_max - dither_pixel_height / 2))
-                    dither_points_upper.append((x_start + rise_x + flat_x, y_max - dither_pixel_height / 2))
-                    dither_points_upper.append((x_start + chart_w, y_min - dither_pixel_height / 2))
+            # 繪製Y軸格線 (每0.5A)
+            for c in [0.5, 1.0, 1.5, 2.0, 2.5]:
+                y_pos = map_y(c)
+                self.chart_canvas.create_line(chart_x_start, y_pos, chart_x_start + fixed_chart_w, y_pos, fill="lightgray", dash=(2, 2))
 
-                    # Lower band points (reversed for polygon fill)
-                    dither_points_lower.append((x_start + chart_w, y_min + dither_pixel_height / 2))
-                    dither_points_lower.append((x_start + rise_x + flat_x, y_max + dither_pixel_height / 2))
-                    dither_points_lower.append((x_start + rise_x, y_max + dither_pixel_height / 2))
-                    dither_points_lower.append((x_start, y_min + dither_pixel_height / 2))
+            # 曲線點
+            points = []
+            # (0%, 0A)
+            points.append((map_x(0), map_y(0)))
+            # (指令死區值, 0A)
+            points.append((map_x(dead_zone), map_y(0)))
+            # (指令死區值, 最小電流值)
+            points.append((map_x(dead_zone), map_y(min_curr)))
+            # (100%, 最大電流值)
+            points.append((map_x(100), map_y(max_curr)))
 
-                    # Combine for polygon
-                    all_dither_points = dither_points_upper + dither_points_lower
-                    self.chart_canvas.create_polygon(all_dither_points, fill=dither_color, stipple="gray50", outline=dither_color, width=1)
+            self.chart_canvas.create_line(points, fill=line_color, width=2, smooth=False)
+
+            # 顯示參數值 (放置在圖表右側)
+            text_x_offset = chart_x_start + fixed_chart_w + 10 # 距離圖表右側10像素
+            text_y_start = chart_y_start + 10
+            line_height = 15
+
+            # 根據group_label選擇正確的翻譯鍵
+            max_curr_key = f"{group_label}_MAX_CURRENT"
+            min_curr_key = f"{group_label}_MIN_CURRENT"
+            dead_zone_key = f"{group_label}_COMMAND_DEAD_ZONE"
+
+            self.chart_canvas.create_text(text_x_offset, text_y_start, anchor=tk.W, 
+                                          text=f"Output {group_label}", 
+                                          font=("Arial", 8), fill=line_color)
+            self.chart_canvas.create_text(text_x_offset, text_y_start + line_height, anchor=tk.W, 
+                                          text=f"{self.get_current_translation(max_curr_key).split('(')[0].strip()}: {max_curr:.2f}A", 
+                                          font=("Arial", 8), fill=line_color)
+            self.chart_canvas.create_text(text_x_offset, text_y_start + 2 * line_height, anchor=tk.W, 
+                                          text=f"{self.get_current_translation(min_curr_key).split('(')[0].strip()}: {min_curr:.2f}A", 
+                                          font=("Arial", 8), fill=line_color)
+            self.chart_canvas.create_text(text_x_offset, text_y_start + 3 * line_height, anchor=tk.W, 
+                                          text=f"{self.get_current_translation(dead_zone_key).split('(')[0].strip()}: {dead_zone:.0f}%", 
+                                          font=("Arial", 8), fill=line_color)
 
 
         # A組參數
         a_max_current = float(self.writable_entries['0010H'].get()) if self.writable_entries['0010H'].get() else 0.0
         a_min_current = float(self.writable_entries['0011H'].get()) if self.writable_entries['0011H'].get() else 0.0
-        a_rise_time = float(self.writable_entries['0012H'].get()) if self.writable_entries['0012H'].get() else 0.0
-        a_fall_time = float(self.writable_entries['0013H'].get()) if self.writable_entries['0013H'].get() else 0.0
-        a_dither_amplitude = float(self.writable_entries['0017H'].get()) if self.writable_entries['0017H'].get() else 0.0
+        a_command_dead_zone = float(self.writable_entries['0014H'].get()) if self.writable_entries['0014H'].get() else 0.0
 
-        x_offset_a = canvas_width * 0.1
-        y_offset_a = canvas_height * 0.5
-        chart_width_a = canvas_width * 0.35
-        chart_height_a = canvas_height * 0.4
-
-        draw_single_chart(x_offset_a, y_offset_a, chart_width_a, chart_height_a,
-                          a_max_current, a_min_current, a_rise_time, a_fall_time, a_dither_amplitude,
-                          "blue", "lightblue", "A")
+        draw_single_independent_chart(0.2, a_max_current, a_min_current, a_command_dead_zone, "blue", "A")
 
         # B組參數
         b_max_current = float(self.writable_entries['001AH'].get()) if self.writable_entries['001AH'].get() else 0.0
         b_min_current = float(self.writable_entries['001BH'].get()) if self.writable_entries['001BH'].get() else 0.0
-        b_rise_time = float(self.writable_entries['001CH'].get()) if self.writable_entries['001CH'].get() else 0.0
-        b_fall_time = float(self.writable_entries['001DH'].get()) if self.writable_entries['001DH'].get() else 0.0
-        b_dither_amplitude = float(self.writable_entries['0021H'].get()) if self.writable_entries['0021H'].get() else 0.0
+        b_command_dead_zone = float(self.writable_entries['001EH'].get()) if self.writable_entries['001EH'].get() else 0.0
 
-        x_offset_b = canvas_width * 0.55
-        y_offset_b = canvas_height * 0.5
-        chart_width_b = canvas_width * 0.35
-        chart_height_b = canvas_height * 0.4
-
-        draw_single_chart(x_offset_b, y_offset_b, chart_width_b, chart_height_b,
-                          b_max_current, b_min_current, b_rise_time, b_fall_time, b_dither_amplitude,
-                          "red", "pink", "B")
+        draw_single_independent_chart(0.7, b_max_current, b_min_current, b_command_dead_zone, "red", "B")
 
     def _draw_linked_chart(self):
         # 繪製連動模式的圖表
         canvas_width = self.chart_canvas.winfo_width()
         canvas_height = self.chart_canvas.winfo_height()
 
-        self.chart_canvas.create_text(canvas_width / 2, 20, text=self.get_current_translation("LINKED_MODE_OUTPUT_CHARACTERISTICS"), font=("Arial", 12, "bold"))
+        # Y軸最大電流值 (3.0A)
+        max_current_value = 3
 
-        max_display_current = 3.0 # Max current for scaling Y axis
+        # 固定圖表寬度
+        fixed_chart_w = 250
+        chart_h = canvas_height * 0.5
+        chart_x_start = (canvas_width - fixed_chart_w) / 2 # 居中
+        chart_y_start = canvas_height * 0.25
+
+        # 繪製圖表外框
+        self.chart_canvas.create_rectangle(chart_x_start, chart_y_start, chart_x_start + fixed_chart_w, chart_y_start + chart_h, outline="black")
+
+        # 繪製X軸 (輸入信號 0~100%)
+        self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start + fixed_chart_w, chart_y_start + chart_h)
+        self.chart_canvas.create_text(chart_x_start, chart_y_start + chart_h + 5, text="0%", anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 5, text="50%", anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + fixed_chart_w, chart_y_start + chart_h + 5, text="100%", anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 20, text=self.get_current_translation("INPUT_SIGNAL"), anchor=tk.N)
+
+        # 繪製Y軸 (電流 0~3A)
+        self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start, chart_y_start)
+        self.chart_canvas.create_text(chart_x_start - 5, chart_y_start + chart_h, text="0A", anchor=tk.E)
+        self.chart_canvas.create_text(chart_x_start - 5, chart_y_start, text=f"{max_current_value}A", anchor=tk.E)
+        self.chart_canvas.create_text(chart_x_start - 20, chart_y_start + chart_h / 2, text=self.get_current_translation("CURRENT"), anchor=tk.CENTER, angle=90)
+
+        # 將百分比和電流值映射到畫布座標
+        def map_x(percentage):
+            return chart_x_start + (percentage / 100.0) * fixed_chart_w
+
+        def map_y(current_val):
+            return chart_y_start + chart_h * (1 - (current_val / max_current_value))
+
+        # 繪製X軸格線 (每10%)
+        for p in range(10, 100, 10):
+            x_pos = map_x(p)
+            self.chart_canvas.create_line(x_pos, chart_y_start, x_pos, chart_y_start + chart_h, fill="lightgray", dash=(2, 2))
+
+        # 繪製Y軸格線 (每0.5A)
+        for c in [0.5, 1.0, 1.5, 2.0, 2.5]:
+            y_pos = map_y(c)
+            self.chart_canvas.create_line(chart_x_start, y_pos, chart_x_start + fixed_chart_w, y_pos, fill="lightgray", dash=(2, 2))
 
         # 獲取A組和B組的參數
         a_max_current = float(self.writable_entries['0010H'].get()) if self.writable_entries['0010H'].get() else 0.0
         a_min_current = float(self.writable_entries['0011H'].get()) if self.writable_entries['0011H'].get() else 0.0
-        a_rise_time = float(self.writable_entries['0012H'].get()) if self.writable_entries['0012H'].get() else 0.0
-        a_fall_time = float(self.writable_entries['0013H'].get()) if self.writable_entries['0013H'].get() else 0.0
-        a_dither_amplitude = float(self.writable_entries['0017H'].get()) if self.writable_entries['0017H'].get() else 0.0
+        a_command_dead_zone = float(self.writable_entries['0014H'].get()) if self.writable_entries['0014H'].get() else 0.0
 
         b_max_current = float(self.writable_entries['001AH'].get()) if self.writable_entries['001AH'].get() else 0.0
         b_min_current = float(self.writable_entries['001BH'].get()) if self.writable_entries['001BH'].get() else 0.0
-        b_rise_time = float(self.writable_entries['001CH'].get()) if self.writable_entries['001CH'].get() else 0.0
-        b_fall_time = float(self.writable_entries['001DH'].get()) if self.writable_entries['001DH'].get() else 0.0
-        b_dither_amplitude = float(self.writable_entries['0021H'].get()) if self.writable_entries['0021H'].get() else 0.0
+        b_command_dead_zone = float(self.writable_entries['001EH'].get()) if self.writable_entries['001EH'].get() else 0.0
 
-        x_offset = canvas_width * 0.1
-        y_offset = canvas_height * 0.5
-        chart_width = canvas_width * 0.8
-        chart_height = canvas_height * 0.4
+        # 模式二曲線點
+        points_linked = []
+        # (0%, B組最大電流值)
+        points_linked.append((map_x(0), map_y(b_max_current)))
+        # ((50% - B組指令死區值), B組最小電流值)
+        points_linked.append((map_x(50 - b_command_dead_zone), map_y(b_min_current)))
+        # ((50% - B組指令死區值), 0A)
+        points_linked.append((map_x(50 - b_command_dead_zone), map_y(0)))
+        # (50%, 0A) - 中間點
+        points_linked.append((map_x(50), map_y(0)))
+        # ((50% + A組指令死區值), 0A)
+        points_linked.append((map_x(50 + a_command_dead_zone), map_y(0)))
+        # ((50% + A組指令死區值), A組最小電流值)
+        points_linked.append((map_x(50 + a_command_dead_zone), map_y(a_min_current)))
+        # (100%, A組最大電流值)
+        points_linked.append((map_x(100), map_y(a_max_current)))
 
-        # 繪製Y軸 (電流)
-        self.chart_canvas.create_line(x_offset, y_offset + chart_height, x_offset, y_offset, arrow=tk.LAST)
-        self.chart_canvas.create_text(x_offset - 10, y_offset, text=f"{max_display_current:.1f}A", anchor=tk.E)
-        self.chart_canvas.create_text(x_offset - 10, y_offset + chart_height * (1 - (min(a_min_current, b_min_current) / max_display_current)), text=f"{min(a_min_current, b_min_current):.1f}A", anchor=tk.E)
-        self.chart_canvas.create_text(x_offset - 10, y_offset + chart_height, text="0A", anchor=tk.E)
-        self.chart_canvas.create_text(x_offset - 30, y_offset + chart_height / 2, text=self.get_current_translation("CURRENT"), anchor=tk.CENTER, angle=90)
+        # 繪製紅色部分 (0% 到 50%)
+        red_segment_points = points_linked[:4] # 包含到 (50%, 0A) 的點
+        self.chart_canvas.create_line(red_segment_points, fill="red", width=2, smooth=False)
 
-        # 繪製X軸 (時間)
-        self.chart_canvas.create_line(x_offset, y_offset + chart_height, x_offset + chart_width, y_offset + chart_height, arrow=tk.LAST)
-        self.chart_canvas.create_text(x_offset + chart_width / 2, y_offset + chart_height + 20, text=self.get_current_translation("TIME"), anchor=tk.N)
+        # 繪製藍色部分 (50% 到 100%)
+        blue_segment_points = points_linked[3:] # 從 (50%, 0A) 開始
+        self.chart_canvas.create_line(blue_segment_points, fill="blue", width=2, smooth=False)
 
-        # Draw A group curve
-        if a_max_current > 0:
-            total_time_for_shape_a = a_rise_time + a_fall_time + 1.0
-            if total_time_for_shape_a == 0: total_time_for_shape_a = 1.0
-            rise_x_a = chart_width * (a_rise_time / total_time_for_shape_a)
-            fall_x_a = chart_width * (a_fall_time / total_time_for_shape_a)
-            flat_x_a = chart_width - rise_x_a - fall_x_a
-            if flat_x_a < 0:
-                flat_x_a = 0
-                scale_factor = chart_width / (rise_x_a + fall_x_a)
-                rise_x_a *= scale_factor
-                fall_x_a *= scale_factor
+        # 顯示參數值 (放置在圖表右側)
+        text_x_offset = chart_x_start + fixed_chart_w + 10
+        text_y_start = chart_y_start + 10
+        line_height = 15
 
-            y_max_a = y_offset + chart_height * (1 - (a_max_current / max_display_current))
-            y_min_a = y_offset + chart_height * (1 - (a_min_current / max_display_current))
+        # 顯示A組參數值
+        self.chart_canvas.create_text(text_x_offset, text_y_start, anchor=tk.W, 
+                                      text="Output A", 
+                                      font=("Arial", 8), fill="blue")
+        self.chart_canvas.create_text(text_x_offset, text_y_start + line_height, anchor=tk.W, 
+                                      text=f"{self.get_current_translation('A_MAX_CURRENT').split('(')[0].strip()}: {a_max_current:.2f}A", 
+                                      font=("Arial", 8), fill="blue")
+        self.chart_canvas.create_text(text_x_offset, text_y_start + 2 * line_height, anchor=tk.W, 
+                                      text=f"{self.get_current_translation('A_MIN_CURRENT').split('(')[0].strip()}: {a_min_current:.2f}A", 
+                                      font=("Arial", 8), fill="blue")
+        self.chart_canvas.create_text(text_x_offset, text_y_start + 3 * line_height, anchor=tk.W, 
+                                      text=f"{self.get_current_translation('A_COMMAND_DEAD_ZONE').split('(')[0].strip()}: {a_command_dead_zone:.1f}%", 
+                                      font=("Arial", 8), fill="blue")
 
-            points_a = []
-            points_a.append((x_offset, y_min_a))
-            points_a.append((x_offset + rise_x_a, y_max_a))
-            points_a.append((x_offset + rise_x_a + flat_x_a, y_max_a))
-            points_a.append((x_offset + chart_width, y_min_a))
-            self.chart_canvas.create_line(points_a, fill="blue", width=2, tags="a_chart", smooth=True)
+        # 顯示B組參數值
+        self.chart_canvas.create_text(text_x_offset, text_y_start + 4 * line_height, anchor=tk.W, 
+                                      text="Output B", 
+                                      font=("Arial", 8), fill="red")
+        self.chart_canvas.create_text(text_x_offset, text_y_start + 5 * line_height, anchor=tk.W, 
+                                      text=f"{self.get_current_translation('B_MAX_CURRENT').split('(')[0].strip()}: {b_max_current:.2f}A", 
+                                      font=("Arial", 8), fill="red")
+        self.chart_canvas.create_text(text_x_offset, text_y_start + 6 * line_height, anchor=tk.W, 
+                                      text=f"{self.get_current_translation('B_MIN_CURRENT').split('(')[0].strip()}: {b_min_current:.2f}A", 
+                                      font=("Arial", 8), fill="red")
+        self.chart_canvas.create_text(text_x_offset, text_y_start + 7 * line_height, anchor=tk.W, 
+                                      text=f"{self.get_current_translation('B_COMMAND_DEAD_ZONE').split('(')[0].strip()}: {b_command_dead_zone:.1f}%", 
+                                      font=("Arial", 8), fill="red")
 
-            if a_dither_amplitude > 0:
-                dither_pixel_height_a = chart_height * (a_dither_amplitude / 100.0) * (a_max_current / max_display_current)
-                dither_points_upper_a = []
-                dither_points_lower_a = []
+    def _draw_single_output_chart(self):
+        # 繪製單組輸出模式的圖表 (只顯示A組)
+        canvas_width = self.chart_canvas.winfo_width()
+        canvas_height = self.chart_canvas.winfo_height()
 
-                dither_points_upper_a.append((x_offset, y_min_a - dither_pixel_height_a / 2))
-                dither_points_upper_a.append((x_offset + rise_x_a, y_max_a - dither_pixel_height_a / 2))
-                dither_points_upper_a.append((x_offset + rise_x_a + flat_x_a, y_max_a - dither_pixel_height_a / 2))
-                dither_points_upper_a.append((x_offset + chart_width, y_min_a - dither_pixel_height_a / 2))
+        # Y軸最大電流值 (3.0A)
+        max_current_value = 3
 
-                dither_points_lower_a.append((x_offset + chart_width, y_min_a + dither_pixel_height_a / 2))
-                dither_points_lower_a.append((x_offset + rise_x_a + flat_x_a, y_max_a + dither_pixel_height_a / 2))
-                dither_points_lower_a.append((x_offset + rise_x_a, y_max_a + dither_pixel_height_a / 2))
-                dither_points_lower_a.append((x_offset, y_min_a + dither_pixel_height_a / 2))
+        # 固定圖表寬度
+        fixed_chart_w = 250
+        chart_h = canvas_height * 0.5
+        chart_x_start = (canvas_width - fixed_chart_w) / 2 # 居中
+        chart_y_start = canvas_height * 0.25
 
-                all_dither_points_a = dither_points_upper_a + dither_points_lower_a
-                self.chart_canvas.create_polygon(all_dither_points_a, fill="lightblue", stipple="gray50", outline="lightblue", width=1, tags="a_chart")
+        # 繪製圖表外框
+        self.chart_canvas.create_rectangle(chart_x_start, chart_y_start, chart_x_start + fixed_chart_w, chart_y_start + chart_h, outline="black")
 
-        # Draw B group curve
-        if b_max_current > 0:
-            total_time_for_shape_b = b_rise_time + b_fall_time + 1.0
-            if total_time_for_shape_b == 0: total_time_for_shape_b = 1.0
-            rise_x_b = chart_width * (b_rise_time / total_time_for_shape_b)
-            fall_x_b = chart_width * (b_fall_time / total_time_for_shape_b)
-            flat_x_b = chart_width - rise_x_b - fall_x_b
-            if flat_x_b < 0:
-                flat_x_b = 0
-                scale_factor = chart_width / (rise_x_b + fall_x_b)
-                rise_x_b *= scale_factor
-                fall_x_b *= scale_factor
+        # 繪製X軸 (輸入信號 0~100%)
+        self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start + fixed_chart_w, chart_y_start + chart_h)
+        self.chart_canvas.create_text(chart_x_start, chart_y_start + chart_h + 5, text="0%", anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + fixed_chart_w, chart_y_start + chart_h + 5, text="100%", anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 20, text=self.get_current_translation("INPUT_SIGNAL"), anchor=tk.N)
 
-            y_max_b = y_offset + chart_height * (1 - (b_max_current / max_display_current))
-            y_min_b = y_offset + chart_height * (1 - (b_min_current / max_display_current))
+        # 繪製Y軸 (電流 0~3A)
+        self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start, chart_y_start)
+        self.chart_canvas.create_text(chart_x_start - 5, chart_y_start + chart_h, text="0A", anchor=tk.E)
+        self.chart_canvas.create_text(chart_x_start - 5, chart_y_start, text=f"{max_current_value}A", anchor=tk.E)
+        self.chart_canvas.create_text(chart_x_start - 20, chart_y_start + chart_h / 2, text=self.get_current_translation("CURRENT"), anchor=tk.CENTER, angle=90)
 
-            points_b = []
-            points_b.append((x_offset, y_min_b))
-            points_b.append((x_offset + rise_x_b, y_max_b))
-            points_b.append((x_offset + rise_x_b + flat_x_b, y_max_b))
-            points_b.append((x_offset + chart_width, y_min_b))
-            self.chart_canvas.create_line(points_b, fill="red", width=2, tags="b_chart", smooth=True)
+        # 將百分比和電流值映射到畫布座標
+        def map_x(percentage):
+            return chart_x_start + (percentage / 100.0) * fixed_chart_w
 
-            if b_dither_amplitude > 0:
-                dither_pixel_height_b = chart_height * (b_dither_amplitude / 100.0) * (b_max_current / max_display_current)
-                dither_points_upper_b = []
-                dither_points_lower_b = []
+        def map_y(current_val):
+            return chart_y_start + chart_h * (1 - (current_val / max_current_value))
 
-                dither_points_upper_b.append((x_offset, y_min_b - dither_pixel_height_b / 2))
-                dither_points_upper_b.append((x_offset + rise_x_b, y_max_b - dither_pixel_height_b / 2))
-                dither_points_upper_b.append((x_offset + rise_x_b + flat_x_b, y_max_b - dither_pixel_height_b / 2))
-                dither_points_upper_b.append((x_offset + chart_width, y_min_b - dither_pixel_height_b / 2))
+        # 繪製X軸格線 (每10%)
+        for p in range(10, 100, 10):
+            x_pos = map_x(p)
+            self.chart_canvas.create_line(x_pos, chart_y_start, x_pos, chart_y_start + chart_h, fill="lightgray", dash=(2, 2))
 
-                dither_points_lower_b.append((x_offset + chart_width, y_min_b + dither_pixel_height_b / 2))
-                dither_points_lower_b.append((x_offset + rise_x_b + flat_x_b, y_max_b + dither_pixel_height_b / 2))
-                dither_points_lower_b.append((x_offset + rise_x_b, y_max_b + dither_pixel_height_b / 2))
-                dither_points_lower_b.append((x_offset, y_min_b + dither_pixel_height_b / 2))
+        # 繪製Y軸格線 (每0.5A)
+        for c in [0.5, 1.0, 1.5, 2.0, 2.5]:
+            y_pos = map_y(c)
+            self.chart_canvas.create_line(chart_x_start, y_pos, chart_x_start + fixed_chart_w, y_pos, fill="lightgray", dash=(2, 2))
 
-                all_dither_points_b = dither_points_upper_b + dither_points_lower_b
-                self.chart_canvas.create_polygon(all_dither_points_b, fill="pink", stipple="gray50", outline="pink", width=1, tags="b_chart")
+        # A組參數
+        a_max_current = float(self.writable_entries['0010H'].get()) if self.writable_entries['0010H'].get() else 0.0
+        a_min_current = float(self.writable_entries['0011H'].get()) if self.writable_entries['0011H'].get() else 0.0
+        a_command_dead_zone = float(self.writable_entries['0014H'].get()) if self.writable_entries['0014H'].get() else 0.0
 
-        # Add legend for linked mode
-        self.chart_canvas.create_text(canvas_width / 2, y_offset + chart_height + 50, text=self.get_current_translation("A_GROUP_LEGEND"), fill="blue", font=("Arial", 10))
-        self.chart_canvas.create_text(canvas_width / 2, y_offset + chart_height + 70, text=self.get_current_translation("B_GROUP_LEGEND"), fill="red", font=("Arial", 10))
+        # 曲線點
+        points = []
+        # (0%, 0A)
+        points.append((map_x(0), map_y(0)))
+        # (指令死區值, 0A)
+        points.append((map_x(a_command_dead_zone), map_y(0)))
+        # (指令死區值, 最小電流值)
+        points.append((map_x(a_command_dead_zone), map_y(a_min_current)))
+        # (100%, 最大電流值)
+        points.append((map_x(100), map_y(a_max_current)))
+
+        self.chart_canvas.create_line(points, fill="blue", width=2, smooth=False)
+
+        # 顯示參數值 (放置在圖表右側)
+        text_x_offset = chart_x_start + fixed_chart_w + 10 # 距離圖表右側10像素
+        text_y_start = chart_y_start + 10
+        line_height = 15
+
+        self.chart_canvas.create_text(text_x_offset, text_y_start, anchor=tk.W, 
+                                      text="Output A", 
+                                      font=("Arial", 8), fill="blue")
+        self.chart_canvas.create_text(text_x_offset, text_y_start + line_height, anchor=tk.W, 
+                                      text=f"{self.get_current_translation('A_MAX_CURRENT').split('(')[0].strip()}: {a_max_current:.2f}A", 
+                                      font=("Arial", 8), fill="blue")
+        self.chart_canvas.create_text(text_x_offset, text_y_start + 2 * line_height, anchor=tk.W, 
+                                      text=f"{self.get_current_translation('A_MIN_CURRENT').split('(')[0].strip()}: {a_min_current:.2f}A", 
+                                      font=("Arial", 8), fill="blue")
+        self.chart_canvas.create_text(text_x_offset, text_y_start + 3 * line_height, anchor=tk.W, 
+                                      text=f"{self.get_current_translation('A_COMMAND_DEAD_ZONE').split('(')[0].strip()}: {a_command_dead_zone:.1f}%", 
+                                      font=("Arial", 8), fill="blue")
 
     def _refresh_ports(self):
         """刷新電腦目前可用的串口。"""
