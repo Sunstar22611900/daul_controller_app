@@ -160,8 +160,8 @@ TEXTS = {
             0: "正常",
             1: "線圈開路",
             2: "線圈短路",
-            3: "電流控制信號斷路",
-            4: "電流控制信號過載"
+            3: "電流信號開路",
+            4: "電流信號過載"
         },
         "SIGNAL_SELECTION_MAP_VALUES": { # For 0006H, 0007H
             0: "0~10V",
@@ -338,8 +338,8 @@ TEXTS = {
             0: "Normal",
             1: "Coil open circuit",
             2: "Coil short circuit",
-            3: "Current control signal open circuit",
-            4: "Current control signal overload"
+            3: "Current command open circuit",
+            4: "Current command overload"
         },
         "SIGNAL_SELECTION_MAP_VALUES": { # For 0006H, 0007H
             0: "0~10V",
@@ -585,12 +585,25 @@ class ModbusMonitorApp:
         self.master.grid_rowconfigure(5, weight=0) # 批量操作
 
         self.master.grid_columnconfigure(0, weight=1)
-        self.master.grid_columnconfigure(1, weight=0)
+        self.master.grid_columnconfigure(1, weight=0, minsize=1100) # Fixed width for the central column
         self.master.grid_columnconfigure(2, weight=1)
 
+        # --- 主內容框架 (固定寬度) ---
+        self.main_content_frame = ttk.Frame(self.master)
+        self.main_content_frame.grid(row=0, column=1, sticky='nsew', padx=0, pady=0, rowspan=6) # Span all content rows
+        self.main_content_frame.grid_columnconfigure(0, weight=1) # Allow content within to expand   
+
+        self.main_content_frame.grid_rowconfigure(0, weight=0) # Modbus參數
+        self.main_content_frame.grid_rowconfigure(1, weight=0) # 分隔線
+        self.main_content_frame.grid_rowconfigure(2, weight=0) # 即時監控
+        self.main_content_frame.grid_rowconfigure(3, weight=1) # 可寫入參數 (給予較大權重)
+        self.main_content_frame.grid_rowconfigure(4, weight=0) # 圖表區
+        self.main_content_frame.grid_rowconfigure(5, weight=0) # 批量操作
+
+
         # --- 頂部區域框架 ---
-        top_frame = ttk.Frame(self.master)
-        top_frame.grid(row=0, column=1, sticky='ew', padx=10, pady=5)
+        top_frame = ttk.Frame(self.main_content_frame)
+        top_frame.grid(row=0, column=0, sticky='ew', padx=0, pady=0)
 
         # Language Selection (Top Right)
         self.language_frame = ttk.LabelFrame(top_frame, text=self.get_current_translation("LANGUAGE_LABEL"), padding="10")
@@ -625,11 +638,11 @@ class ModbusMonitorApp:
         self.connect_button.grid(row=0, column=7, padx=5, pady=5)
 
         # --- 分隔線 ---
-        ttk.Separator(self.master, orient='horizontal').grid(row=1, column=1, pady=5, sticky='ew', padx=10)
+        ttk.Separator(self.main_content_frame, orient='horizontal').grid(row=1, column=0, pady=5, sticky='ew', padx=0)
 
         # --- 即時監控區框架 ---
-        monitor_area_frame = ttk.Frame(self.master)
-        monitor_area_frame.grid(row=2, column=1, sticky='ew', padx=10)
+        monitor_area_frame = ttk.Frame(self.main_content_frame)
+        monitor_area_frame.grid(row=2, column=0, sticky='ew', padx=0)
         monitor_area_frame.grid_columnconfigure(0, weight=1)
         monitor_area_frame.grid_columnconfigure(1, weight=1)
 
@@ -646,8 +659,8 @@ class ModbusMonitorApp:
         self._clear_monitor_area()
 
         # --- 可寫入參數區 (Notebook) ---
-        self.writable_params_area_frame = ttk.LabelFrame(self.master, text=self.get_current_translation("WRITABLE_PARAMS_FRAME_TEXT"), padding="10")
-        self.writable_params_area_frame.grid(row=3, column=1, sticky='nsew', padx=10, pady=(5,5))
+        self.writable_params_area_frame = ttk.LabelFrame(self.main_content_frame, text=self.get_current_translation("WRITABLE_PARAMS_FRAME_TEXT"), padding="10")
+        self.writable_params_area_frame.grid(row=3, column=0, sticky='nsew', padx=0, pady=(5,5))
         self.writable_params_area_frame.grid_rowconfigure(0, weight=1)
         self.writable_params_area_frame.grid_columnconfigure(0, weight=1)
 
@@ -777,12 +790,8 @@ class ModbusMonitorApp:
                     self.writable_controls[reg_hex] = control # Add this line to store the control
 
         # --- 圖表區 ---
-        # --- 圖表區 ---
-        # 調整圖表區的grid row，因為批量操作按鈕已經移動
-        # --- 圖表區 ---
-        # 調整圖表區的grid row，因為批量操作按鈕已經移動
-        self.chart_area_frame = ttk.Frame(self.master)
-        self.chart_area_frame.grid(row=4, column=1, sticky='nsew', padx=10, pady=5) # 保持在row 4 # 保持在row 4
+        self.chart_area_frame = ttk.Frame(self.main_content_frame)
+        self.chart_area_frame.grid(row=4, column=0, sticky='nsew', padx=0, pady=5) # 保持在row 4
         self.chart_area_frame.grid_rowconfigure(0, weight=1)
         self.chart_area_frame.grid_columnconfigure(0, weight=1)
         self.chart_frame = ttk.LabelFrame(self.chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
@@ -817,7 +826,7 @@ class ModbusMonitorApp:
             title_label.pack(side=tk.TOP, anchor=tk.CENTER, pady=(0,2))
             value_frame = ttk.Frame(item_frame)
             value_frame.pack(side=tk.TOP, anchor=tk.CENTER)
-            display_label = ttk.Label(value_frame, text="----", anchor="center", font=('Arial', 14, 'bold'))
+            display_label = ttk.Label(value_frame, text="----", anchor="center", font=('Arial', 12, 'bold'))
             display_label.pack(side=tk.LEFT)
             if unit:
                 ttk.Label(value_frame, text=unit).pack(side=tk.LEFT, anchor=tk.S, pady=(0,3))
@@ -963,7 +972,7 @@ class ModbusMonitorApp:
 
         # 在圖表區最上方顯示模式名稱
         canvas_width = self.chart_canvas.winfo_width()
-        self.chart_canvas.create_text(canvas_width / 2, 20, text=mode_text, font=("Arial", 14, "bold"), fill="navy")
+        self.chart_canvas.create_text(canvas_width / 2, 20, text=mode_text, font=("Arial", 14, "bold"))
 
     def _draw_independent_charts(self):
         # 繪製獨立模式的圖表 (A組和B組)
@@ -1056,14 +1065,14 @@ class ModbusMonitorApp:
         a_min_current = float(self.writable_entries['0011H'].get()) if self.writable_entries['0011H'].get() else 0.0
         a_command_dead_zone = float(self.writable_entries['0014H'].get()) if self.writable_entries['0014H'].get() else 0.0
 
-        draw_single_independent_chart(0.2, a_max_current, a_min_current, a_command_dead_zone, "blue", "A")
+        draw_single_independent_chart(0.2, a_max_current, a_min_current, a_command_dead_zone, "Steelblue", "A")
 
         # B組參數
         b_max_current = float(self.writable_entries['001AH'].get()) if self.writable_entries['001AH'].get() else 0.0
         b_min_current = float(self.writable_entries['001BH'].get()) if self.writable_entries['001BH'].get() else 0.0
         b_command_dead_zone = float(self.writable_entries['001EH'].get()) if self.writable_entries['001EH'].get() else 0.0
 
-        draw_single_independent_chart(0.7, b_max_current, b_min_current, b_command_dead_zone, "red", "B")
+        draw_single_independent_chart(0.7, b_max_current, b_min_current, b_command_dead_zone, "SeaGreen", "B")
 
     def _draw_linked_chart(self):
         # 繪製連動模式的圖表
@@ -1140,11 +1149,11 @@ class ModbusMonitorApp:
 
         # 繪製紅色部分 (0% 到 50%)
         red_segment_points = points_linked[:4] # 包含到 (50%, 0A) 的點
-        self.chart_canvas.create_line(red_segment_points, fill="red", width=2, smooth=False)
+        self.chart_canvas.create_line(red_segment_points, fill="SeaGreen", width=2, smooth=False)
 
         # 繪製藍色部分 (50% 到 100%)
         blue_segment_points = points_linked[3:] # 從 (50%, 0A) 開始
-        self.chart_canvas.create_line(blue_segment_points, fill="blue", width=2, smooth=False)
+        self.chart_canvas.create_line(blue_segment_points, fill="Steelblue", width=2, smooth=False)
 
         # 顯示參數值 (放置在圖表右側)
         text_x_offset = chart_x_start + fixed_chart_w + 10
@@ -1154,30 +1163,30 @@ class ModbusMonitorApp:
         # 顯示A組參數值
         self.chart_canvas.create_text(text_x_offset, text_y_start, anchor=tk.W, 
                                       text="Output A", 
-                                      font=("Arial", 8), fill="blue")
+                                      font=("Arial", 8), fill="Steelblue")
         self.chart_canvas.create_text(text_x_offset, text_y_start + line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_MAX_CURRENT').split('(')[0].strip()}: {a_max_current:.2f}A", 
-                                      font=("Arial", 8), fill="blue")
+                                      font=("Arial", 8), fill="Steelblue")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 2 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_MIN_CURRENT').split('(')[0].strip()}: {a_min_current:.2f}A", 
-                                      font=("Arial", 8), fill="blue")
+                                      font=("Arial", 8), fill="Steelblue")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 3 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_COMMAND_DEAD_ZONE').split('(')[0].strip()}: {a_command_dead_zone:.1f}%", 
-                                      font=("Arial", 8), fill="blue")
+                                      font=("Arial", 8), fill="Steelblue")
 
         # 顯示B組參數值
         self.chart_canvas.create_text(text_x_offset, text_y_start + 4 * line_height, anchor=tk.W, 
                                       text="Output B", 
-                                      font=("Arial", 8), fill="red")
+                                      font=("Arial", 8), fill="SeaGreen")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 5 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('B_MAX_CURRENT').split('(')[0].strip()}: {b_max_current:.2f}A", 
-                                      font=("Arial", 8), fill="red")
+                                      font=("Arial", 8), fill="SeaGreen")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 6 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('B_MIN_CURRENT').split('(')[0].strip()}: {b_min_current:.2f}A", 
-                                      font=("Arial", 8), fill="red")
+                                      font=("Arial", 8), fill="SeaGreen")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 7 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('B_COMMAND_DEAD_ZONE').split('(')[0].strip()}: {b_command_dead_zone:.1f}%", 
-                                      font=("Arial", 8), fill="red")
+                                      font=("Arial", 8), fill="SeaGreen")
 
     def _draw_single_output_chart(self):
         # 繪製單組輸出模式的圖表 (只顯示A組)
@@ -1241,7 +1250,7 @@ class ModbusMonitorApp:
         # (100%, 最大電流值)
         points.append((map_x(100), map_y(a_max_current)))
 
-        self.chart_canvas.create_line(points, fill="blue", width=2, smooth=False)
+        self.chart_canvas.create_line(points, fill="Steelblue", width=2, smooth=False)
 
         # 顯示參數值 (放置在圖表右側)
         text_x_offset = chart_x_start + fixed_chart_w + 10 # 距離圖表右側10像素
@@ -1250,16 +1259,16 @@ class ModbusMonitorApp:
 
         self.chart_canvas.create_text(text_x_offset, text_y_start, anchor=tk.W, 
                                       text="Output A", 
-                                      font=("Arial", 8), fill="blue")
+                                      font=("Arial", 8), fill="Steelblue")
         self.chart_canvas.create_text(text_x_offset, text_y_start + line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_MAX_CURRENT').split('(')[0].strip()}: {a_max_current:.2f}A", 
-                                      font=("Arial", 8), fill="blue")
+                                      font=("Arial", 8), fill="Steelblue")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 2 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_MIN_CURRENT').split('(')[0].strip()}: {a_min_current:.2f}A", 
-                                      font=("Arial", 8), fill="blue")
+                                      font=("Arial", 8), fill="Steelblue")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 3 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_COMMAND_DEAD_ZONE').split('(')[0].strip()}: {a_command_dead_zone:.1f}%", 
-                                      font=("Arial", 8), fill="blue")
+                                      font=("Arial", 8), fill="Steelblue")
 
     def _refresh_ports(self):
         """刷新電腦目前可用的串口。"""
