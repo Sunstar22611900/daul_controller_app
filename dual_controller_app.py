@@ -92,11 +92,12 @@ TEXTS = {
         "DELETE_BUTTON": "刪除",
         "NO_ITEM_SELECTED_MSG": "請選擇一個項目。",
         "FACTORY_RESET_NO_ACTION_MSG": "恢復出廠設置 (0) 不執行任何操作。",
-        "FACTORY_RESET_SUCCESS_MSG": "恢復出廠設置 (5) 指令已發送，2秒後將重新讀取寄存器。",
+        "FACTORY_RESET_SUCCESS_MSG": "恢復出廠設置 (5) 指令已發送，5秒後將重新讀取寄存器。",
         "SKIP_REGISTER_BATCH_WRITE": "跳過寄存器 0x{register_address:04X} ({i}/{total_registers})...",
         "FILE_NOT_FOUND_FOR_DELETE": "檔案 '{filename}' 不存在，無法刪除。",
         "DELETE_FAIL": "刪除檔案 '{filename}' 失敗: {e}",
         "DELETE_SUCCESS": "參數已成功刪除為 '{filename}'。",
+        "FACTORY_RESET_CONFIRM_BATCH_MSG": "即將將控制器恢復出廠設置，是否確定?",
         
         # 新增/修改的可寫入參數區的翻譯鍵
         "COMMON_PARAMS_FRAME_TEXT": "通用參數",
@@ -269,11 +270,12 @@ TEXTS = {
         "DELETE_BUTTON": "Delete",
         "NO_ITEM_SELECTED_MSG": "Please select an item.",
         "FACTORY_RESET_NO_ACTION_MSG": "Factory Reset (0) performs no action.",
-        "FACTORY_RESET_SUCCESS_MSG": "Factory Reset (5) command sent. Re-reading registers in 2 seconds.",
+        "FACTORY_RESET_SUCCESS_MSG": "Factory Reset (5) command sent. Re-reading registers in 5 seconds.",
         "SKIP_REGISTER_BATCH_WRITE": "Skipping register 0x{register_address:04X} ({i}/{total_registers})...",
         "FILE_NOT_FOUND_FOR_DELETE": "File '{filename}' not found for deletion.",
         "DELETE_FAIL": "Failed to delete file '{filename}': {e}",
         "DELETE_SUCCESS": "Parameters successfully deleted as '{filename}'.",
+        "FACTORY_RESET_CONFIRM_BATCH_MSG": "You are about to factory reset the controller. Are you sure?",
         
         # New/Modified writable parameter area translations
         "COMMON_PARAMS_FRAME_TEXT": "Common Parameters",
@@ -1596,8 +1598,8 @@ class ModbusMonitorApp:
             elif write_value == 5:
                 if write_modbus_register(slave_id, register_address, write_value):
                     messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("FACTORY_RESET_SUCCESS_MSG"))
-                    # 間隔2秒後再重新讀取所有寄存器並更新介面
-                    self.master.after(2000, self._read_all_registers_and_update_gui)
+                    # 間隔5秒後再重新讀取所有寄存器並更新介面
+                    self.master.after(5000, self._read_all_registers_and_update_gui)
                 return # 已處理，退出函數
 
         # 對於其他寄存器，或000DH但不是0或5的值，執行正常寫入
@@ -1753,22 +1755,51 @@ class ModbusMonitorApp:
     def _batch_write_parameters(self):
         """
         批量將"可寫入檔案區"的所有參數依次寫入控制器。
-        修改: 跳過000DH不進行寫入動作。
+        根據000DH的選擇執行不同動作。
         """
         if not self.modbus_master:
             messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("MODBUS_NOT_CONNECTED_WARNING"))
             return
 
-        # Use self.writable_params_config which is a list of dicts
-        params_to_write_list = self.writable_params_config 
+        params_to_write_list = self.writable_params_config
 
+        # 獲取000DH (Factory Reset) 的當前選定值
+        factory_reset_param_config = next((p for p in params_to_write_list if p['reg'] == '000DH'), None)
+        factory_reset_value_str = self.writable_entries['000DH'].get().strip()
+        factory_reset_numeric_value = None
+
+        if factory_reset_param_config and factory_reset_value_str:
+            # 確保param_config['rev_map']已更新到當前語言
+            current_lang_map = self.translations.get(factory_reset_param_config['map_key'], {})
+            factory_reset_param_config['rev_map'] = {v: k for k, v in current_lang_map.items()}
+            factory_reset_numeric_value = factory_reset_param_config['rev_map'].get(factory_reset_value_str)
+
+        # 判斷是否為恢復出廠設置模式
+        if factory_reset_numeric_value == 5: # 恢復出廠設置
+            confirm = messagebox.askyesno(self.get_current_translation("CONFIRM_TITLE"),
+                                          self.get_current_translation("FACTORY_RESET_CONFIRM_BATCH_MSG"))
+            if confirm:
+                slave_id = int(self.slave_id_spinbox.get())
+                register_address = int('000DH'.replace('H', ''), 16)
+                
+                # 禁用GUI
+                self._set_gui_state(tk.DISABLED)
+                
+                if write_modbus_register(slave_id, register_address, factory_reset_numeric_value):
+                    messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("FACTORY_RESET_SUCCESS_MSG"))
+                    # 強制暫停讀取寫入控制器5秒，再恢復
+                    self.master.after(5000, lambda: self._set_gui_state(tk.NORMAL))
+                    self.master.after(5000, self._read_all_registers_and_update_gui)
+                else:
+                    self._set_gui_state(tk.NORMAL) # 如果寫入失敗，立即恢復GUI
+                return # 處理完畢，退出函數
+            else:
+                return # 用戶取消，不進行任何動作
+
+        # 以下是正常批次寫入邏輯 (當000DH為"無作用"或其他值時)
         # 預先執行所有驗證。若有任何一個參數不合法，則停止整個批量寫入
         for param_entry_dict in params_to_write_list: # Iterate through the list of dictionaries
             reg_hex = param_entry_dict['reg']
-            
-            # Skip validation for 000DH (Factory Reset)
-            if reg_hex == '000EH':
-                continue 
             
             value_str = self.writable_entries[reg_hex].get().strip() # Get value from GUI entry for this reg_hex
             if not value_str: 
@@ -1812,8 +1843,8 @@ class ModbusMonitorApp:
                 return
 
         # Special validation for Max/Min Current for both A and B groups
-        max_curr_a_str = self.writable_entries['000FH'].get()
-        min_curr_a_str = self.writable_entries['0010H'].get()
+        max_curr_a_str = self.writable_entries['0010H'].get()
+        min_curr_a_str = self.writable_entries['0011H'].get()
         if max_curr_a_str and min_curr_a_str:
             try:
                 float(max_curr_a_str)
@@ -1823,8 +1854,8 @@ class ModbusMonitorApp:
             except ValueError:
                 pass 
         
-        max_curr_b_str = self.writable_entries['0018H'].get()
-        min_curr_b_str = self.writable_entries['0019H'].get()
+        max_curr_b_str = self.writable_entries['001AH'].get()
+        min_curr_b_str = self.writable_entries['001BH'].get()
         if max_curr_b_str and min_curr_b_str:
             try:
                 float(max_curr_b_str)
@@ -1863,12 +1894,13 @@ class ModbusMonitorApp:
                 # Calculate progress for display, based on overall index
                 display_progress_count = i_idx + 1 
 
-                if reg_hex == '000DH': # Skip Factory Reset for batch write
-                    self.master.after(0, progress_label.config, {'text': self.get_current_translation("SKIP_REGISTER_BATCH_WRITE").format(register_address=int(reg_hex.replace('H', ''), 16), i=display_progress_count, total_registers=total_elements_in_batch)})
-                    self.master.after(0, progress_bar.config, {'value': display_progress_count / total_elements_in_batch * 100 if total_elements_in_batch > 0 else 100})
-                    self.master.update_idletasks()
-                    time.sleep(0.1)
-                    continue 
+                # 不再跳過000DH，因為它現在是正常批次寫入的一部分
+                # if reg_hex == '000DH': # Skip Factory Reset for batch write
+                #     self.master.after(0, progress_label.config, {'text': self.get_current_translation("SKIP_REGISTER_BATCH_WRITE").format(register_address=int(reg_hex.replace('H', ''), 16), i=display_progress_count, total_registers=total_elements_in_batch)})
+                #     self.master.after(0, progress_bar.config, {'value': display_progress_count / total_elements_in_batch * 100 if total_elements_in_batch > 0 else 100})
+                #     self.master.update_idletasks()
+                #     time.sleep(0.1)
+                #     continue 
                 
                 register_address = int(reg_hex.replace('H', ''), 16)
                 value_str = self.writable_entries[reg_hex].get().strip() # Get value from GUI entry
@@ -1898,7 +1930,8 @@ class ModbusMonitorApp:
             self.master.after(0, lambda: self._set_gui_state(tk.NORMAL)) 
 
             # Calculate total registers that were *intended* to be written (excluding 000DH)
-            actual_total_to_write = len([p for p in params_to_write_list if p['reg'] != '000DH'])
+            # actual_total_to_write = len([p for p in params_to_write_list if p['reg'] != '000DH'])
+            actual_total_to_write = len(params_to_write_list) # 現在000DH也包含在內
 
             if success_count == actual_total_to_write:
                 self.master.after(0, lambda: messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("BATCH_WRITE_SUCCESS_ALL")))
