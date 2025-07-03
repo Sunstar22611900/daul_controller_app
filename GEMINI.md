@@ -218,3 +218,27 @@
     *   對 `self.main_content_frame` 呼叫 `grid_propagate(False)` 以防止其根據子元件內容自動調整大小。
     *   將 `self.main_content_frame` 內部的主欄位 `grid_columnconfigure` 的 `weight` 設置為 `0`，並設定 `minsize` 為 `1000`，確保內容區域的寬度嚴格固定。
     *   調整所有原先直接放置在 `self.master` 中的主要 GUI 元素（如 `top_frame`, `monitor_area_frame`, `writable_params_area_frame`, `chart_area_frame`）的父級為 `self.main_content_frame`，並相應調整其 `grid` 參數。
+
+## 2025年7月3日 進度更新 (圖表座標軸優化)
+
+### 1. 圖表 X 軸動態更新
+
+*   **新增輔助函數 `_get_chart_xaxis_properties`：**
+    *   此函數根據傳入的組別（'A' 或 'B'）以及相關的輸入信號選擇參數（`000EH`, `0006H`, `0018H`, `0007H`）來動態決定 X 軸的標題和刻度標籤。
+    *   **標題邏輯：**
+        *   若選擇 "RS485"，標題直接顯示為 "第一組RS485" 或 "第二組RS485"。
+        *   若選擇 "信號 1" 或 "信號 2"，標題直接顯示為 "信號 1" 或 "信號 2"。
+    *   **刻度邏輯：**
+        *   若為 RS485 信號，刻度保持為 "0%" 和 "100%"。
+        *   若為類比信號，則根據對應的類比信號模式（"0~5V", "0~10V", "4~20mA"）將刻度更新為實際的物理單位（如 "0V", "5V"）。
+*   **修改圖表繪製函數：**
+    *   `_draw_single_output_chart`、`_draw_independent_charts` 和 `_draw_linked_chart` 現在都會呼叫 `_get_chart_xaxis_properties` 來獲取 X 軸的屬性，並用其回傳值來繪製座標軸，取代了原先寫死的標籤。
+
+### 2. 「單組信號-雙組輸出」模式中間刻度修正
+
+*   **`_get_chart_xaxis_properties` 函數增強：**
+    *   除了標題和最大/最小刻度，此函數現在還會計算並回傳一個 `mid_label`（中間刻度標籤）。
+    *   如果 X 軸的單位是 V 或 mA，`mid_label` 會被計算為範圍的中點（例如，"0V" 和 "5V" 的中點是 "2.5V"）。
+    *   如果單位是百分比，`mid_label` 保持為 "50%"。
+*   **`_draw_linked_chart` 函數更新：**
+    *   繪製 X 軸中間刻度時，不再使用固定的 "50%"，而是使用從 `_get_chart_xaxis_properties` 獲取的 `mid_label` 值，確保了在不同物理單位下中間點刻度的準確性。

@@ -942,6 +942,76 @@ class ModbusMonitorApp:
         self.chart_frame.config(text=self.translations["CONTROLLER_MODE_CHART_FRAME_TEXT"])
         self._draw_chart() # Update chart after language change
 
+    def _get_chart_xaxis_properties(self, group):
+        """
+        根據組別 ('A' 或 'B') 和相關參數確定X軸的標題和刻度。
+        :param group: 'A' 或 'B'
+        :return: dict with keys 'title', 'min_label', 'max_label', 'mid_label'
+        """
+        title = self.get_current_translation("INPUT_SIGNAL")
+        min_label = '0%'
+        max_label = '100%'
+        mid_label = '50%'
+
+        try:
+            analog_mode_map = self.translations.get("SIGNAL_SELECTION_MAP_VALUES", {})
+
+            def calculate_mid_label(min_l, max_l):
+                if 'V' in max_l:
+                    min_val = float(min_l.replace('V', ''))
+                    max_val = float(max_l.replace('V', ''))
+                    mid_val = (min_val + max_val) / 2
+                    return f"{mid_val:.1f}V"
+                elif 'mA' in max_l:
+                    min_val = float(min_l.replace('mA', ''))
+                    max_val = float(max_l.replace('mA', ''))
+                    mid_val = (min_val + max_val) / 2
+                    return f"{mid_val:.0f}mA"
+                return '50%'
+
+            if group == 'A':
+                a_input_signal_map = self.translations.get("A_INPUT_SIGNAL_SELECTION_MAP_VALUES", {})
+                source_str = self.writable_entries['000EH'].get()
+                
+                if source_str == a_input_signal_map.get(1):  # "第一組485"
+                    title = source_str
+                elif source_str == a_input_signal_map.get(0):  # "信號 1"
+                    title = source_str
+                    analog_mode_str = self.writable_entries['0006H'].get()
+                    if analog_mode_str == analog_mode_map.get(0): min_label, max_label = '0V', '10V'
+                    elif analog_mode_str == analog_mode_map.get(1): min_label, max_label = '0V', '5V'
+                    elif analog_mode_str == analog_mode_map.get(2): min_label, max_label = '4mA', '20mA'
+
+            elif group == 'B':
+                b_input_signal_map = self.translations.get("B_INPUT_SIGNAL_SELECTION_MAP_VALUES", {})
+                source_str = self.writable_entries['0018H'].get()
+
+                if source_str == b_input_signal_map.get(4):  # "第二組485"
+                    title = source_str
+                elif source_str == b_input_signal_map.get(3):  # "第一組485"
+                    title = source_str
+                elif source_str == b_input_signal_map.get(2):  # "信號 2"
+                    title = source_str
+                    analog_mode_str = self.writable_entries['0007H'].get() # 信號2對應0007H
+                    if analog_mode_str == analog_mode_map.get(0): min_label, max_label = '0V', '10V'
+                    elif analog_mode_str == analog_mode_map.get(1): min_label, max_label = '0V', '5V'
+                    elif analog_mode_str == analog_mode_map.get(2): min_label, max_label = '4mA', '20mA'
+                elif source_str == b_input_signal_map.get(1):  # "信號 1"
+                    title = source_str
+                    analog_mode_str = self.writable_entries['0006H'].get() # 信號1對應0006H
+                    if analog_mode_str == analog_mode_map.get(0): min_label, max_label = '0V', '10V'
+                    elif analog_mode_str == analog_mode_map.get(1): min_label, max_label = '0V', '5V'
+                    elif analog_mode_str == analog_mode_map.get(2): min_label, max_label = '4mA', '20mA'
+            
+            mid_label = calculate_mid_label(min_label, max_label)
+
+        except Exception as e:
+            print(f"Error in _get_chart_xaxis_properties for group {group}: {e}")
+            # Fallback to default values on any error
+            pass
+
+        return {'title': title, 'min_label': min_label, 'max_label': max_label, 'mid_label': mid_label}
+
     def _draw_chart(self):
         """
         根據控制器模式和參數繪製圖表。
@@ -988,17 +1058,17 @@ class ModbusMonitorApp:
         chart_y_start = canvas_height * 0.25 # Adjusted start Y for better visualization
 
         # Helper function to draw a single chart for independent mode
-        def draw_single_independent_chart(x_center_ratio, max_curr, min_curr, dead_zone, line_color, group_label):
+        def draw_single_independent_chart(x_center_ratio, max_curr, min_curr, dead_zone, line_color, group_label, xaxis_props):
             chart_x_start = canvas_width * x_center_ratio - (fixed_chart_w / 2)
 
             # 繪製圖表外框
             self.chart_canvas.create_rectangle(chart_x_start, chart_y_start, chart_x_start + fixed_chart_w, chart_y_start + chart_h, outline="black")
 
-            # 繪製X軸 (輸入信號 0~100%)
+            # 繪製X軸 (根據xaxis_props)
             self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start + fixed_chart_w, chart_y_start + chart_h)
-            self.chart_canvas.create_text(chart_x_start, chart_y_start + chart_h + 5, text="0%", anchor=tk.N)
-            self.chart_canvas.create_text(chart_x_start + fixed_chart_w, chart_y_start + chart_h + 5, text="100%", anchor=tk.N)
-            self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 20, text=self.get_current_translation("INPUT_SIGNAL"), anchor=tk.N)
+            self.chart_canvas.create_text(chart_x_start, chart_y_start + chart_h + 5, text=xaxis_props['min_label'], anchor=tk.N)
+            self.chart_canvas.create_text(chart_x_start + fixed_chart_w, chart_y_start + chart_h + 5, text=xaxis_props['max_label'], anchor=tk.N)
+            self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 20, text=xaxis_props['title'], anchor=tk.N)
 
             # 繪製Y軸 (電流 0~3A)
             self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start, chart_y_start)
@@ -1064,15 +1134,15 @@ class ModbusMonitorApp:
         a_max_current = float(self.writable_entries['0010H'].get()) if self.writable_entries['0010H'].get() else 0.0
         a_min_current = float(self.writable_entries['0011H'].get()) if self.writable_entries['0011H'].get() else 0.0
         a_command_dead_zone = float(self.writable_entries['0014H'].get()) if self.writable_entries['0014H'].get() else 0.0
-
-        draw_single_independent_chart(0.2, a_max_current, a_min_current, a_command_dead_zone, "Steelblue", "A")
+        xaxis_props_a = self._get_chart_xaxis_properties('A')
+        draw_single_independent_chart(0.2, a_max_current, a_min_current, a_command_dead_zone, "Steelblue", "A", xaxis_props_a)
 
         # B組參數
         b_max_current = float(self.writable_entries['001AH'].get()) if self.writable_entries['001AH'].get() else 0.0
         b_min_current = float(self.writable_entries['001BH'].get()) if self.writable_entries['001BH'].get() else 0.0
         b_command_dead_zone = float(self.writable_entries['001EH'].get()) if self.writable_entries['001EH'].get() else 0.0
-
-        draw_single_independent_chart(0.7, b_max_current, b_min_current, b_command_dead_zone, "SeaGreen", "B")
+        xaxis_props_b = self._get_chart_xaxis_properties('B')
+        draw_single_independent_chart(0.7, b_max_current, b_min_current, b_command_dead_zone, "SeaGreen", "B", xaxis_props_b)
 
     def _draw_linked_chart(self):
         # 繪製連動模式的圖表
@@ -1091,12 +1161,15 @@ class ModbusMonitorApp:
         # 繪製圖表外框
         self.chart_canvas.create_rectangle(chart_x_start, chart_y_start, chart_x_start + fixed_chart_w, chart_y_start + chart_h, outline="black")
 
-        # 繪製X軸 (輸入信號 0~100%)
+        # 獲取X軸屬性 (跟隨A組)
+        xaxis_props = self._get_chart_xaxis_properties('A')
+
+        # 繪製X軸
         self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start + fixed_chart_w, chart_y_start + chart_h)
-        self.chart_canvas.create_text(chart_x_start, chart_y_start + chart_h + 5, text="0%", anchor=tk.N)
-        self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 5, text="50%", anchor=tk.N)
-        self.chart_canvas.create_text(chart_x_start + fixed_chart_w, chart_y_start + chart_h + 5, text="100%", anchor=tk.N)
-        self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 20, text=self.get_current_translation("INPUT_SIGNAL"), anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start, chart_y_start + chart_h + 5, text=xaxis_props['min_label'], anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 5, text=xaxis_props['mid_label'], anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + fixed_chart_w, chart_y_start + chart_h + 5, text=xaxis_props['max_label'], anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 20, text=xaxis_props['title'], anchor=tk.N)
 
         # 繪製Y軸 (電流 0~3A)
         self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start, chart_y_start)
@@ -1205,11 +1278,14 @@ class ModbusMonitorApp:
         # 繪製圖表外框
         self.chart_canvas.create_rectangle(chart_x_start, chart_y_start, chart_x_start + fixed_chart_w, chart_y_start + chart_h, outline="black")
 
-        # 繪製X軸 (輸入信號 0~100%)
+        # 獲取X軸屬性 (跟隨A組)
+        xaxis_props = self._get_chart_xaxis_properties('A')
+
+        # 繪製X軸
         self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start + fixed_chart_w, chart_y_start + chart_h)
-        self.chart_canvas.create_text(chart_x_start, chart_y_start + chart_h + 5, text="0%", anchor=tk.N)
-        self.chart_canvas.create_text(chart_x_start + fixed_chart_w, chart_y_start + chart_h + 5, text="100%", anchor=tk.N)
-        self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 20, text=self.get_current_translation("INPUT_SIGNAL"), anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start, chart_y_start + chart_h + 5, text=xaxis_props['min_label'], anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + fixed_chart_w, chart_y_start + chart_h + 5, text=xaxis_props['max_label'], anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + fixed_chart_w / 2, chart_y_start + chart_h + 20, text=xaxis_props['title'], anchor=tk.N)
 
         # 繪製Y軸 (電流 0~3A)
         self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start, chart_y_start)
