@@ -103,7 +103,7 @@ TEXTS = {
         "COMMON_PARAMS_FRAME_TEXT": "通用參數",
         "A_GROUP_PARAMS_FRAME_TEXT": "A組輸出參數",
         "B_GROUP_PARAMS_FRAME_TEXT": "B組輸出參數",
-        "PID_PARAMS_FRAME_TEXT": "信號PID參數",
+        "PID_PARAMS_FRAME_TEXT": "PID參數",
 
         "SIGNAL_SELECTION_1": "信號 1 選擇",
         "SIGNAL_SELECTION_2": "信號 2 選擇",
@@ -158,10 +158,10 @@ TEXTS = {
         # Register value maps (for localized display)
         "STATUS_MAP_VALUES": {
             0: "正常",
-            1: "線圈開路",
-            2: "線圈短路",
-            3: "電流信號開路",
-            4: "電流信號過載"
+            1: "4~20mA信號開路",
+            2: "4~20mA信號過載",
+            3: "線圈開路",
+            4: "線圈短路"
         },
         "SIGNAL_SELECTION_MAP_VALUES": { # For 0006H, 0007H
             0: "0~10V",
@@ -215,7 +215,7 @@ TEXTS = {
         "MONITOR_AREA_A_FRAME_TEXT": "Real-time Monitoring (Output A: 0000H~0002H)",
         "MONITOR_AREA_B_FRAME_TEXT": "Real-time Monitoring (Output B: 0003H~0005H)",
         "OUTPUT_CURRENT_LABEL": "Output Current",
-        "INPUT_SIGNAL_LABEL": "Input Signal",
+        "INPUT_SIGNAL_LABEL": "Input Command",
         "CURRENT_STATUS_LABEL": "Status",
         "WRITABLE_PARAMS_FRAME_TEXT": "Writable Parameters",
         "WRITE_BUTTON": "Write",
@@ -281,18 +281,18 @@ TEXTS = {
         "COMMON_PARAMS_FRAME_TEXT": "Common Parameters",
         "A_GROUP_PARAMS_FRAME_TEXT": "Output A Parameters",
         "B_GROUP_PARAMS_FRAME_TEXT": "Output B Parameters",
-        "PID_PARAMS_FRAME_TEXT": "Signal PID Parameters",
+        "PID_PARAMS_FRAME_TEXT": "PID Parameters",
 
-        "SIGNAL_SELECTION_1": "Signal 1 Selection",
-        "SIGNAL_SELECTION_2": "Signal 1 Selection",
+        "SIGNAL_SELECTION_1": "Command 1 Selection",
+        "SIGNAL_SELECTION_2": "Command 2 Selection",
         "PANEL_DISPLAY_MODE": "Panel Display Mode",
-        "RS485_CONTROL_SIGNAL_1": "RS485 Control Signal 1 (0~100%)",
-        "RS485_CONTROL_SIGNAL_2": "RS485 Control Signal 2 (0~100%)",
+        "RS485_CONTROL_SIGNAL_1": "RS485 Command 1 (0~100%)",
+        "RS485_CONTROL_SIGNAL_2": "RS485 Command 2 (0~100%)",
         "DEVICE_ADDRESS_ADJUSTMENT": "Device Address Adjustment (1~247)",
         "DEVICE_BAUDRATE_ADJUSTMENT": "Device Baud Rate Adjustment",
         "FACTORY_RESET": "Factory Reset",
-        "A_INPUT_SIGNAL_SELECTION": "Input Signal Selection",
-        "A_FEEDBACK_SIGNAL": "Feedback Signal",
+        "A_INPUT_SIGNAL_SELECTION": "Input Command Selection",
+        "A_FEEDBACK_SIGNAL": "Feedback Command",
         "A_MAX_CURRENT": "Max Output Current (0.20~3.00A)",
         "A_MIN_CURRENT": "Min Output Current (0.00~1.00A)",
         "A_CURRENT_RISE_TIME": "Ramp up Time (0.1~5.0s)",
@@ -301,8 +301,8 @@ TEXTS = {
         "A_PWM_FREQUENCY": "PWM Frequency (70~1000Hz)",
         "A_TREMOR_FREQUENCY": "Dither Frequency (70~500Hz)",
         "A_DITHER_AMPLITUDE": "Dither Amplitude (0~25%)",
-        "B_INPUT_SIGNAL_SELECTION": "Input Signal Selection",
-        "B_FEEDBACK_SIGNAL": "Feedback Signal",
+        "B_INPUT_SIGNAL_SELECTION": "Input Command Selection",
+        "B_FEEDBACK_SIGNAL": "Feedback Command",
         "B_MAX_CURRENT": "Max Output Current (0.20~3.00A)",
         "B_MIN_CURRENT": "Min Output Current (0.00~1.00A)",
         "B_CURRENT_RISE_TIME": "Ramp up Time (0.1~5.0s)",
@@ -311,12 +311,12 @@ TEXTS = {
         "B_PWM_FREQUENCY": "PWM Frequency (70~1000Hz)",
         "B_TREMOR_FREQUENCY": "Dither Frequency (70~500Hz)",
         "B_DITHER_AMPLITUDE": "Dither Amplitude (0~25%)",
-        "SIGNAL_1_P": "Signal 1 P (0~100)",
-        "SIGNAL_1_I": "Signal 1 I (0~100)",
-        "SIGNAL_1_D": "Signal 1 D (0~100)",
-        "SIGNAL_2_P": "Signal 2 P (0~100)",
-        "SIGNAL_2_I": "Signal 2 I (0~100)",
-        "SIGNAL_2_D": "Signal 2 D (0~100)",
+        "SIGNAL_1_P": "Command 1 P (0~100)",
+        "SIGNAL_1_I": "Command 1 I (0~100)",
+        "SIGNAL_1_D": "Command 1 D (0~100)",
+        "SIGNAL_2_P": "Command 2 P (0~100)",
+        "SIGNAL_2_I": "Command 2 I (0~100)",
+        "SIGNAL_2_D": "Command 2 D (0~100)",
         "LANGUAGE_LABEL": "Language",
         "UNKNOWN_STATUS": "Unknown Status",
         "WARNING_READ_DATA_INSUFFICIENT": "Warning: Insufficient register data read to update all writable parameters.",
@@ -328,7 +328,7 @@ TEXTS = {
         "TIME": "Time",
         "A_GROUP_LEGEND": "Output A Curve",
         "B_GROUP_LEGEND": "Output B Curve",
-        "INPUT_SIGNAL": "Input Signal",
+        "INPUT_SIGNAL": "Input Command",
         "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "Dual Output Dual Slope",
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Output Single Slope",
         "SINGLE_OUTPUT_MODE_TEXT": "Single Output",
@@ -336,10 +336,11 @@ TEXTS = {
         # Register value maps (for localized display)
         "STATUS_MAP_VALUES": {
             0: "Normal",
-            1: "Coil open circuit",
-            2: "Coil short circuit",
-            3: "Current command open circuit",
-            4: "Current command overload"
+            1: "4~20mA command open",
+            2: "4~20mA command overload",
+            3: "Coil open",
+            4: "Coil short"
+
         },
         "SIGNAL_SELECTION_MAP_VALUES": { # For 0006H, 0007H
             0: "0~10V",
@@ -348,9 +349,9 @@ TEXTS = {
         },
         "PANEL_DISPLAY_MODE_MAP_VALUES": { # For 0008H
             0: "Display Output A Current",
-            1: "Display Input Signal for Output A",
+            1: "Display Command for Output A",
             2: "Display Output B Current",
-            3: "Display Input Signal for Output B",
+            3: "Display Command for Output B",
             4: "Do Not Display"
         },
         "DEVICE_BAUDRATE_MAP_VALUES": { # For 000CH
@@ -365,20 +366,20 @@ TEXTS = {
             5: "Factory Reset"
         },
         "A_INPUT_SIGNAL_SELECTION_MAP_VALUES": { # For 000EH
-            0: "Signal 1",
-            1: "RS485 Group 1"
+            0: "Command 1",
+            1: "RS485 Command 1"
         },
         "B_INPUT_SIGNAL_SELECTION_MAP_VALUES": { # For 0018H
             0: "No Output",
-            1: "Signal 1",
-            2: "Signal 2",
-            3: "RS485 Group 1",
-            4: "RS485 Group 2"
+            1: "Command 1",
+            2: "Command 2",
+            3: "RS485 Command 1",
+            4: "RS485 Command 2"
         },
         "FEEDBACK_SIGNAL_MAP_VALUES": { # For 000FH, 0019H
             0: "Off",
-            1: "Signal 1",
-            2: "Signal 2"
+            1: "Command 1",
+            2: "Command 2"
         }
     }
 }
