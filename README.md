@@ -7,10 +7,10 @@ This application provides a comprehensive Graphical User Interface (GUI) for con
 ## Features
 
 *   **Modbus RTU Communication:** Connects to controllers via serial COM ports with configurable baud rates and slave IDs.
-*   **Real-time Monitoring:** Displays live output current, input command, and status for both Group A and Group B.
+*   **Real-time Monitoring:** Displays live output current, input command, and status for both Output A and Output B.
 *   **Multi-language Support:** Supports both English and Traditional Chinese interfaces.
-*   **Organized Parameter Management:** Writable parameters are categorized into Common, Group A, Group B, and PID parameters, accessible via a tabbed interface.
-*   **Dynamic Control Mode Chart:** Visualizes the controller's output characteristics based on current settings, dynamically switching between "Dual Output Dual Slope", "Dual Output Single Slope", and "Single Output" modes.
+*   **Organized Parameter Management:** Writable parameters are categorized into Common, Output A, Output B, and PID parameters, accessible via a tabbed interface.
+*   **Dynamic Control Mode Chart:** Visualizes the controller's output characteristics based on input selection settings, dynamically switching between "Dual Output Dual Slope", "Dual Output Single Slope", and "Single Output" modes.
 *   **Parameter Persistence:** Save and load parameter configurations locally for easy recall and deployment.
 *   **Batch Write Operations:** Apply multiple parameter changes to the controller in a single batch, with special handling for factory reset commands.
 *   **Input Validation:** Ensures parameter values are within valid ranges and formats before writing to the controller.
@@ -57,7 +57,7 @@ A pre-built executable (`dual_controller_app.exe`) is available in the `dist/` d
     *   Click "Connect" to establish Modbus communication.
 
 3.  **Real-time Monitoring:**
-    *   Once connected, the "Real-time Monitoring" section will display live data for Group A and Group B.
+    *   Once connected, the "Real-time Monitoring" section will display live data for Output A and Output B.
 
 4.  **Writable Parameters:**
     *   Navigate through the tabs (Common, Output A, Output B, PID Parameters) to adjust various settings.
