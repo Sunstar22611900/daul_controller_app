@@ -609,10 +609,10 @@ class ModbusMonitorApp:
 
         # Language Selection (Top Right)
         self.language_frame = ttk.LabelFrame(top_frame, text=self.get_current_translation("LANGUAGE_LABEL"), padding="10")
-        self.language_frame.pack(side=tk.RIGHT, pady=5)
+        self.language_frame.pack(side=tk.RIGHT)
         self.language_combobox_var = tk.StringVar(value="中文")
         self.language_combobox = ttk.Combobox(self.language_frame, values=["中文", "English"], state="readonly", width=7, textvariable=self.language_combobox_var)
-        self.language_combobox.pack(padx=5, pady=5)
+        self.language_combobox.grid(row=0, column=0, padx=5, pady=5)
         self.language_combobox.bind("<<ComboboxSelected>>", self._on_language_select)
 
         # A. Modbus通訊參數設置區域
@@ -634,10 +634,10 @@ class ModbusMonitorApp:
         self.slave_id_var = tk.StringVar(value="1")
         self.slave_id_spinbox = ttk.Spinbox(self.modbus_params_frame, from_=1, to=247, increment=1, width=5, textvariable=self.slave_id_var)
         self.slave_id_spinbox.grid(row=0, column=5, padx=5, pady=5, sticky=tk.W)
-        self.refresh_ports_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("REFRESH_PORTS_BUTTON"), command=self._refresh_ports)
+        self.refresh_ports_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("REFRESH_PORTS_BUTTON"), width=10, command=self._refresh_ports)
         self.refresh_ports_button.grid(row=0, column=6, padx=5, pady=5)
-        self.connect_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), command=self._toggle_connection)
-        self.connect_button.grid(row=0, column=7, padx=5, pady=5)
+        self.connect_button = ttk.Checkbutton(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="round-toggle", command=self._toggle_connection)
+        self.connect_button.grid(row=0, column=7, padx=15, pady=5, sticky=tk.E)
 
         # --- 分隔線 ---
         ttk.Separator(self.main_content_frame, orient='horizontal').grid(row=1, column=0, pady=5, sticky='ew', padx=0)
@@ -756,7 +756,7 @@ class ModbusMonitorApp:
                 elif param['type'] == 'spinbox':
                     control = ttk.Spinbox(parent_frame, from_=param['min'], to=param['max'], increment=1, width=15, textvariable=var)
                 elif param['type'] == 'entry' or param['type'] == 'entry_scaled':
-                    control = ttk.Entry(parent_frame, textvariable=var, width=18)
+                    control = ttk.Entry(parent_frame, textvariable=var, width=17)
 
                 if control:
                     control.grid(row=row_num, column=col_offset + 1, padx=5, pady=5, sticky=tk.W)
@@ -784,7 +784,7 @@ class ModbusMonitorApp:
                 elif param['type'] == 'spinbox':
                     control = ttk.Spinbox(parent_frame, from_=param['min'], to=param['max'], increment=1, width=15, textvariable=var)
                 elif param['type'] == 'entry' or param['type'] == 'entry_scaled':
-                    control = ttk.Entry(parent_frame, textvariable=var, width=18)
+                    control = ttk.Entry(parent_frame, textvariable=var, width=17)
 
                 if control:
                     control.grid(row=row_num, column=col_offset + 1, padx=5, pady=5, sticky=tk.W)
