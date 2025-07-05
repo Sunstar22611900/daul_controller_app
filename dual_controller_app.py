@@ -534,7 +534,7 @@ class ModbusMonitorApp:
         self.translations = self._current_translations # Initialize instance-level translations here
         
         master.title(self.get_current_translation("APP_TITLE"))
-        master.geometry("1200x850") 
+        master.geometry("1200x1000") 
         master.resizable(True, True) 
 
         self.modbus_master = None
@@ -656,8 +656,8 @@ class ModbusMonitorApp:
         self.monitor_frame_b.grid(row=0, column=1, sticky='nsew', padx=(5, 0))
 
         # ... (監控區內部元件創建邏輯)
-        self.monitor_labels_info_a, self.monitor_display_labels_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
-        self.monitor_labels_info_b, self.monitor_display_labels_b = self._create_monitor_widgets(self.monitor_frame_b, [("0003H", "OUTPUT_CURRENT_LABEL", "A"), ("0004H", "INPUT_SIGNAL_LABEL", "%"), ("0005H", "CURRENT_STATUS_LABEL", "")])
+        self.monitor_labels_info_a, self.monitor_display_controls_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
+        self.monitor_labels_info_b, self.monitor_display_controls_b = self._create_monitor_widgets(self.monitor_frame_b, [("0003H", "OUTPUT_CURRENT_LABEL", "A"), ("0004H", "INPUT_SIGNAL_LABEL", "%"), ("0005H", "CURRENT_STATUS_LABEL", "")])
         self._clear_monitor_area()
 
         # --- 可寫入參數區 (Notebook) ---
@@ -741,7 +741,7 @@ class ModbusMonitorApp:
                 row_num = i
                 col_offset = 0
 
-                label = ttk.Label(parent_frame, text=f"{reg_hex}: {self.get_current_translation(param['title_key'])}")
+                label = ttk.Label(parent_frame, text=f"{self.get_current_translation(param['title_key'])} ({reg_hex})")
                 label.grid(row=row_num, column=col_offset, padx=5, pady=5, sticky=tk.W)
                 self.writable_labels[reg_hex] = label
 
@@ -769,7 +769,7 @@ class ModbusMonitorApp:
                 row_num = i - midpoint # Adjust row number for the right column
                 col_offset = 2
 
-                label = ttk.Label(parent_frame, text=f"{reg_hex}: {self.get_current_translation(param['title_key'])}")
+                label = ttk.Label(parent_frame, text=f"{self.get_current_translation(param['title_key'])} ({reg_hex})")
                 label.grid(row=row_num, column=col_offset, padx=5, pady=5, sticky=tk.W)
                 self.writable_labels[reg_hex] = label
 
@@ -818,23 +818,71 @@ class ModbusMonitorApp:
         self.batch_write_button.grid(row=0, column=2, padx=5, pady=5, sticky='ew')
 
     def _create_monitor_widgets(self, parent_frame, config):
-        parent_frame.grid_columnconfigure(list(range(len(config))), weight=1)
+        # Configure grid for the parent frame
+        parent_frame.grid_columnconfigure(0, weight=1)
+        parent_frame.grid_columnconfigure(1, weight=1)
+        parent_frame.grid_rowconfigure(0, weight=1) # Row for meters
+        parent_frame.grid_rowconfigure(1, weight=1) # Row for status
+
         labels_info = {}
-        display_labels = {}
-        for i, (reg_hex, title_key, unit) in enumerate(config):
-            item_frame = ttk.Frame(parent_frame)
-            item_frame.grid(row=0, column=i, sticky='nsew', padx=5)
-            title_label = ttk.Label(item_frame, text=f"{reg_hex}: {self.get_current_translation(title_key)}")
-            title_label.pack(side=tk.TOP, anchor=tk.CENTER, pady=(0,2))
-            value_frame = ttk.Frame(item_frame)
-            value_frame.pack(side=tk.TOP, anchor=tk.CENTER)
-            display_label = ttk.Label(value_frame, text="----", anchor="center", font=('Arial', 12, 'bold'))
-            display_label.pack(side=tk.LEFT)
-            if unit:
-                ttk.Label(value_frame, text=unit).pack(side=tk.LEFT, anchor=tk.S, pady=(0,3))
-            labels_info[reg_hex] = {'title_label': title_label, 'unit': unit, 'title_key': title_key}
-            display_labels[reg_hex] = display_label
-        return labels_info, display_labels
+        display_controls = {}
+
+        # --- Create and place Meter 1: Output Current ---
+        current_config = next((c for c in config if c[1] == "OUTPUT_CURRENT_LABEL"), None)
+        if current_config:
+            reg_hex_current, title_key_current, unit_current = current_config
+            initial_subtext_current = self.get_current_translation(title_key_current)
+            current_meter = ttk.Meter(
+                master=parent_frame,
+                metersize=160,
+                padding=0,
+                amountused=0,
+                amounttotal=3.0,
+                textright='A',
+                subtext=initial_subtext_current,
+                bootstyle='primary',
+                metertype="semi",
+                interactive=False,
+                amountformat='{:.2f}'
+            )
+            current_meter.grid(row=0, column=0, sticky='nsew', padx=5, pady=0)
+            labels_info[reg_hex_current] = {'title_label': None, 'unit': unit_current, 'title_key': title_key_current}
+            display_controls[reg_hex_current] = current_meter
+
+        # --- Create and place Meter 2: Input Signal ---
+        signal_config = next((c for c in config if c[1] == "INPUT_SIGNAL_LABEL"), None)
+        if signal_config:
+            reg_hex_signal, title_key_signal, unit_signal = signal_config
+            initial_subtext_signal = self.get_current_translation(title_key_signal)
+            signal_meter = ttk.Meter(
+                master=parent_frame,
+                metersize=160,
+                padding=0,
+                amountused=0,
+                amounttotal=100,
+                textright='%',
+                subtext=initial_subtext_signal,
+                bootstyle='success',
+                metertype="semi",
+                interactive=False,
+            )
+            signal_meter.grid(row=0, column=1, sticky='nsew', padx=5, pady=0)
+            labels_info[reg_hex_signal] = {'title_label': None, 'unit': unit_signal, 'title_key': title_key_signal}
+            display_controls[reg_hex_signal] = signal_meter
+
+        # --- Create and place Status Display ---
+        status_config = next((c for c in config if c[1] == "CURRENT_STATUS_LABEL"), None)
+        if status_config:
+            reg_hex_status, title_key_status, unit_status = status_config
+            initial_subtext_status = self.get_current_translation(title_key_status)
+            status_frame = ttk.LabelFrame(parent_frame, text=initial_subtext_status, padding=(10, 5))
+            status_frame.grid(row=1, column=0, columnspan=2, sticky='nsew', padx=0, pady=0)
+            status_label = ttk.Label(status_frame, text="----", anchor="center", font=('Arial', 16, 'bold'))
+            status_label.pack(expand=True, fill='both')
+            labels_info[reg_hex_status] = {'title_label': status_frame, 'unit': unit_status, 'title_key': title_key_status}
+            display_controls[reg_hex_status] = status_label
+
+        return labels_info, display_controls
 
 
     def _on_language_select(self, event=None):
@@ -879,24 +927,35 @@ class ModbusMonitorApp:
         
         # Update monitor area labels (titles only) for A group
         for reg_hex, info in self.monitor_labels_info_a.items():
-            info['title_label'].config(text=f"{reg_hex}: {self.translations[info['title_key']]}")
+            if info.get('title_label'): # Check if title_label exists (for status)
+                 info['title_label'].config(text=self.translations[info['title_key']])
+            else: # For meters, update subtext
+                control = self.monitor_display_controls_a[reg_hex]
+                if isinstance(control, ttk.Meter):
+                    control.configure(subtext=self.translations[info['title_key']])
+
         # Update monitor area labels (titles only) for B group
         for reg_hex, info in self.monitor_labels_info_b.items():
-            info['title_label'].config(text=f"{reg_hex}: {self.translations[info['title_key']]}")
+            if info.get('title_label'): # Check if title_label exists (for status)
+                 info['title_label'].config(text=self.translations[info['title_key']])
+            else: # For meters, update subtext
+                control = self.monitor_display_controls_b[reg_hex]
+                if isinstance(control, ttk.Meter):
+                    control.configure(subtext=self.translations[info['title_key']])
 
         # Update monitor area 0002H (Current Status) display value for A group
         if hasattr(self, 'last_status_code_a') and self.last_status_code_a is not None:
             status_text_a = self.translations["STATUS_MAP_VALUES"].get(self.last_status_code_a, self.translations["UNKNOWN_STATUS"])
-            self.monitor_display_labels_a['0002H'].config(text=status_text_a)
+            self.monitor_display_controls_a['0002H'].config(text=status_text_a)
         else:
-            self.monitor_display_labels_a['0002H'].config(text="----")
+            self.monitor_display_controls_a['0002H'].config(text="----")
         
         # Update monitor area 0005H (Current Status) display value for B group
         if hasattr(self, 'last_status_code_b') and self.last_status_code_b is not None:
             status_text_b = self.translations["STATUS_MAP_VALUES"].get(self.last_status_code_b, self.translations["UNKNOWN_STATUS"])
-            self.monitor_display_labels_b['0005H'].config(text=status_text_b)
+            self.monitor_display_controls_b['0005H'].config(text=status_text_b)
         else:
-            self.monitor_display_labels_b['0005H'].config(text="----")
+            self.monitor_display_controls_b['0005H'].config(text="----")
 
 
         # Update writable parameters labels and single write buttons
@@ -1487,39 +1546,63 @@ class ModbusMonitorApp:
         # A Group: 0000H - 0002H
         # 0000H: 輸出電流 (A)
         current_val_a = convert_to_float(registers[0], 100)
-        self.monitor_display_labels_a['0000H'].config(text=f"{current_val_a:.2f}" if current_val_a is not None else "----")
+        if current_val_a is not None:
+            self.monitor_display_controls_a['0000H'].configure(amountused=current_val_a)
+        else:
+            self.monitor_display_controls_a['0000H'].configure(amountused=0)
 
         # 0001H: 輸入信號 (%)
         signal_val_a = convert_to_float(registers[1], 10)
-        self.monitor_display_labels_a['0001H'].config(text=f"{signal_val_a:.1f}" if signal_val_a is not None else "----")
+        if signal_val_a is not None:
+            self.monitor_display_controls_a['0001H'].configure(amountused=signal_val_a)
+        else:
+            self.monitor_display_controls_a['0001H'].configure(amountused=0)
 
         # 0002H: 目前狀態
         status_code_a = registers[2]
         self.last_status_code_a = status_code_a # Store the numeric value for language updates
         status_text_a = self.translations["STATUS_MAP_VALUES"].get(status_code_a, self.get_current_translation("UNKNOWN_STATUS")) 
-        self.monitor_display_labels_a['0002H'].config(text=status_text_a)
+        self.monitor_display_controls_a['0002H'].config(text=status_text_a)
 
         # B Group: 0003H - 0005H
         # 0003H: 輸出電流 (A)
         current_val_b = convert_to_float(registers[3], 100)
-        self.monitor_display_labels_b['0003H'].config(text=f"{current_val_b:.2f}" if current_val_b is not None else "----")
+        if current_val_b is not None:
+            self.monitor_display_controls_b['0003H'].configure(amountused=current_val_b)
+        else:
+            self.monitor_display_controls_b['0003H'].configure(amountused=0)
 
         # 0004H: 輸入信號 (%)
         signal_val_b = convert_to_float(registers[4], 10)
-        self.monitor_display_labels_b['0004H'].config(text=f"{signal_val_b:.1f}" if signal_val_b is not None else "----")
+        if signal_val_b is not None:
+            self.monitor_display_controls_b['0004H'].configure(amountused=signal_val_b)
+        else:
+            self.monitor_display_controls_b['0004H'].configure(amountused=0)
 
         # 0005H: 目前狀態
         status_code_b = registers[5]
         self.last_status_code_b = status_code_b # Store the numeric value for language updates
         status_text_b = self.translations["STATUS_MAP_VALUES"].get(status_code_b, self.get_current_translation("UNKNOWN_STATUS")) 
-        self.monitor_display_labels_b['0005H'].config(text=status_text_b)
+        self.monitor_display_controls_b['0005H'].config(text=status_text_b)
 
     def _clear_monitor_area(self):
         """清除即時監控區的所有顯示，設為"----"。"""
-        for label in self.monitor_display_labels_a.values():
-            label.config(text="----")
-        for label in self.monitor_display_labels_b.values():
-            label.config(text="----")
+        for reg, control in self.monitor_display_controls_a.items():
+            title_key = self.monitor_labels_info_a[reg]['title_key']
+            initial_subtext = self.get_current_translation(title_key)
+            if isinstance(control, ttk.Meter):
+                control.configure(amountused=0, subtext=initial_subtext)
+            else:
+                control.config(text="----")
+
+        for reg, control in self.monitor_display_controls_b.items():
+            title_key = self.monitor_labels_info_b[reg]['title_key']
+            initial_subtext = self.get_current_translation(title_key)
+            if isinstance(control, ttk.Meter):
+                control.configure(amountused=0, subtext=initial_subtext)
+            else:
+                control.config(text="----")
+
         self.last_status_code_a = None # Clear stored status code when area is cleared
         self.last_status_code_b = None # Clear stored status code when area is cleared
 

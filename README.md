@@ -1,114 +1,48 @@
-# SUNSTAR Modbus RTU Dual Controller Application
+# SUNSTAR Modbus RTU 雙控制器監控調整程式
 
-## Overview
+這是一個使用 Python、Tkinter、ttkbootstrap 和 modbus-tk 開發的桌面應用程式，用於監控和調整基於 Modbus RTU 協議的 SUNSTAR 雙控制器。
 
-This application provides a comprehensive Graphical User Interface (GUI) for configuring and monitoring a dual-channel controller via Modbus RTU protocol. It allows users to establish communication with the controller, view real-time monitoring data for two independent output groups (A and B), adjust various writable parameters, and visualize controller behavior through dynamic charts.
+## 主要功能
 
-## Features
+*   **Modbus RTU 通訊**：通過串口連接到控制器，讀取和寫入寄存器。
+*   **雙語介面**：支援中文和英文之間的即時切換。
+*   **即時監控**：
+    *   使用 `ttkbootstrap` 的 `Meter` 元件以圖形化方式顯示 A 組和 B 組的輸出電流和輸入信號。
+    *   即時顯示控制器狀態（正常、開路、短路等）。
+*   **參數讀寫**：
+    *   以分頁形式清晰地組織了通用參數、A 組參數、B 組參數和 PID 參數。
+    *   支援單個參數的即時寫入和所有參數的批量寫入。
+    *   提供「恢復出廠設置」功能，並有安全確認提示。
+*   **參數管理**：
+    *   可以將當前所有參數保存為本地 JSON 檔案。
+    *   可以從本地檔案讀取參數配置並應用到介面。
+    *   提供刪除已保存參數檔案的功能。
+*   **動態圖表**：
+    *   根據不同的控制器工作模式（單組輸出、雙組信號-雙組輸出、單組信號-雙組輸出）即時繪製輸出特性曲線。
+    *   圖表會根據相關參數（如最大/最小電流、指令死區等）動態更新。
+    *   圖表的 X 軸會根據信號源（類比信號或 RS485）動態顯示不同的單位（V, mA, %）。
+*   **介面優化**：
+    *   採用 `ttkbootstrap` 的 `litera` 主題，美觀易用。
+    *   對參數顯示、按鈕佈局等進行了優化，以提高用戶體驗。
 
-*   **Modbus RTU Communication:** Connects to controllers via serial COM ports with configurable baud rates and slave IDs.
-*   **Real-time Monitoring:** Displays live output current, input command, and status for both Output A and Output B.
-*   **Multi-language Support:** Supports both English and Traditional Chinese interfaces.
-*   **Organized Parameter Management:** Writable parameters are categorized into Common, Output A, Output B, and PID parameters, accessible via a tabbed interface.
-*   **Dynamic Control Mode Chart:** Visualizes the controller's output characteristics based on input selection settings, dynamically switching between "Dual Output Dual Slope", "Dual Output Single Slope", and "Single Output" modes.
-*   **Parameter Persistence:** Save and load parameter configurations locally for easy recall and deployment.
-*   **Batch Write Operations:** Apply multiple parameter changes to the controller in a single batch, with special handling for factory reset commands.
-*   **Input Validation:** Ensures parameter values are within valid ranges and formats before writing to the controller.
+## 如何使用
 
-## Requirements
-
-To run this application from source, you need:
-
-*   Python 3.x
-*   `pyserial` library
-*   `modbus_tk` library
-*   `ttkbootstrap` library
-
-## Installation
-
-### From Executable (Windows)
-
-A pre-built executable (`dual_controller_app.exe`) is available in the `dist/` directory or via GitHub Releases. No installation is required; simply run the executable.
-
-### From Source
-
-1.  **Clone the repository:**
+1.  **安裝依賴**:
     ```bash
-    git clone https://github.com/Sunstar22611900/daul_controller_app.git
-    cd daul_controller_app
+    pip install ttkbootstrap modbus-tk pyserial
     ```
-
-2.  **Install dependencies:**
-    ```bash
-    pip install pyserial modbus_tk ttkbootstrap
-    ```
-
-## Usage
-
-1.  **Run the application:**
+2.  **運行程式**:
     ```bash
     python dual_controller_app.py
     ```
+3.  **連接控制器**:
+    *   在「Modbus通訊參數設置」區域選擇正確的通訊端口、鮑率和設備位址。
+    *   點擊「連接」按鈕。
+4.  **操作**:
+    *   連接成功後，程式會自動讀取所有參數並更新介面。
+    *   在「可寫入參數」區修改參數，點擊「套用至控制器」進行批量寫入。
+    *   使用「本地儲存」和「本地讀取」功能來管理不同的參數配置。
 
-2.  **Modbus Communication Setup:**
-    *   Select the correct **COM Port** from the dropdown.
-    *   Choose the appropriate **Baud Rate**.
-    *   Enter the **Device Address (Slave ID)** (1-247).
-    *   Click "Refresh Ports" if your COM port doesn't appear.
-    *   Click "Connect" to establish Modbus communication.
+## 螢幕截圖
 
-3.  **Real-time Monitoring:**
-    *   Once connected, the "Real-time Monitoring" section will display live data for Output A and Output B.
-
-4.  **Writable Parameters:**
-    *   Navigate through the tabs (Common, Output A, Output B, PID Parameters) to adjust various settings.
-    *   Enter desired values in the input fields.
-    *   Use "SAVE locally" to save current parameters to a JSON file.
-    *   Use "LOAD locally" to load previously saved parameters.
-    *   Click "APPLY to Controller" to write all configured parameters to the device.
-
-5.  **Controller Mode Chart:**
-    *   The "Controller Mode Chart" section visually represents the output characteristics based on the configured parameters. This chart updates dynamically as parameters are changed.
-
-## Building the Executable (Optional)
-
-You can build a standalone Windows executable using PyInstaller.
-
-1.  **Install PyInstaller:**
-    ```bash
-    pip install pyinstaller
-    ```
-
-2.  **Generate the `.spec` file:**
-    ```bash
-    pyinstaller --noconsole --onefile dual_controller_app.py
-    ```
-
-3.  **Modify the `.spec` file:**
-    Open `dual_controller_app.spec` in a text editor. Ensure the `datas` and `icon` sections are correctly configured to include necessary assets like icons. An example configuration for `datas` and `icon` within the `Analysis` and `EXE` objects respectively:
-
-    ```python
-    # ... inside Analysis object
-    datas=[
-        ('icon', 'icon'),
-    ],
-    # ...
-
-    # ... inside EXE object
-    icon='icon/STEED_80px.ico'
-    # ...
-    ```
-
-4.  **Build the executable:**
-    ```bash
-    pyinstaller dual_controller_app.spec -y
-    ```
-    The executable will be generated in the `dist/` directory.
-
-## Contributing
-
-Contributions are welcome! Please feel free to open issues or submit pull requests.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE) - see the `LICENSE` file for details.
+*待補充*
