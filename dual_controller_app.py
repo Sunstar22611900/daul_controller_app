@@ -1,7 +1,8 @@
 #根據gemini02版本手動修改排版
 
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog, filedialog
+from tkinter import messagebox, simpledialog, filedialog
+import ttkbootstrap as ttk
 import serial.tools.list_ports
 import modbus_tk
 import modbus_tk.defines as defines
@@ -2069,10 +2070,11 @@ def resource_path(relative_path):
 # --- 主程式入口 ---
 if __name__ == "__main__":
     root = tk.Tk()
-    root.iconbitmap(resource_path('icon/001.ico'))
-    app = ModbusMonitorApp(root)
+    root.iconbitmap(resource_path('icon/STEED_80px.ico'))
+    # 使用 ttkbootstrap 主題
+    style = ttk.Style()
+    style.theme_use('litera')
 
-    root.tk.call('source', resource_path('forest-light.tcl'))
-    ttk.Style().theme_use('forest-light')
+    app = ModbusMonitorApp(root)
 
     root.mainloop()

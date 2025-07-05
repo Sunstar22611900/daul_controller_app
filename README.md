@@ -22,6 +22,7 @@ To run this application from source, you need:
 *   Python 3.x
 *   `pyserial` library
 *   `modbus_tk` library
+*   `ttkbootstrap` library
 
 ## Installation
 
@@ -39,7 +40,7 @@ A pre-built executable (`dual_controller_app.exe`) is available in the `dist/` d
 
 2.  **Install dependencies:**
     ```bash
-    pip install pyserial modbus_tk
+    pip install pyserial modbus_tk ttkbootstrap
     ```
 
 ## Usage
@@ -84,19 +85,17 @@ You can build a standalone Windows executable using PyInstaller.
     ```
 
 3.  **Modify the `.spec` file:**
-    Open `dual_controller_app.spec` in a text editor. Ensure the `datas` and `icon` sections are correctly configured to include necessary assets like icons and the `forest-light` theme. An example configuration for `datas` and `icon` within the `Analysis` and `EXE` objects respectively:
+    Open `dual_controller_app.spec` in a text editor. Ensure the `datas` and `icon` sections are correctly configured to include necessary assets like icons. An example configuration for `datas` and `icon` within the `Analysis` and `EXE` objects respectively:
 
     ```python
     # ... inside Analysis object
     datas=[
         ('icon', 'icon'),
-        ('forest-light.tcl', '.'),
-        ('forest-light', 'forest-light'),
     ],
     # ...
 
     # ... inside EXE object
-    icon='icon/002.ico'
+    icon='icon/STEED_80px.ico'
     # ...
     ```
 

@@ -21,25 +21,104 @@
     *   `_write_single_register`：將「恢復出廠設置」的特殊處理從 `0007H` 移至 `000CH`。
     *   `_batch_write_parameters`：更新此函數以遍歷新的 `writable_params_config`，並在批次寫入時跳過 `000CH`（恢復出廠設置）的寫入操作。
 
-## 遇到的問題與解決方案
+## 
 
-在開發過程中，我們遇到了一些問題並逐一解決：
 
-1.  **`_tkinter.TclError: bitmap "..." not defined` (圖示檔案缺失)**
-    *   **問題描述：** 程式無法找到 `icon/001.ico` 圖示檔案。
-    *   **解決方案：** 經檢查，`icon` 目錄不存在。手動創建 `D:\07python\gemini-daul-controller\icon` 目錄並將 `001.ico` 和 `002.ico` 複製到其中。
 
-2.  **`KeyError: 'is_int'` (參數配置錯誤)**
-    *   **問題描述：** 在 `_create_widgets` 函數中，為 `entry` 類型控制項創建按鈕命令時，程式預期 `param` 字典中存在 `is_int` 鍵，但某些 `entry` 參數並未定義此鍵。
-    *   **解決方案：** 修改相關程式碼，使用 `param.get('is_int', False)` 來安全地獲取 `is_int` 的值，如果不存在則預設為 `False`。
+1.  **`_tkinter.TclError: bitmap "..." not defined` (
+)**
+    *   **
+：** 
+ `icon/001.ico` 
+。
+    *   **
+：** 
+ `icon` 
+。
+ `D:\07python\gemini-daul-controller\icon` 
+ `001.ico` 
+ `002.ico` 
+。
 
-3.  **`_tkinter.TclError: couldn't read file "forest-light.tcl"` (主題檔案缺失)**
-    *   **問題描述：** 程式無法找到 `forest-light.tcl` 主題檔案。
-    *   **解決方案：** 經檢查，`forest-light.tcl` 和 `forest-light` 目錄不存在。手動將這些檔案/目錄複製到 `D:\07python\gemini-daul-controller\` 目錄。
+2.  **`KeyError: 'is_int'` (
+)**
+    *   **
+：** 
+ `_create_widgets` 
+，
+ `entry` 
+，
+ `param` 
+ `is_int` 
+，
+ `entry` 
+。
+    *   **
+：** 
+，
+ `param.get('is_int', False)` 
+ `is_int` 
+，
+ `False` 
+。
 
-4.  **`AttributeError: 'ModbusMonitorApp' object has no attribute 'writable_params_frame'` (GUI 元素引用錯誤)**
-    *   **問題描述：** 在 `_update_all_text` 函數中，程式嘗試配置已替換為 `writable_params_notebook` 的 `writable_params_frame`。
-    *   **解決方案：** 從 `_update_all_text` 函數中移除對 `self.writable_params_frame.config` 的呼叫。
+3.  **`_tkinter.TclError: couldn't read file "forest-light.tcl"` (
+)**
+    *   **
+：** 
+ `forest-light.tcl` 
+。
+    *   **
+：** 
+ `forest-light.tcl` 
+ `forest-light` 
+。
+ `D:\07python\gemini-daul-controller\` 
+/
+。
+
+4.  **`AttributeError: 'ModbusMonitorApp' object has no attribute 'writable_params_frame'` (GUI 
+)**
+    *   **
+：** 
+ `_update_all_text` 
+，
+ `writable_params_notebook` 
+ `writable_params_frame` 
+。
+    *   **
+：** 
+ `_update_all_text` 
+ `self.writable_params_frame.config` 
+。
+
+5.  **`_tkinter.TclError: invalid command name ".!frame.!frame.!labelframe.!combobox.popdown.f.l"` (ttkbootstrap 
+)**
+    *   **
+：** 
+ `ttkbootstrap` 
+ `forest-light` 
+，
+ `_tkinter.TclError: invalid command name` 
+。
+ `ttkbootstrap` 
+ `Combobox` 
+，
+。
+    *   **
+：** 
+ `ttk.Style().theme_use('litera')` 
+ `ModbusMonitorApp` 
+，
+ `ModbusMonitorApp` 
+，
+ `ttkbootstrap` 
+ `ttk` 
+。
+ `forest-light.tcl` 
+ `forest-light` 
+。
+
 
 ## 目前狀態
 所有規劃的程式碼修改已完成，並且應用程式已成功執行。您現在應該可以看到一個帶有 Modbus 參數設置、A/B 組即時監控區、可寫入參數（分為通用、A 組、B 組、PID 參數標籤頁）以及批量操作區的應用程式視窗。
