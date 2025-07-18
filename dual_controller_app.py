@@ -634,9 +634,9 @@ class ModbusMonitorApp:
         self.slave_id_var = tk.StringVar(value="1")
         self.slave_id_spinbox = ttk.Spinbox(self.modbus_params_frame, from_=1, to=247, increment=1, width=5, textvariable=self.slave_id_var)
         self.slave_id_spinbox.grid(row=0, column=5, padx=5, pady=5, sticky=tk.W)
-        self.refresh_ports_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("REFRESH_PORTS_BUTTON"), width=10, command=self._refresh_ports)
+        self.refresh_ports_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("REFRESH_PORTS_BUTTON"), bootstyle="primary.Outline", width=10, command=self._refresh_ports)
         self.refresh_ports_button.grid(row=0, column=6, padx=5, pady=5)
-        self.connect_button = ttk.Checkbutton(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="round-toggle", command=self._toggle_connection)
+        self.connect_button = ttk.Checkbutton(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="success-toolbutton", command=self._toggle_connection)
         self.connect_button.grid(row=0, column=7, padx=15, pady=5, sticky=tk.E)
 
         # --- 分隔線 ---
@@ -810,11 +810,11 @@ class ModbusMonitorApp:
         self.writable_params_buttons_frame.grid_columnconfigure(1, weight=1)
         self.writable_params_buttons_frame.grid_columnconfigure(2, weight=1)
 
-        self.save_params_button = ttk.Button(self.writable_params_buttons_frame, text=self.get_current_translation("SAVE_PARAMS_BUTTON"), command=self._save_parameters_to_file, width=15)
+        self.save_params_button = ttk.Button(self.writable_params_buttons_frame, text=self.get_current_translation("SAVE_PARAMS_BUTTON"), bootstyle="primary.Outline", command=self._save_parameters_to_file, width=15)
         self.save_params_button.grid(row=0, column=0, padx=5, pady=5, sticky='ew')
-        self.load_params_button = ttk.Button(self.writable_params_buttons_frame, text=self.get_current_translation("LOAD_PARAMS_BUTTON"), command=self._load_parameters_from_file, width=15)
+        self.load_params_button = ttk.Button(self.writable_params_buttons_frame, text=self.get_current_translation("LOAD_PARAMS_BUTTON"), bootstyle="primary.Outline", command=self._load_parameters_from_file, width=15)
         self.load_params_button.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
-        self.batch_write_button = ttk.Button(self.writable_params_buttons_frame, text=self.get_current_translation("BATCH_WRITE_BUTTON"), command=self._batch_write_parameters, width=15)
+        self.batch_write_button = ttk.Button(self.writable_params_buttons_frame, text=self.get_current_translation("BATCH_WRITE_BUTTON"), bootstyle="primary.Outline", command=self._batch_write_parameters, width=15)
         self.batch_write_button.grid(row=0, column=2, padx=5, pady=5, sticky='ew')
 
     def _create_monitor_widgets(self, parent_frame, config):
@@ -833,17 +833,17 @@ class ModbusMonitorApp:
             reg_hex_current, title_key_current, unit_current = current_config
             initial_subtext_current = self.get_current_translation(title_key_current)
             current_meter = ttk.Meter(
-                master=parent_frame,
+                master=parent_frame,    
                 metersize=160,
                 padding=0,
                 amountused=0,
-                amounttotal=3.0,
-                textright='A',
+                amounttotal=3000,
+                textright='mA',
                 subtext=initial_subtext_current,
                 bootstyle='primary',
                 metertype="semi",
                 interactive=False,
-                amountformat='{:.2f}'
+                amountformat='{:,}'
             )
             current_meter.grid(row=0, column=0, sticky='nsew', padx=5, pady=0)
             labels_info[reg_hex_current] = {'title_label': None, 'unit': unit_current, 'title_key': title_key_current}
@@ -865,6 +865,7 @@ class ModbusMonitorApp:
                 bootstyle='success',
                 metertype="semi",
                 interactive=False,
+                # amountformat='{:.1f}'
             )
             signal_meter.grid(row=0, column=1, sticky='nsew', padx=5, pady=0)
             labels_info[reg_hex_signal] = {'title_label': None, 'unit': unit_signal, 'title_key': title_key_signal}
@@ -1196,14 +1197,14 @@ class ModbusMonitorApp:
         a_min_current = float(self.writable_entries['0011H'].get()) if self.writable_entries['0011H'].get() else 0.0
         a_command_dead_zone = float(self.writable_entries['0014H'].get()) if self.writable_entries['0014H'].get() else 0.0
         xaxis_props_a = self._get_chart_xaxis_properties('A')
-        draw_single_independent_chart(0.2, a_max_current, a_min_current, a_command_dead_zone, "Steelblue", "A", xaxis_props_a)
+        draw_single_independent_chart(0.2, a_max_current, a_min_current, a_command_dead_zone, "Coral", "A", xaxis_props_a)
 
         # B組參數
         b_max_current = float(self.writable_entries['001AH'].get()) if self.writable_entries['001AH'].get() else 0.0
         b_min_current = float(self.writable_entries['001BH'].get()) if self.writable_entries['001BH'].get() else 0.0
         b_command_dead_zone = float(self.writable_entries['001EH'].get()) if self.writable_entries['001EH'].get() else 0.0
         xaxis_props_b = self._get_chart_xaxis_properties('B')
-        draw_single_independent_chart(0.7, b_max_current, b_min_current, b_command_dead_zone, "SeaGreen", "B", xaxis_props_b)
+        draw_single_independent_chart(0.7, b_max_current, b_min_current, b_command_dead_zone, "MediumOrchid", "B", xaxis_props_b)
 
     def _draw_linked_chart(self):
         # 繪製連動模式的圖表
@@ -1283,11 +1284,11 @@ class ModbusMonitorApp:
 
         # 繪製紅色部分 (0% 到 50%)
         red_segment_points = points_linked[:4] # 包含到 (50%, 0A) 的點
-        self.chart_canvas.create_line(red_segment_points, fill="SeaGreen", width=2, smooth=False)
+        self.chart_canvas.create_line(red_segment_points, fill="MediumOrchid", width=2, smooth=False)
 
         # 繪製藍色部分 (50% 到 100%)
         blue_segment_points = points_linked[3:] # 從 (50%, 0A) 開始
-        self.chart_canvas.create_line(blue_segment_points, fill="Steelblue", width=2, smooth=False)
+        self.chart_canvas.create_line(blue_segment_points, fill="Coral", width=2, smooth=False)
 
         # 顯示參數值 (放置在圖表右側)
         text_x_offset = chart_x_start + fixed_chart_w + 10
@@ -1297,30 +1298,30 @@ class ModbusMonitorApp:
         # 顯示A組參數值
         self.chart_canvas.create_text(text_x_offset, text_y_start, anchor=tk.W, 
                                       text="Output A", 
-                                      font=("Arial", 8), fill="Steelblue")
+                                      font=("Arial", 8), fill="Coral")
         self.chart_canvas.create_text(text_x_offset, text_y_start + line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_MAX_CURRENT').split('(')[0].strip()}: {a_max_current:.2f}A", 
-                                      font=("Arial", 8), fill="Steelblue")
+                                      font=("Arial", 8), fill="Coral")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 2 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_MIN_CURRENT').split('(')[0].strip()}: {a_min_current:.2f}A", 
-                                      font=("Arial", 8), fill="Steelblue")
+                                      font=("Arial", 8), fill="Coral")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 3 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_COMMAND_DEAD_ZONE').split('(')[0].strip()}: {a_command_dead_zone:.1f}%", 
-                                      font=("Arial", 8), fill="Steelblue")
+                                      font=("Arial", 8), fill="Coral")
 
         # 顯示B組參數值
         self.chart_canvas.create_text(text_x_offset, text_y_start + 4 * line_height, anchor=tk.W, 
                                       text="Output B", 
-                                      font=("Arial", 8), fill="SeaGreen")
+                                      font=("Arial", 8), fill="MediumOrchid")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 5 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('B_MAX_CURRENT').split('(')[0].strip()}: {b_max_current:.2f}A", 
-                                      font=("Arial", 8), fill="SeaGreen")
+                                      font=("Arial", 8), fill="MediumOrchid")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 6 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('B_MIN_CURRENT').split('(')[0].strip()}: {b_min_current:.2f}A", 
-                                      font=("Arial", 8), fill="SeaGreen")
+                                      font=("Arial", 8), fill="MediumOrchid")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 7 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('B_COMMAND_DEAD_ZONE').split('(')[0].strip()}: {b_command_dead_zone:.1f}%", 
-                                      font=("Arial", 8), fill="SeaGreen")
+                                      font=("Arial", 8), fill="MediumOrchid")
 
     def _draw_single_output_chart(self):
         # 繪製單組輸出模式的圖表 (只顯示A組)
@@ -1387,7 +1388,7 @@ class ModbusMonitorApp:
         # (100%, 最大電流值)
         points.append((map_x(100), map_y(a_max_current)))
 
-        self.chart_canvas.create_line(points, fill="Steelblue", width=2, smooth=False)
+        self.chart_canvas.create_line(points, fill="Coral", width=2, smooth=False)
 
         # 顯示參數值 (放置在圖表右側)
         text_x_offset = chart_x_start + fixed_chart_w + 10 # 距離圖表右側10像素
@@ -1396,16 +1397,16 @@ class ModbusMonitorApp:
 
         self.chart_canvas.create_text(text_x_offset, text_y_start, anchor=tk.W, 
                                       text="Output A", 
-                                      font=("Arial", 8), fill="Steelblue")
+                                      font=("Arial", 8), fill="Coral")
         self.chart_canvas.create_text(text_x_offset, text_y_start + line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_MAX_CURRENT').split('(')[0].strip()}: {a_max_current:.2f}A", 
-                                      font=("Arial", 8), fill="Steelblue")
+                                      font=("Arial", 8), fill="Coral")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 2 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_MIN_CURRENT').split('(')[0].strip()}: {a_min_current:.2f}A", 
-                                      font=("Arial", 8), fill="Steelblue")
+                                      font=("Arial", 8), fill="Coral")
         self.chart_canvas.create_text(text_x_offset, text_y_start + 3 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_COMMAND_DEAD_ZONE').split('(')[0].strip()}: {a_command_dead_zone:.1f}%", 
-                                      font=("Arial", 8), fill="Steelblue")
+                                      font=("Arial", 8), fill="Coral")
 
     def _refresh_ports(self):
         """刷新電腦目前可用的串口。"""
@@ -1544,8 +1545,8 @@ class ModbusMonitorApp:
     def _update_monitor_area(self, registers):
         """根據讀取的寄存器值更新即時監控區的顯示。"""
         # A Group: 0000H - 0002H
-        # 0000H: 輸出電流 (A)
-        current_val_a = convert_to_float(registers[0], 100)
+        # 0000H: 輸出電流 (mA)
+        current_val_a = convert_to_float(registers[0], 0.1)
         if current_val_a is not None:
             self.monitor_display_controls_a['0000H'].configure(amountused=current_val_a)
         else:
@@ -1565,8 +1566,8 @@ class ModbusMonitorApp:
         self.monitor_display_controls_a['0002H'].config(text=status_text_a)
 
         # B Group: 0003H - 0005H
-        # 0003H: 輸出電流 (A)
-        current_val_b = convert_to_float(registers[3], 100)
+        # 0003H: 輸出電流 (mA)
+        current_val_b = convert_to_float(registers[3], 0.1)
         if current_val_b is not None:
             self.monitor_display_controls_b['0003H'].configure(amountused=current_val_b)
         else:
