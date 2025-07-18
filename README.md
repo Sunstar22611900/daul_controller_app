@@ -45,4 +45,4 @@
 
 ## 螢幕截圖
 
-*待補充*
+<img width="1202" height="1032" alt="image" src="https://github.com/user-attachments/assets/51e04fba-3dfd-44c7-8e27-916826353510" />
