@@ -21,103 +21,27 @@
     *   `_write_single_register`：將「恢復出廠設置」的特殊處理從 `0007H` 移至 `000CH`。
     *   `_batch_write_parameters`：更新此函數以遍歷新的 `writable_params_config`，並在批次寫入時跳過 `000CH`（恢復出廠設置）的寫入操作。
 
-## 
+## 遇到的問題與解決方案 (歷史紀錄)
 
+1.  **`_tkinter.TclError: bitmap "..." not defined`**
+    *   **問題描述：** 應用程式無法找到 `icon/001.ico` 檔案。
+    *   **解決方案：** 確保 `icon` 資料夾及其內容位於正確的路徑，例如 `D:\07python\gemini-daul-controller\icon`，並且 `001.ico` 和 `002.ico` 檔案存在。
 
-1.  **`_tkinter.TclError: bitmap "..." not defined` (
-)**
-    *   **
-：** 
- `icon/001.ico` 
-。
-    *   **
-：** 
- `icon` 
-。
- `D:\07python\gemini-daul-controller\icon` 
- `001.ico` 
- `002.ico` 
-。
+2.  **`KeyError: 'is_int'`**
+    *   **問題描述：** 在 `_create_widgets` 函數中，當處理 `entry` 類型的參數時，嘗試存取 `param` 字典中不存在的 `is_int` 鍵。
+    *   **解決方案：** 修改程式碼，使用 `param.get('is_int', False)` 來安全地存取 `is_int` 鍵，如果不存在則預設為 `False`。
 
-2.  **`KeyError: 'is_int'` (
-)**
-    *   **
-：** 
- `_create_widgets` 
-，
- `entry` 
-，
- `param` 
- `is_int` 
-，
- `entry` 
-。
-    *   **
-：** 
-，
- `param.get('is_int', False)` 
- `is_int` 
-，
- `False` 
-。
+3.  **`_tkinter.TclError: couldn't read file "forest-light.tcl"`**
+    *   **問題描述：** 應用程式無法找到 `forest-light.tcl` 主題檔案。
+    *   **解決方案：** 確保 `forest-light.tcl` 和 `forest-light` 資料夾位於應用程式的根目錄或可存取的路徑，例如 `D:\07python\gemini-daul-controller\`。
 
-3.  **`_tkinter.TclError: couldn't read file "forest-light.tcl"` (
-)**
-    *   **
-：** 
- `forest-light.tcl` 
-。
-    *   **
-：** 
- `forest-light.tcl` 
- `forest-light` 
-。
- `D:\07python\gemini-daul-controller\` 
-/
-。
+4.  **`AttributeError: 'ModbusMonitorApp' object has no attribute 'writable_params_frame'` (GUI 更新問題)**
+    *   **問題描述：** 在 `_update_all_text` 函數中，嘗試存取 `self.writable_params_frame` 屬性時發生錯誤，因為該屬性可能尚未被創建或已被銷毀。這通常發生在 `writable_params_notebook` 及其子框架被重新建立時。
+    *   **解決方案：** 在 `_update_all_text` 函數中，添加 `hasattr(self, 'writable_params_notebook')` 等檢查，確保在更新 GUI 元件之前，這些元件已經存在。
 
-4.  **`AttributeError: 'ModbusMonitorApp' object has no attribute 'writable_params_frame'` (GUI 
-)**
-    *   **
-：** 
- `_update_all_text` 
-，
- `writable_params_notebook` 
- `writable_params_frame` 
-。
-    *   **
-：** 
- `_update_all_text` 
- `self.writable_params_frame.config` 
-。
-
-5.  **`_tkinter.TclError: invalid command name ".!frame.!frame.!labelframe.!combobox.popdown.f.l"` (ttkbootstrap 
-)**
-    *   **
-：** 
- `ttkbootstrap` 
- `forest-light` 
-，
- `_tkinter.TclError: invalid command name` 
-。
- `ttkbootstrap` 
- `Combobox` 
-，
-。
-    *   **
-：** 
- `ttk.Style().theme_use('litera')` 
- `ModbusMonitorApp` 
-，
- `ModbusMonitorApp` 
-，
- `ttkbootstrap` 
- `ttk` 
-。
- `forest-light.tcl` 
- `forest-light` 
-。
-
+5.  **`_tkinter.TclError: invalid command name ".!frame.!frame.!labelframe.!combobox.popdown.f.l"` (ttkbootstrap 主題問題)**
+    *   **問題描述：** 使用 `ttkbootstrap` 主題時，特別是 `Combobox` 元件，在某些操作後會出現無效命令名稱的錯誤。這可能與 `ttkbootstrap` 主題的內部狀態管理有關。
+    *   **解決方案：** 確保在 `ModbusMonitorApp` 類別初始化時，正確地設定 `ttk.Style().theme_use('litera')`，並且所有 `ttkbootstrap` 元件都使用 `ttk` 模組而不是 `tk` 模組。同時，確保 `forest-light.tcl` 和 `forest-light` 資料夾被正確地包含在應用程式的資源中。
 
 ## 目前狀態
 所有規劃的程式碼修改已完成，並且應用程式已成功執行。您現在應該可以看到一個帶有 Modbus 參數設置、A/B 組即時監控區、可寫入參數（分為通用、A 組、B 組、PID 參數標籤頁）以及批量操作區的應用程式視窗。
@@ -264,10 +188,10 @@
 
 ### 1. 參數輸入區優化
 
-*   **移除個別寫入按鈕：** 將參數輸入區每個參數旁邊的獨立寫入按鈕全部移除，簡化介面.\
-*   **兩欄顯示：** 將參數輸入欄位從單欄改為左右兩欄顯示，提高空間利用率.\
-*   **統一元件寬度：** 調整 `ttk.Combobox` 和 `ttk.Spinbox` 的 `width` 屬性為 `15`，`ttk.Entry` 保持 `18`，以實現視覺上總寬度的一致性.\
-*   **批量操作按鈕位置調整：** 將「儲存」、「讀取」和「批次寫入」按鈕從原有的「批量操作區」移至「可寫入參數區」的底部，並統一按鈕寬度為 `15`.\
+*   **移除個別寫入按鈕：** 將參數輸入區每個參數旁邊的獨立寫入按鈕全部移除，簡化介面.
+*   **兩欄顯示：** 將參數輸入欄位從單欄改為左右兩欄顯示，提高空間利用率.
+*   **統一元件寬度：** 調整 `ttk.Combobox` 和 `ttk.Spinbox` 的 `width` 屬性為 `15`，`ttk.Entry` 保持 `18`，以實現視覺上總寬度的一致性.
+*   **批量操作按鈕位置調整：** 將「儲存」、「讀取」和「批次寫入」按鈕從原有的「批量操作區」移至「可寫入參數區」的底部，並統一按鈕寬度為 `15`.
 *   **語言切換問題修正：** 修正了 `KeyError` 導致語言切換時參數調整區語言無法更新的問題，確保所有控制項在語言切換時都能正確更新。
 
 ### 2. 參數顯示邏輯調整
@@ -317,7 +241,7 @@
 *   **`_get_chart_xaxis_properties` 函數增強：**
     *   除了標題和最大/最小刻度，此函數現在還會計算並回傳一個 `mid_label`（中間刻度標籤）。
     *   如果 X 軸的單位是 V 或 mA，`mid_label` 會被計算為範圍的中點（例如，"0V" 和 "5V" 的中點是 "2.5V"）。
-    *   如果單位是百分比，`mid_label` 保持為 "50%"。
+    *   如果單位是百分比，`mid_label` 保持為 "50%風。
 *   **`_draw_linked_chart` 函數更新：**
     *   繪製 X 軸中間刻度時，不再使用固定的 "50%"，而是使用從 `_get_chart_xaxis_properties` 獲取的 `mid_label` 值，確保了在不同物理單位下中間點刻度的準確性。
 
@@ -336,4 +260,84 @@
 ### 2. 可寫入參數區優化
 
 *   **標籤格式調整：**
-    *   將可寫入參數的標籤格式從 `"寄存器位址: 參數名稱"` 修改為 `"參數名稱 (寄存器位址)"`，使參數名稱更突出，同時保留了必要的地址信息。
+    *   將可寫入參數的標籤格式從 "寄存器位址: 參數名稱" 修改為 "參數名稱 (寄存器位址)"，使參數名稱更突出，同時保留了必要的地址信息。
+
+## 2025年7月18日 進度更新 (模式切換與視窗顯示問題)
+
+### 1. 問題描述
+程式在啟動時，模式選擇對話框沒有正確顯示，導致主程式卡住，無法正常進入主介面。
+*   **原因分析：**
+    *   在 `__init__` 函數中，主視窗 (`root`) 被 `root.withdraw()` 隱藏。
+    *   模式選擇對話框 (`dialog`) 被設定為依附於主視窗 (`dialog.transient(self.master)`)。
+    *   由於主視窗是隱藏的，依附於它的對話框也變成了隱藏狀態，導致使用者無法看到並操作對話框。
+    *   程式隨後在 `dialog.wait_window()` 處無限期等待，造成邏輯死鎖。
+
+### 2. 修正計畫
+1.  **修改 `__init__` 函數：**
+    *   移除 `self.master.withdraw()`。
+    *   在呼叫 `_show_mode_selection_dialog()` 之前，確保所有潛在的 UI 變數都被初始化為 `None` 或空字典，以避免在 UI 重新建立時出現 `AttributeError`。
+    *   在模式選擇完成後（即 `self.controller_mode` 不為 `None` 時），呼叫 `_setup_main_window()` 來設定主視窗的標題和大小，並呼叫 `_create_widgets()` 來建立 UI。
+2.  **修改 `_show_mode_selection_dialog` 函數：**
+    *   確保對話框的 `transient` 設定不會導致其隱藏。
+3.  **修改 `if __name__ == "__main__":` 區塊：**
+    *   在創建 `ModbusMonitorApp` 實例之前，將 `root.withdraw()` 移到這裡，確保主視窗在模式選擇對話框顯示之前是隱藏的。
+    *   在模式選擇完成後，如果 `app.controller_mode` 不為 `None`，則呼叫 `root.deiconify()` 顯示主視窗。
+    *   如果 `app.controller_mode` 為 `None` (使用者關閉了模式選擇對話框)，則呼叫 `root.destroy()` 確保程式正常退出。
+
+## 2025年7月21日 進度更新 (啟動流程修復)
+
+### 1. 問題描述
+在 7 月 18 日的修正後，程式出現了新的啟動問題：
+1.  **初次修正後：** 視窗閃退，但程式仍在終端機背景執行，無法操作。
+2.  **二次修正後：** 視窗完全不出現，程式卡在等待一個不可見的對話框。
+
+*   **根本原因分析：**
+    *   一個被 `withdraw()` 隱藏的 `tk.Tk` 或 `ttk.Window` 主視窗，其子視窗 (`Toplevel`) 也會被隱藏。因此，在隱藏主視窗後才建立的模式選擇對話框，使用者根本看不到，導致程式卡在 `dialog.wait_window()`，等待一個永遠不會發生的互動。
+
+### 2. 最終修正方案
+採用了更穩健的啟動流程，將視窗的顯示與隱藏邏輯完全封裝在 `ModbusMonitorApp` 類別的 `__init__` 函數中：
+
+1.  **`__init__` 函數：**
+    *   在函數一開始，立刻呼叫 `self.master.withdraw()` 隱藏主視窗。
+    *   初始化所有必要的變數。
+    *   呼叫 `_show_mode_selection_dialog()` 顯示模式選擇對話框。
+    *   **關鍵：** 如果使用者在對話框中選擇了一個模式 (`self.controller_mode` 有值)，則繼續執行後續的 UI 建立 (`_setup_main_window`, `_create_widgets`)。
+    *   在所有 UI 元件都建立完成後，最後才呼叫 `self.master.deiconify()` 將配置好的主視窗顯示給使用者。
+    *   如果使用者直接關閉了模式選擇對話框，`__init__` 函數會提前返回，主程式的 `mainloop` 也不會啟動，從而實現乾淨的退出。
+
+2.  **`_show_mode_selection_dialog` 函數：**
+    *   移除了 `dialog.transient(self.master)`，解除對話框與主視窗的依附關係，確保即使主視窗被隱藏，對話框也能獨立顯示。
+    *   將對話框的關閉按鈕 (`WM_DELETE_WINDOW`) 的行為設定為直接銷毀主視窗 (`self.master.destroy`)，這能確保在使用者不想選擇模式時，整個應用程式能完全關閉，避免留下「殭屍」進程。
+
+3.  **`if __name__ == "__main__":` 區塊：**
+    *   大幅簡化，只負責建立 `ttk.Window` 和 `ModbusMonitorApp` 的實例，然後無條件啟動 `root.mainloop()`。整個啟動流程的複雜邏輯都已移交給 `ModbusMonitorApp` 類別內部處理，使得主程式碼區塊更清晰，並且能正確處理 `mainloop` 在視窗被提前銷毀時可能拋出的 `TclError`。
+
+### 3. 目前狀態
+程式已能穩定、正確地啟動。模式選擇對話框會優先顯示，使用者做出選擇後，主視窗才會出現。若使用者關閉選擇對話框，程式會乾淨地退出。接下來將由使用者進行全面的功能測試。
+
+## 2025年7月21日 進度更新 (功能修正)
+
+根據使用者的測試回饋，完成了以下四項功能修正：
+
+### 1. 參數顯示/寫入邏輯修正
+
+*   **問題 1 (雙組模式 `entry_scaled` 顯示錯誤)：** 雙組輸出模式下，`0015H`, `0016H`, `001FH`, `0020H` 等 `entry_scaled` 類型的參數在讀取後未正確乘以比例因子，導致顯示值錯誤（例如，讀取到 7 卻顯示為 0.7）。
+    *   **解決方案：** 修改 `_update_writable_params_area` 函數，為 `entry_scaled` 類型的參數新增一個獨立的處理分支，確保從寄存器讀取到的值會乘以其在 `writable_params_config` 中定義的 `scale` 後再顯示於介面。
+
+*   **問題 3 (單組模式 `000CH` 邏輯錯誤)：** 單組輸出模式下，`000CH`（震顫頻率）的讀取和寫入邏輯不正確。
+    *   **解決方案：**
+        1.  修改 `single_writable_params_config` 中 `000CH` 的定義，將其 `scale` 從 `1` 修正為 `10`。
+        2.  由於 `entry_scaled` 類型的處理邏輯已在問題 1 中修正，現在 `000CH` 在讀取時會自動乘以 10 顯示，在寫入時（透過 `_validate_single_param_for_batch` 函數）會自動除以 10 存入，使其行為與預期一致。
+
+### 2. 即時監控邏輯修正
+
+*   **問題 2 (單組模式電流顯示為 0)：** 單組輸出模式下，`0000H` 的輸出電流值在即時監控區始終顯示為 0。
+    *   **解決方案：** 修改 `_update_monitor_area` 函數，移除了原本錯誤的判斷 `100 if self.controller_mode == 'single' else 0.1`，並將單組模式和雙組模式 A 組的電流換算比例 (`scale`) 都修正為 `100`，確保電流值能被正確轉換並顯示。
+
+### 3. 檔案儲存路徑重構
+
+*   **問題 4 (本地存檔混用)：** 本地儲存功能未區分模式和語言，導致所有設定檔都存在同一個資料夾下，容易造成不相容的設定檔被誤用。
+    *   **解決方案：**
+        1.  **新增 `_get_parameters_dir` 輔助函數：** 此函數會根據當前的控制器模式 (`self.controller_mode`) 和語言 (`self.current_language_code`) 回傳一個唯一的資料夾路徑（例如 `modbus_parameters/zh_dual` 或 `modbus_parameters/en_single`）。
+        2.  **修改 `_save_parameters_to_file` 函數：** 在儲存檔案前，呼叫 `_get_parameters_dir` 來確定目標資料夾，並自動建立不存在的資料夾，確保設定檔被存放在正確的分類路徑下。
+        3.  **修改 `_load_parameters_from_file` 函數：** 在讀取檔案時，同樣呼叫 `_get_parameters_dir`，只列出並讀取當前模式與語言對應的資料夾中的設定檔，從根本上避免了混淆。

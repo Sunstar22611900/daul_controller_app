@@ -1,11 +1,6 @@
-
-dual_controller_app00.py
-*.tcl
-*.txt
-*.docx
+/modbus_parameters/
+/dist/
+/build/
 *.spec
-*.png
-
-# PyInstaller files
-build/
-dist/
+__pycache__/
+.pyc
