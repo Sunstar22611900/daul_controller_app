@@ -163,6 +163,16 @@ TEXTS = {
         "MODE_SELECTION_PROMPT": "請選擇要操作的控制器模式：",
         "DUAL_CONTROLLER_BUTTON": "雙組控制器",
         "SINGLE_CONTROLLER_BUTTON": "單組控制器",
+        "SWITCH_MODE_FRAME_TEXT": "模式切換",
+        "DUAL_MODE_OPTION": "雙組輸出",
+        "SINGLE_MODE_OPTION": "單組輸出",
+        "CONFIRM_SWITCH_MODE_TITLE": "確認切換模式",
+        "CONFIRM_SWITCH_MODE_MSG": "切換模式將會斷開目前連線並重置介面，是否確定？",
+        "BATCH_WRITE_PROGRESS_TITLE": "寫入進度",
+        "BATCH_WRITE_IN_PROGRESS": "正在寫入寄存器 0x{register_address:04X} ({i}/{total_registers})...",
+        "CURRENT_RANGE_ERROR_A": "A組輸出：最大電流必須大於等於最小電流 + 0.1A。",
+        "CURRENT_RANGE_ERROR_B": "B組輸出：最大電流必須大於等於最小電流 + 0.1A。",
+        "CURRENT_RANGE_ERROR_S": "單組輸出：最大電流必須大於等於最小電流 + 0.1A。",
         "MONITOR_AREA_SINGLE_FRAME_TEXT": "即時監控 (輸出: 0000H~0002H)",
         "S_SIGNAL_SELECTION": "信號選擇",
         "S_ENABLE_MODE": "啟用模式",
@@ -387,6 +397,16 @@ TEXTS = {
         "MODE_SELECTION_PROMPT": "Please select the controller mode to operate:",
         "DUAL_CONTROLLER_BUTTON": "Dual Controller",
         "SINGLE_CONTROLLER_BUTTON": "Single Controller",
+        "SWITCH_MODE_FRAME_TEXT": "Switch Mode",
+        "DUAL_MODE_OPTION": "Dual Output",
+        "SINGLE_MODE_OPTION": "Single Output",
+        "CONFIRM_SWITCH_MODE_TITLE": "Confirm Mode Switch",
+        "CONFIRM_SWITCH_MODE_MSG": "Switching modes will disconnect the current session and reset the interface. Are you sure?",
+        "BATCH_WRITE_PROGRESS_TITLE": "Write Progress",
+        "BATCH_WRITE_IN_PROGRESS": "Writing register 0x{register_address:04X} ({i}/{total_registers})...",
+        "CURRENT_RANGE_ERROR_A": "Output A: Maximum current must be >= Minimum current + 0.1A.",
+        "CURRENT_RANGE_ERROR_B": "Output B: Maximum current must be >= Minimum current + 0.1A.",
+        "CURRENT_RANGE_ERROR_S": "Single Output: Maximum current must be >= Minimum current + 0.1A.",
         "MONITOR_AREA_SINGLE_FRAME_TEXT": "Real-time Monitoring (Output: 0000H~0002H)",
         "S_SIGNAL_SELECTION": "Signal Selection",
         "S_ENABLE_MODE": "Enable Mode",
@@ -677,7 +697,7 @@ class ModbusMonitorApp:
         """Configure the main window after mode selection."""
         app_title_key = "APP_TITLE_DUAL" if self.controller_mode == 'dual' else "APP_TITLE_SINGLE"
         self.master.title(self.get_current_translation(app_title_key))
-        self.master.geometry("1200x1000")
+        self.master.geometry("960x1000")
         self.master.resizable(True, True)
 
     def _show_mode_selection_dialog(self):
@@ -753,9 +773,16 @@ class ModbusMonitorApp:
         top_frame.grid(row=0, column=0, sticky='ew', pady=(0, 5))
         top_frame.grid_columnconfigure(0, weight=1)
 
-        # --- 模式切換按鈕 ---
-        self.mode_switch_button = ttk.Button(top_frame, text="切換模式", command=self._switch_controller_mode, bootstyle="secondary")
-        self.mode_switch_button.pack(side=tk.RIGHT, padx=(10, 0))
+        # --- 模式切換 (Combobox) ---
+        self.mode_switch_frame = ttk.LabelFrame(top_frame, text=self.get_current_translation("SWITCH_MODE_FRAME_TEXT"), padding="10")
+        self.mode_switch_frame.pack(side=tk.RIGHT, padx=(10, 0))
+        self.mode_combobox_var = tk.StringVar()
+        self.mode_combobox = ttk.Combobox(self.mode_switch_frame, textvariable=self.mode_combobox_var, values=[self.get_current_translation("DUAL_MODE_OPTION"), self.get_current_translation("SINGLE_MODE_OPTION")], state="readonly", width=12)
+        self.mode_combobox.grid(row=0, column=0, padx=5, pady=5)
+        self.mode_combobox.bind("<<ComboboxSelected>>", self._on_mode_select)
+        # Set initial value
+        current_mode_text = self.get_current_translation("DUAL_MODE_OPTION") if self.controller_mode == 'dual' else self.get_current_translation("SINGLE_MODE_OPTION")
+        self.mode_combobox_var.set(current_mode_text)
 
         # --- 語言選擇 (通用) ---
         self.language_frame = ttk.LabelFrame(top_frame, text=self.get_current_translation("LANGUAGE_LABEL"), padding="10")
@@ -983,15 +1010,21 @@ class ModbusMonitorApp:
         self.batch_write_button = ttk.Button(buttons_frame, text=self.get_current_translation("BATCH_WRITE_BUTTON"), bootstyle="primary.Outline", command=self._batch_write_parameters, width=15)
         self.batch_write_button.grid(row=0, column=2, padx=5, pady=5, sticky='ew')
 
-    def _switch_controller_mode(self):
+    def _on_mode_select(self, event=None):
         """處理模式切換請求。"""
-        if messagebox.askyesno("確認切換", "切換模式將會斷開目前連線並重置介面，是否確定？"):
+        selected_mode_str = self.mode_combobox_var.get()
+        target_mode = 'dual' if selected_mode_str == self.get_current_translation("DUAL_MODE_OPTION") else 'single'
+
+        if target_mode == self.controller_mode:
+            return # Do nothing if the mode is not actually changed
+
+        if messagebox.askyesno(self.get_current_translation("CONFIRM_SWITCH_MODE_TITLE"), self.get_current_translation("CONFIRM_SWITCH_MODE_MSG")):
             # Disconnect if connected
             if self.modbus_master:
                 self._toggle_connection() # This will handle disconnection and UI clearing
 
             # Switch mode
-            self.controller_mode = 'single' if self.controller_mode == 'dual' else 'dual'
+            self.controller_mode = target_mode
             
             # Update title
             app_title_key = "APP_TITLE_DUAL" if self.controller_mode == 'dual' else "APP_TITLE_SINGLE"
@@ -1001,6 +1034,10 @@ class ModbusMonitorApp:
             self._build_ui_for_mode()
             # Update all text for the new UI
             self._update_all_text()
+        else:
+            # If user cancels, revert the combobox to the current mode
+            current_mode_text = self.get_current_translation("DUAL_MODE_OPTION") if self.controller_mode == 'dual' else self.get_current_translation("SINGLE_MODE_OPTION")
+            self.mode_combobox_var.set(current_mode_text)
 
     def _create_monitor_widgets(self, parent_frame, config):
         # Configure grid for the parent frame
@@ -1100,7 +1137,17 @@ class ModbusMonitorApp:
         self.refresh_ports_button.config(text=self.translations["REFRESH_PORTS_BUTTON"])
         self.connect_button.config(text=self.translations["DISCONNECT_BUTTON"] if self.modbus_master else self.translations["CONNECT_BUTTON"])
         self.language_frame.config(text=self.translations["LANGUAGE_LABEL"])
-        self.mode_switch_button.config(text=self.translations.get("SWITCH_MODE_BUTTON", "切換模式"))
+        
+        # Update mode switch combobox
+        self.mode_switch_frame.config(text=self.get_current_translation("SWITCH_MODE_FRAME_TEXT"))
+        dual_text = self.translations["DUAL_MODE_OPTION"]
+        single_text = self.translations["SINGLE_MODE_OPTION"]
+        self.mode_combobox.config(values=[dual_text, single_text])
+        if self.controller_mode == 'dual':
+            self.mode_combobox_var.set(dual_text)
+        else:
+            self.mode_combobox_var.set(single_text)
+
         self.save_params_button.config(text=self.translations["SAVE_PARAMS_BUTTON"])
         self.load_params_button.config(text=self.translations["LOAD_PARAMS_BUTTON"])
         self.batch_write_button.config(text=self.translations["BATCH_WRITE_BUTTON"])
@@ -1116,6 +1163,12 @@ class ModbusMonitorApp:
             self.writable_params_notebook.tab(self.pid_params_frame, text=self.translations["PID_PARAMS_FRAME_TEXT"])
             self.chart_frame.config(text=self.translations["CONTROLLER_MODE_CHART_FRAME_TEXT"])
             
+            # Update monitor meter subtext
+            self.monitor_display_controls_a['0000H'].configure(subtext=self.translations["OUTPUT_CURRENT_LABEL"])
+            self.monitor_display_controls_a['0001H'].configure(subtext=self.translations["INPUT_SIGNAL_LABEL"])
+            self.monitor_display_controls_b['0003H'].configure(subtext=self.translations["OUTPUT_CURRENT_LABEL"])
+            self.monitor_display_controls_b['0004H'].configure(subtext=self.translations["INPUT_SIGNAL_LABEL"])
+
             # Update monitor status text
             if hasattr(self, 'last_status_code_a') and self.last_status_code_a is not None:
                 status_text_a = self.translations["STATUS_MAP_VALUES"].get(self.last_status_code_a, self.translations["UNKNOWN_STATUS"])
@@ -1131,6 +1184,10 @@ class ModbusMonitorApp:
             self.monitor_frame_a.config(text=self.translations["MONITOR_AREA_SINGLE_FRAME_TEXT"])
             self.writable_params_area_frame.config(text=self.translations["WRITABLE_PARAMS_FRAME_TEXT"])
             
+            # Update monitor meter subtext
+            self.monitor_display_controls_a['0000H'].configure(subtext=self.translations["OUTPUT_CURRENT_LABEL"])
+            self.monitor_display_controls_a['0001H'].configure(subtext=self.translations["INPUT_SIGNAL_LABEL"])
+
             # Update monitor status text
             if hasattr(self, 'last_status_code_a') and self.last_status_code_a is not None:
                 status_text_a = self.translations["S_STATUS_MAP_VALUES"].get(self.last_status_code_a, self.translations["UNKNOWN_STATUS"])
@@ -1995,14 +2052,39 @@ class ModbusMonitorApp:
                 self.writable_entries[reg_hex].set(value_str)
 
     def _batch_write_parameters(self):
-        """批量寫入參數。"""
+        """批量寫入參數，包含進度條和驗證。"""
         if not self.modbus_master:
             messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("MODBUS_NOT_CONNECTED_WARNING"))
             return
 
         config = self.writable_params_config if self.controller_mode == 'dual' else self.single_writable_params_config
-        
-        # Factory Reset check
+
+        # --- 驗證最大/最小電流 ---
+        try:
+            if self.controller_mode == 'dual':
+                # A組
+                max_a = float(self.writable_entries['0010H'].get())
+                min_a = float(self.writable_entries['0011H'].get())
+                if max_a < min_a + 0.1:
+                    messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("CURRENT_RANGE_ERROR_A"))
+                    return
+                # B組
+                max_b = float(self.writable_entries['001AH'].get())
+                min_b = float(self.writable_entries['001BH'].get())
+                if max_b < min_b + 0.1:
+                    messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("CURRENT_RANGE_ERROR_B"))
+                    return
+            else: # single
+                max_s = float(self.writable_entries['0008H'].get())
+                min_s = float(self.writable_entries['0009H'].get())
+                if max_s < min_s + 0.1:
+                    messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("CURRENT_RANGE_ERROR_S"))
+                    return
+        except (ValueError, KeyError) as e:
+            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), f"無法驗證電流範圍，請檢查參數是否為有效數字: {e}")
+            return
+
+        # --- 處理恢復出廠設置 ---
         reset_reg_hex = '000DH' if self.controller_mode == 'dual' else '0007H'
         if reset_reg_hex in self.writable_entries:
             reset_val_str = self.writable_entries[reset_reg_hex].get()
@@ -2012,9 +2094,9 @@ class ModbusMonitorApp:
                 if rev_map.get(reset_val_str) == 5:
                     if messagebox.askyesno(self.get_current_translation("CONFIRM_TITLE"), self.get_current_translation("FACTORY_RESET_CONFIRM_BATCH_MSG")):
                         self._perform_factory_reset(int(reset_reg_hex.replace('H', ''), 16))
-                    return 
+                    return
 
-        # Validation and write loop
+        # --- 準備寫入列表 ---
         validated_writes = []
         for param in config:
             reg_hex = param['reg']
@@ -2024,17 +2106,43 @@ class ModbusMonitorApp:
 
             value_to_write = self._validate_single_param_for_batch(param)
             if value_to_write is None:
-                return 
-            validated_writes.append({'address': int(reg_hex.replace('H', ''), 16), 'value': value_to_write})
+                return
+            validated_writes.append({'address': int(reg_hex.replace('H', ''), 16), 'value': value_to_write, 'reg_hex': reg_hex})
 
+        # --- 創建並顯示進度條視窗 ---
+        progress_window = tk.Toplevel(self.master)
+        progress_window.title(self.get_current_translation("BATCH_WRITE_PROGRESS_TITLE"))
+        progress_window.geometry("400x100")
+        progress_window.resizable(False, False)
+        progress_window.transient(self.master)
+        progress_window.grab_set()
+
+        progress_label = ttk.Label(progress_window, text="...")
+        progress_label.pack(pady=10, padx=10, fill=tk.X)
+        progress_bar = ttk.Progressbar(progress_window, orient='horizontal', length=380, mode='determinate')
+        progress_bar.pack(pady=10, padx=10)
+
+        # --- 執行寫入 ---
         slave_id = int(self.slave_id_spinbox.get())
-        for write_op in validated_writes:
+        total_writes = len(validated_writes)
+        progress_bar["maximum"] = total_writes
+        
+        for i, write_op in enumerate(validated_writes):
+            # 更新進度條
+            progress_label.config(text=self.get_current_translation("BATCH_WRITE_IN_PROGRESS").format(
+                register_address=write_op['address'], i=i + 1, total_registers=total_writes
+            ))
+            progress_bar["value"] = i + 1
+            progress_window.update_idletasks()
+
             if not write_modbus_register(slave_id, write_op['address'], write_op['value']):
                 messagebox.showerror(self.get_current_translation("ERROR_TITLE"), f"Failed to write to register 0x{write_op['address']:04X}. Aborting.")
-                self._read_all_registers_and_update_gui() 
+                progress_window.destroy()
+                self._read_all_registers_and_update_gui()
                 return
             time.sleep(0.05)
 
+        progress_window.destroy()
         messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("BATCH_WRITE_SUCCESS_ALL"))
         self._read_all_registers_and_update_gui()
 
