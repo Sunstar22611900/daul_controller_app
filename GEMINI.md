@@ -341,3 +341,29 @@
         1.  **新增 `_get_parameters_dir` 輔助函數：** 此函數會根據當前的控制器模式 (`self.controller_mode`) 和語言 (`self.current_language_code`) 回傳一個唯一的資料夾路徑（例如 `modbus_parameters/zh_dual` 或 `modbus_parameters/en_single`）。
         2.  **修改 `_save_parameters_to_file` 函數：** 在儲存檔案前，呼叫 `_get_parameters_dir` 來確定目標資料夾，並自動建立不存在的資料夾，確保設定檔被存放在正確的分類路徑下。
         3.  **修改 `_load_parameters_from_file` 函數：** 在讀取檔案時，同樣呼叫 `_get_parameters_dir`，只列出並讀取當前模式與語言對應的資料夾中的設定檔，從根本上避免了混淆。
+
+## 2025年7月21日 進度更新 (使用者體驗優化)
+
+根據使用者的回饋，完成了以下幾項介面和邏輯的優化：
+
+### 1. 模式切換介面優化
+
+*   **問題：** 原本的「切換模式」按鈕不夠直觀，且相關提示訊息只有中文。
+*   **解決方案：**
+    1.  將 `Button` 元件改為 `ttk.Combobox`，並用一個 `LabelFrame` 包裝，使其功能更清晰，外觀更統一。
+    2.  新增 `SWITCH_MODE_FRAME_TEXT`, `DUAL_MODE_OPTION`, `SINGLE_MODE_OPTION`, `CONFIRM_SWITCH_MODE_TITLE`, `CONFIRM_SWITCH_MODE_MSG` 等中英文翻譯鍵。
+    3.  重構模式切換的事件處理函數 `_on_mode_select`，確保在切換時能正確處理中英文提示，並在使用者取消操作時，`Combobox` 的選項會自動恢復原狀。
+    4.  修正了因元件替換而遺漏的 `_update_all_text` 函數中的更新邏輯，確保在切換語言時，新的模式切換介面也能正確顯示對應的語言。
+
+### 2. 批次寫入流程優化
+
+*   **問題：** 批次寫入時，使用者無法得知目前的進度，且缺少對關鍵參數的邏輯驗證。
+*   **解決方案：**
+    1.  **新增進度條視窗：** 重構 `_batch_write_parameters` 函數，在開始寫入前，建立一個包含 `ttk.Progressbar` 和狀態標籤的 `Toplevel` 視窗。在遍歷寫入每個寄存器時，即時更新進度條和狀態文字，寫入完成或失敗後自動關閉視窗。
+    2.  **新增最大/最小電流邏輯驗證：** 在 `_batch_write_parameters` 函數的開頭，加入對最大/最小電流的檢查。根據當前是單組還是雙組模式，檢查對應的參數（`0010H` vs `0011H`, `001AH` vs `001BH`, `0008H` vs `0009H`），確保最大電流值不小於最小電流值 + 0.1。若驗證失敗，則彈出對應的中英文錯誤訊息並中止寫入。
+    3.  為新的進度條和錯誤訊息新增了 `BATCH_WRITE_PROGRESS_TITLE`, `BATCH_WRITE_IN_PROGRESS`, `CURRENT_RANGE_ERROR_A`, `CURRENT_RANGE_ERROR_B`, `CURRENT_RANGE_ERROR_S` 等中英文翻譯鍵。
+
+### 3. 即時監控顯示修正
+
+*   **問題：** 切換語言時，即時監控區 `Meter` 元件的子標題（輸出電流、輸入信號）不會跟著改變。
+*   **解決方案：** 在 `_update_all_text` 函數中，為單組和雙組模式的處理分支明確加入了更新 `Meter` 元件 `subtext` 的程式碼，確保語言切換時所有介面元素都能同步更新。
