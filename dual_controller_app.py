@@ -99,6 +99,7 @@ TEXTS = {
         "DELETE_FAIL": "刪除檔案 \'{filename}\' 失敗: {e}",
         "DELETE_SUCCESS": "參數已成功刪除為 \'{filename}\'.",
         "FACTORY_RESET_CONFIRM_BATCH_MSG": "即將將控制器恢復出廠設置，是否確定?",
+        "FACTORY_RESET_COUNTDOWN_MSG": "控制器重置中，請稍候... {seconds} 秒後將重新讀取參數。",
         
         # 新增/修改的可寫入參數區的翻譯鍵
         "COMMON_PARAMS_FRAME_TEXT": "通用參數",
@@ -175,7 +176,7 @@ TEXTS = {
         "CURRENT_RANGE_ERROR_S": "單組輸出：最大電流必須大於等於最小電流 + 0.1A。",
         "MONITOR_AREA_SINGLE_FRAME_TEXT": "即時監控 (輸出: 0000H~0002H)",
         "S_SIGNAL_SELECTION": "信號選擇",
-        "S_ENABLE_MODE": "啟用模式",
+        "S_ENABLE_MODE": "外部啟動功能",
         "S_DISPLAY_MODE": "顯示模式",
         "S_485_CONTROL_SIGNAL": "485控制信號 (0~100%)",
         "S_FACTORY_RESET": "恢復出廠設置",
@@ -184,7 +185,7 @@ TEXTS = {
         "S_CURRENT_RISE_TIME": "電流上升時間 (0.1~5.0s)",
         "S_CURRENT_FALL_TIME": "電流下降時間 (0.1~5.0s)",
         "S_DITHER_FREQUENCY": "震顫頻率 (70~350Hz)",
-        "S_DEAD_ZONE_SETTING": "死區設定 (0~5%)",
+        "S_DEAD_ZONE_SETTING": "指令死區 (0~5%)",
         
         # Register value maps (for localized display)
         "STATUS_MAP_VALUES": {
@@ -265,8 +266,8 @@ TEXTS = {
         "MODBUS_PARAMS_FRAME_TEXT": "Modbus Setting",
         "COM_PORT_LABEL": "Port",
         "BAUDRATE_LABEL": "Baud Rate",
-        "SLAVE_ID_LABEL": "Device Address",
-        "REFRESH_PORTS_BUTTON": "Refresh Ports",
+        "SLAVE_ID_LABEL": "Address",
+        "REFRESH_PORTS_BUTTON": "Refresh",
         "CONNECT_BUTTON": "Connect",
         "DISCONNECT_BUTTON": "Disconnect",
         "MONITOR_AREA_A_FRAME_TEXT": "Real-time Monitoring (Output A: 0000H~0002H)",
@@ -333,6 +334,7 @@ TEXTS = {
         "DELETE_FAIL": "Failed to delete file \'{filename}\': {e}",
         "DELETE_SUCCESS": "Parameters successfully deleted as \'{filename}\'.",
         "FACTORY_RESET_CONFIRM_BATCH_MSG": "You are about to factory reset the controller. Are you sure?",
+        "FACTORY_RESET_COUNTDOWN_MSG": "Controller is resetting, please wait... Re-reading parameters in {seconds} seconds.",
         
         # New/Modified writable parameter area translations
         "COMMON_PARAMS_FRAME_TEXT": "Common Parameters",
@@ -408,17 +410,17 @@ TEXTS = {
         "CURRENT_RANGE_ERROR_B": "Output B: Maximum current must be >= Minimum current + 0.1A.",
         "CURRENT_RANGE_ERROR_S": "Single Output: Maximum current must be >= Minimum current + 0.1A.",
         "MONITOR_AREA_SINGLE_FRAME_TEXT": "Real-time Monitoring (Output: 0000H~0002H)",
-        "S_SIGNAL_SELECTION": "Signal Selection",
+        "S_SIGNAL_SELECTION": "Command Selection",
         "S_ENABLE_MODE": "Enable Mode",
-        "S_DISPLAY_MODE": "Display Mode",
-        "S_485_CONTROL_SIGNAL": "485 Control Signal (0~100%)",
+        "S_DISPLAY_MODE": "Panel Display Mode",
+        "S_485_CONTROL_SIGNAL": "RS485 Command (0~100%)",
         "S_FACTORY_RESET": "Factory Reset",
-        "S_MAX_CURRENT": "Max Current Setting (0.00~3.00A)",
-        "S_MIN_CURRENT": "Min Current Setting (0.00~1.00A)",
-        "S_CURRENT_RISE_TIME": "Current Rise Time (0.1~5.0s)",
-        "S_CURRENT_FALL_TIME": "Current Fall Time (0.1~5.0s)",
+        "S_MAX_CURRENT": "Max Output Current (0.00~3.00A)",
+        "S_MIN_CURRENT": "Min Output Current (0.00~1.00A)",
+        "S_CURRENT_RISE_TIME": "Ramp up Time (0.1~5.0s)",
+        "S_CURRENT_FALL_TIME": "Ramp down Time (0.1~5.0s)",
         "S_DITHER_FREQUENCY": "Dither Frequency (70~350Hz)",
-        "S_DEAD_ZONE_SETTING": "Dead Zone Setting (0~5%)",
+        "S_DEAD_ZONE_SETTING": "Command Deadband (0~5%)",
         
         # Register value maps (for localized display)
         "STATUS_MAP_VALUES": {
@@ -448,8 +450,8 @@ TEXTS = {
             1: "Enabled"
         },
         "S_DISPLAY_MODE_MAP_VALUES": {
-            0: "Show Current",
-            1: "Show Input Signal",
+            0: "Show Output Current",
+            1: "Show Input Command",
             2: "No Display"
         },
         "S_FACTORY_RESET_MAP_VALUES": {
@@ -461,10 +463,10 @@ TEXTS = {
             2: "4~20mA"
         },
         "PANEL_DISPLAY_MODE_MAP_VALUES": { # For 0008H
-            0: "Display Output A Current",
-            1: "Display Command for Output A",
-            2: "Display Output B Current",
-            3: "Display Command for Output B",
+            0: "Show Output A Current",
+            1: "Show Command for Output A",
+            2: "Show Output B Current",
+            3: "Show Command for Output B",
             4: "Do Not Display"
         },
         "DEVICE_BAUDRATE_MAP_VALUES": { # For 000CH
@@ -810,10 +812,10 @@ class ModbusMonitorApp:
         self.slave_id_var = tk.StringVar(value="1")
         self.slave_id_spinbox = ttk.Spinbox(self.modbus_params_frame, from_=1, to=247, increment=1, width=5, textvariable=self.slave_id_var)
         self.slave_id_spinbox.grid(row=0, column=5, padx=5, pady=5, sticky=tk.W)
-        self.refresh_ports_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("REFRESH_PORTS_BUTTON"), bootstyle="primary.Outline", width=10, command=self._refresh_ports)
+        self.refresh_ports_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("REFRESH_PORTS_BUTTON"), bootstyle="primary.Outline", command=self._refresh_ports)
         self.refresh_ports_button.grid(row=0, column=6, padx=5, pady=5)
         self.connect_button = ttk.Checkbutton(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="success-toolbutton", command=self._toggle_connection)
-        self.connect_button.grid(row=0, column=7, padx=15, pady=5, sticky=tk.E)
+        self.connect_button.grid(row=0, column=7, padx=5, pady=5, sticky=tk.E)
 
         # --- 分隔線 ---
         ttk.Separator(self.main_content_frame, orient='horizontal').grid(row=1, column=0, pady=5, sticky='ew')
@@ -1928,16 +1930,15 @@ class ModbusMonitorApp:
                     pass 
 
         # *** 修改點: 單個寫入000DH的特殊處理 (Factory Reset) ***
-        if reg_hex == '000DH':
-            if write_value == 0:
+        if reg_hex == '000DH' or reg_hex == '0007H':
+            if write_value == 5:
+                if messagebox.askyesno(self.get_current_translation("CONFIRM_TITLE"), self.get_current_translation("FACTORY_RESET_CONFIRM_BATCH_MSG")):
+                    self._execute_factory_reset()
+                return # Stop further processing for this action
+            else:
+                # For "No Action" or other values, just write it silently or show a message
                 messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("FACTORY_RESET_NO_ACTION_MSG"))
-                return # 寫入0不執行任何動作
-            elif write_value == 5:
-                if write_modbus_register(slave_id, register_address, write_value):
-                    messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("FACTORY_RESET_SUCCESS_MSG"))
-                    # 間隔5秒後再重新讀取所有寄存器並更新介面
-                    self.master.after(5000, self._read_all_registers_and_update_gui)
-                return # 已處理，退出函數
+                return # Stop further processing
 
         # 對於其他寄存器，或000DH但不是0或5的值，執行正常寫入
         if write_value is not None:
@@ -1956,6 +1957,91 @@ class ModbusMonitorApp:
         for reg_hex, var in self.writable_entries.items():
             params[reg_hex] = var.get()
         return params
+
+    def _show_countdown_window(self, duration, callback=None):
+        """
+        顯示一個模態倒數計時視窗。
+        :param duration: 倒數的秒數。
+        :param callback: 倒數結束後要執行的函數。
+        """
+        countdown_dialog = tk.Toplevel(self.master)
+        countdown_dialog.title(self.get_current_translation("INFO_TITLE"))
+        countdown_dialog.resizable(False, False)
+        countdown_dialog.grab_set()  # Make it modal
+
+        # Center the dialog
+        self.master.update_idletasks()
+        master_x = self.master.winfo_x()
+        master_y = self.master.winfo_y()
+        master_w = self.master.winfo_width()
+        master_h = self.master.winfo_height()
+        dialog_w = 400
+        dialog_h = 100
+        x = master_x + (master_w // 2) - (dialog_w // 2)
+        y = master_y + (master_h // 2) - (dialog_h // 2)
+        countdown_dialog.geometry(f'{dialog_w}x{dialog_h}+{x}+{y}')
+
+        countdown_label = ttk.Label(countdown_dialog, text="", font=("", 12))
+        countdown_label.pack(pady=20, padx=20)
+
+        remaining = tk.IntVar(value=duration)
+
+        def _update_countdown():
+            current_remaining = remaining.get()
+            if current_remaining > 0:
+                msg = self.get_current_translation("FACTORY_RESET_COUNTDOWN_MSG").format(seconds=current_remaining)
+                countdown_label.config(text=msg)
+                remaining.set(current_remaining - 1)
+                countdown_dialog.after(1000, _update_countdown)
+            else:
+                countdown_dialog.destroy()
+                if callback:
+                    self.master.after(100, callback) # Short delay before callback
+
+        _update_countdown()
+        countdown_dialog.protocol("WM_DELETE_WINDOW", lambda: None) # Disable closing
+
+    def _execute_factory_reset(self):
+        """
+        執行恢復出廠設置的完整流程：
+        1. 停止輪詢
+        2. 發送重置命令
+        3. 顯示10秒倒數
+        4. 倒數結束後，重新讀取所有參數並重新啟動輪詢
+        """
+        factory_reset_reg_hex = '000DH' if self.controller_mode == 'dual' else '0007H'
+        slave_id = int(self.slave_id_spinbox.get())
+        register_address = int(factory_reset_reg_hex.replace('H', ''), 16)
+
+        # 1. 停止輪詢
+        was_polling = self.polling_active
+        if was_polling:
+            self.polling_active = False
+            if self.polling_thread and self.polling_thread.is_alive():
+                self.polling_thread.join(timeout=0.2) # Give it a moment to stop
+                self.polling_thread = None
+
+
+        def _reset_callback():
+            """倒數結束後執行的回調函數"""
+            # 4. 重新讀取參數
+            self._read_all_registers_and_update_gui()
+            # 重新啟動輪詢
+            if was_polling:
+                self.polling_active = True
+                self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
+                self.polling_thread.start()
+
+        # 2. 發送重置命令
+        if write_modbus_register(slave_id, register_address, 5):
+            # 3. 顯示倒數計時視窗
+            self._show_countdown_window(10, _reset_callback)
+        else:
+            # 如果寫入失敗，需要恢復輪詢
+            if was_polling:
+                self.polling_active = True
+                self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
+                self.polling_thread.start()
 
     def _get_parameters_dir(self):
         """根據當前模式和語言獲取參數存檔目錄。"""
@@ -2196,7 +2282,7 @@ class ModbusMonitorApp:
 
     def _set_gui_state(self, state):
         """啟用或禁用所有相關的GUI元件。"""
-        for control in [self.connect_button, self.refresh_ports_button, self.save_params_button, self.load_params_button, self.batch_write_button, self.mode_switch_button]:
+        for control in [self.connect_button, self.refresh_ports_button, self.save_params_button, self.load_params_button, self.batch_write_button, self.mode_combobox]:
             control.config(state=state)
         
         for control, readonly_state in [(self.language_combobox, "readonly"), (self.port_combobox, "readonly"), (self.baudrate_combobox, "readonly")]:
