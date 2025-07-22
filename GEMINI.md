@@ -113,7 +113,7 @@
 *   **圖表動態更新：**
     *   在 `_read_all_registers_and_update_gui` 函數末尾調用 `_draw_chart`。
     *   在 `_write_single_register` 函數成功寫入後調用 `_draw_chart`。
-    *   在 `_batch_write_parameters` 函數成功寫入後調用 `_draw_chart`。
+    *   確保 `_batch_write_parameters` 函數在批量寫入完成後調用 `_draw_chart`。
 
 ### 3. 遇到的問題與解決方案 (2025年7月2日)
 
@@ -367,3 +367,25 @@
 
 *   **問題：** 切換語言時，即時監控區 `Meter` 元件的子標題（輸出電流、輸入信號）不會跟著改變。
 *   **解決方案：** 在 `_update_all_text` 函數中，為單組和雙組模式的處理分支明確加入了更新 `Meter` 元件 `subtext` 的程式碼，確保語言切換時所有介面元素都能同步更新。
+
+## 2025年7月22日 進度更新
+
+### 1. 恢復出廠設置功能改進
+
+*   **問題：** 單組/雙組控制器的「恢復出廠設置」功能未按預期動作，且缺少倒數計時提示。
+*   **解決方案：**
+    1.  在 `TEXTS` 語言包中新增 `FACTORY_RESET_COUNTDOWN_MSG` 翻譯鍵，用於倒數計時提示。
+    2.  新增 `_show_countdown_window` 函數，用於顯示一個模態的 10 秒倒數計時視窗。
+    3.  新增 `_execute_factory_reset` 函數，統一處理恢復出廠設置的完整邏輯：
+        *   停止 Modbus 輪詢。
+        *   發送重置命令（值 5）到控制器。
+        *   顯示 10 秒倒數計時視窗。
+        *   倒數結束後，重新讀取所有控制器參數並更新 GUI。
+        *   重新啟動 Modbus 輪詢。
+    4.  修改 `_write_single_register` 函數，移除舊的恢復出廠設置特殊處理，統一呼叫 `_execute_factory_reset`。
+    5.  修改 `_batch_write_parameters` 函數，當選擇「恢復出廠設置」並確認後，呼叫 `_execute_factory_reset`。
+
+### 2. GUI 狀態管理修正
+
+*   **問題：** 在 `_set_gui_state` 函數中，嘗試存取不存在的 `self.mode_switch_button` 屬性，導致 `AttributeError`。
+*   **解決方案：** 將 `_set_gui_state` 函數中的 `self.mode_switch_button` 替換為正確的 `self.mode_combobox`，確保 GUI 元件狀態能被正確管理。
