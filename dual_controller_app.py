@@ -1099,7 +1099,7 @@ class ModbusMonitorApp:
         status_config = next((c for c in config if c[1] == "CURRENT_STATUS_LABEL"), None)
         if status_config:
             reg_hex_status, title_key_status, unit_status = status_config
-            initial_subtext_status = self.get_current_translation(title_key_status)
+            initial_subtext_status = self.get_current_translation("CURRENT_STATUS_LABEL")
             status_frame = ttk.LabelFrame(parent_frame, text=initial_subtext_status, padding=(10, 5))
             status_frame.grid(row=1, column=0, columnspan=2, sticky='nsew', padx=0, pady=0)
             status_label = ttk.Label(status_frame, text="----", anchor="center", font=('Arial', 16, 'bold'))
@@ -1172,9 +1172,13 @@ class ModbusMonitorApp:
             self.monitor_display_controls_b['0004H'].configure(subtext=self.translations["INPUT_SIGNAL_LABEL"])
 
             # Update monitor status text
+            # Update monitor status text
+            self.monitor_labels_info_a['0002H']['title_label'].config(text=self.translations["CURRENT_STATUS_LABEL"])
             if hasattr(self, 'last_status_code_a') and self.last_status_code_a is not None:
                 status_text_a = self.translations["STATUS_MAP_VALUES"].get(self.last_status_code_a, self.translations["UNKNOWN_STATUS"])
                 self.monitor_display_controls_a['0002H'].config(text=status_text_a)
+            
+            self.monitor_labels_info_b['0005H']['title_label'].config(text=self.translations["CURRENT_STATUS_LABEL"])
             if hasattr(self, 'last_status_code_b') and self.last_status_code_b is not None:
                 status_text_b = self.translations["STATUS_MAP_VALUES"].get(self.last_status_code_b, self.translations["UNKNOWN_STATUS"])
                 self.monitor_display_controls_b['0005H'].config(text=status_text_b)
@@ -1191,6 +1195,8 @@ class ModbusMonitorApp:
             self.monitor_display_controls_a['0001H'].configure(subtext=self.translations["INPUT_SIGNAL_LABEL"])
 
             # Update monitor status text
+            # Update monitor status text
+            self.monitor_labels_info_a['0002H']['title_label'].config(text=self.translations["CURRENT_STATUS_LABEL"])
             if hasattr(self, 'last_status_code_a') and self.last_status_code_a is not None:
                 status_text_a = self.translations["S_STATUS_MAP_VALUES"].get(self.last_status_code_a, self.translations["UNKNOWN_STATUS"])
                 self.monitor_display_controls_a['0002H'].config(text=status_text_a)
