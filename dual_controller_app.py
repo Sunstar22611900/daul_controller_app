@@ -27,7 +27,7 @@ PARAMETERS_DIR = "modbus_parameters"
 # --- 語言包 ---
 TEXTS = {
     "zh": {
-        "APP_TITLE": "SUNSTAR Modbus RTU 雙控制器監控調整程式 V1.0",
+        "APP_TITLE": "STEED Modbus RTU 雙控制器監控調整程式 V1.0",
         "MODBUS_PARAMS_FRAME_TEXT": "Modbus通訊參數設置",
         "COM_PORT_LABEL": "通訊端口",
         "BAUDRATE_LABEL": "鮑率",
@@ -158,8 +158,8 @@ TEXTS = {
         "SINGLE_OUTPUT_MODE_TEXT": "單組輸出",
 
         # --- 模式選擇與單組控制器 ---
-        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU 雙控制器監控調整程式 V1.1",
-        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU 單控制器監控調整程式 V1.1",
+        "APP_TITLE_DUAL": "STEED Modbus RTU 雙控制器監控調整程式 V1.1",
+        "APP_TITLE_SINGLE": "STEED Modbus RTU 單控制器監控調整程式 V1.1",
         "MODE_SELECTION_TITLE": "型號選擇",
         "MODE_SELECTION_PROMPT": "請選擇要操作的控制器型號：",
         "DUAL_CONTROLLER_BUTTON": "SY-DPCA-*-2",
@@ -262,7 +262,7 @@ TEXTS = {
         }
     },
     "en": {
-        "APP_TITLE": "SUNSTAR Modbus RTU Dual Controller Setup V1.0",
+        "APP_TITLE": "STEED Modbus RTU Dual Controller Setup V1.0",
         "MODBUS_PARAMS_FRAME_TEXT": "Modbus Setting",
         "COM_PORT_LABEL": "Port",
         "BAUDRATE_LABEL": "Baud Rate",
@@ -393,8 +393,8 @@ TEXTS = {
         "SINGLE_OUTPUT_MODE_TEXT": "Single Output",
 
         # --- Mode Selection & Single Controller ---
-        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU Dual Controller Setup V1.1",
-        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU Single Controller Setup V1.1",
+        "APP_TITLE_DUAL": "STEED Modbus RTU Dual Controller Setup V1.1",
+        "APP_TITLE_SINGLE": "STEED Modbus RTU Single Controller Setup V1.1",
         "MODE_SELECTION_TITLE": "Model Selection",
         "MODE_SELECTION_PROMPT": "Please select the controller model:",
         "DUAL_CONTROLLER_BUTTON": "SY-DPCA-*-2",

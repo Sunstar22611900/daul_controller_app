@@ -7,7 +7,9 @@ a = Analysis(
     binaries=[],
     datas=[
         ('icon/001.ico', 'icon'),
-        ('icon/002.ico', 'icon')
+        ('icon/002.ico', 'icon'),
+        ('icon/STEED_32px.ico', 'icon'),
+        ('icon/STEED_80px.ico', 'icon')
     ],
     hiddenimports=[],
     hookspath=[],
