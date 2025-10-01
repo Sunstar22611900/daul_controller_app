@@ -5,12 +5,7 @@ a = Analysis(
     ['dual_controller_app.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('icon/001.ico', 'icon'),
-        ('icon/002.ico', 'icon'),
-        ('icon/STEED_32px.ico', 'icon'),
-        ('icon/STEED_80px.ico', 'icon')
-    ],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -40,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='icon/002.ico'
+    icon=['icon\\STEED_80px.ico'],
 )
