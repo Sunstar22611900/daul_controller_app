@@ -972,13 +972,17 @@ class ModbusMonitorApp:
             parent_frame.grid_columnconfigure(3, weight=1)
 
             num_params = len(params_in_group)
-            midpoint = math.ceil(num_params / 2)
+            midpoint = math.floor(num_params / 2)
 
             # Create controls in two columns
             for i, param in enumerate(params_in_group):
                 reg_hex = param['reg']
-                row_num = i % midpoint
-                col_offset = 0 if i < midpoint else 2
+                if i < midpoint:
+                    col_offset = 0
+                    row_num = i % midpoint
+                else:
+                    col_offset = 2
+                    row_num = i - midpoint
 
                 label = ttk.Label(parent_frame, text=f"{self.get_current_translation(param['title_key'])} ({reg_hex})")
                 label.grid(row=row_num, column=col_offset, padx=5, pady=5, sticky=tk.W)
