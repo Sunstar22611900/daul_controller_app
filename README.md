@@ -41,4 +41,4 @@
 
 ## 螢幕截圖
 
-<img width="1202" height="1032" alt="image" src="https://github.com/user-attachments/assets/51e04fba-3dfd-44c7-8e27-916826353510" />
+<img width="962" height="1032" alt="擷取" src="https://github.com/user-attachments/assets/1de6d1e9-d652-42c8-a347-63d4e6222c4f" />
