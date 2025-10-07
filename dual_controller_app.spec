@@ -1,13 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+
 a = Analysis(
     ['dual_controller_app.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('icon/STEED_80px.ico', 'icon'),
-        ('icon/STEED_32px.ico', 'icon')
-    ],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -37,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['icon/STEED_80px.ico'],
+    icon=['icon\\STEED_80px.ico'],
 )
