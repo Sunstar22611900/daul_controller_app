@@ -1,11 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
 a = Analysis(
     ['dual_controller_app.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[
+        ('icon/STEED_80px.ico', 'icon'),
+        ('icon/STEED_32px.ico', 'icon')
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
