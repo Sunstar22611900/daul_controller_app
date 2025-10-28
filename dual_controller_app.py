@@ -656,8 +656,22 @@ class RealtimeChartWindow(tk.Toplevel):
         self.controller_mode = self.app.controller_mode
 
         self.title(self.app.get_current_translation("CHART_WINDOW_TITLE"))
+        # 移除標題列
+        self.overrideredirect(True)
         self.geometry("800x600")
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
+
+        # 用於記錄滑鼠點擊時的起始座標
+        self._drag_start_x = 0
+        self._drag_start_y = 0
+
+        # --- 綁定滑鼠事件以實現拖曳 ---
+        # 1. 左鍵按下時，記錄起始座標
+        self.bind('<Button-1>', self.start_drag)
+        # 2. 左鍵按住並移動時，移動視窗
+        self.bind('<B1-Motion>', self.drag_window)
+        # 3. 可以在釋放時清除，但通常非必要，因為 start_drag 會更新
+        # self.master.bind('<ButtonRelease-1>', self.stop_drag)
 
         self._create_widgets()
         self._create_charts() # Creates axes and empty plot lines
@@ -665,6 +679,21 @@ class RealtimeChartWindow(tk.Toplevel):
 
         # Start a periodic update for the chart
         self.after_id = self.after(250, self._periodic_update) # Reduced frequency
+
+    def start_drag(self, event):
+        """滑鼠左鍵按下時，記錄相對於視窗左上角的座標"""
+        # 記錄滑鼠點擊位置相對於視窗左上角 (0, 0) 的偏移
+        self._drag_start_x = event.x
+        self._drag_start_y = event.y
+    def drag_window(self, event):
+        """滑鼠按住並移動時，計算並設定視窗的新位置"""
+        # 計算視窗的新位置：
+        # 新位置 = 滑鼠的螢幕絕對位置 - 滑鼠點擊時的偏移)
+        # event.x_root 和 event.y_root 是滑鼠相對於整個螢幕的絕對座標
+        new_x = event.x_root - self._drag_start_x
+        new_y = event.y_root - self._drag_start_y
+        # 移動視窗
+        self.geometry(f'+{new_x}+{new_y}')
 
     def _create_widgets(self):
         # Frame for charts
@@ -1056,11 +1085,11 @@ class ModbusMonitorApp:
             self.chart_window.destroy()
             self.chart_window = None
             if hasattr(self, 'chart_button'):
-                self.chart_button.config(bootstyle="primary.Outline")
+                self.chart_button.config(bootstyle="primary_toolbutton")
         else:
             self.chart_window = RealtimeChartWindow(self.master, self) # Pass self (ModbusMonitorApp instance)
             if hasattr(self, 'chart_button'):
-                self.chart_button.config(bootstyle="primary")
+                self.chart_button.config(bootstyle="primary_button")
 
     def _create_widgets(self):
         """創建所有GUI元件並佈局。"""
@@ -1117,7 +1146,7 @@ class ModbusMonitorApp:
         self.slave_id_spinbox.grid(row=0, column=5, padx=5, pady=5, sticky=tk.W)
         self.refresh_ports_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("REFRESH_PORTS_BUTTON"), bootstyle="primary.Outline", command=self._refresh_ports)
         self.refresh_ports_button.grid(row=0, column=6, padx=5, pady=5)
-        self.connect_button = ttk.Checkbutton(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="success-toolbutton", command=self._toggle_connection)
+        self.connect_button = ttk.Checkbutton(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_connection)
         self.connect_button.grid(row=0, column=7, padx=5, pady=5, sticky=tk.E)
 
         # --- 分隔線 ---
@@ -1162,7 +1191,7 @@ class ModbusMonitorApp:
         self.monitor_frame_b.grid(row=0, column=1, sticky='nsew', padx=(5, 0), pady=(5,0))
 
         # Chart Button on row 1, aligned to the right
-        self.chart_button = ttk.Button(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary.Outline", command=self._toggle_chart_window)
+        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_chart_window)
         self.chart_button.grid(row=0, column=1, sticky='ne', padx=5, pady=20)
 
         self.monitor_labels_info_a, self.monitor_display_controls_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
@@ -1229,7 +1258,7 @@ class ModbusMonitorApp:
         self.monitor_frame_a.grid(row=0, column=0, sticky='nsew', pady=(5,0))
 
         # Chart Button
-        self.chart_button = ttk.Button(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary.Outline", command=self._toggle_chart_window)
+        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_chart_window)
         self.chart_button.grid(row=0, column=0, sticky='ne', padx=5, pady=20)
 
         self.monitor_labels_info_a, self.monitor_display_controls_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
