@@ -177,6 +177,7 @@ TEXTS = {
 
         # --- Real-time Chart ---
         "SHOW_CHART_BUTTON": "即時圖表",
+        "CLOSE_CHART_BUTTON": "關閉圖表",
         "CHART_WINDOW_TITLE": "即時數據圖表",
         "SAVE_CHART_DATA_BUTTON": "儲存圖表數據",
         "Y_AXIS_CURRENT": "輸出電流 (A)",
@@ -433,6 +434,7 @@ TEXTS = {
 
         # --- Real-time Chart ---
         "SHOW_CHART_BUTTON": "Real-time Chart",
+        "CLOSE_CHART_BUTTON": "Close Chart",
         "CHART_WINDOW_TITLE": "Real-time Data Chart",
         "SAVE_CHART_DATA_BUTTON": "Save Chart Data",
         "Y_AXIS_CURRENT": "Output Current (A)",
@@ -1085,11 +1087,12 @@ class ModbusMonitorApp:
             self.chart_window.destroy()
             self.chart_window = None
             if hasattr(self, 'chart_button'):
-                self.chart_button.config(bootstyle="primary_toolbutton")
+                self.chart_button.config(text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton")
         else:
             self.chart_window = RealtimeChartWindow(self.master, self) # Pass self (ModbusMonitorApp instance)
             if hasattr(self, 'chart_button'):
-                self.chart_button.config(bootstyle="primary_button")
+                self.chart_button.config(text=self.get_current_translation("CLOSE_CHART_BUTTON"), bootstyle="primary_button")
+
 
     def _create_widgets(self):
         """創建所有GUI元件並佈局。"""
@@ -1512,7 +1515,8 @@ class ModbusMonitorApp:
         self.load_params_button.config(text=self.translations["LOAD_PARAMS_BUTTON"])
         self.batch_write_button.config(text=self.translations["BATCH_WRITE_BUTTON"])
         if hasattr(self, 'chart_button'):
-            self.chart_button.config(text=self.translations["SHOW_CHART_BUTTON"])
+            self.chart_button.config(text=self.translations["CLOSE_CHART_BUTTON"]) if self.chart_window and self.chart_window.winfo_exists() else self.chart_button.config(text=self.translations["SHOW_CHART_BUTTON"])
+
 
         # Update mode-specific UI
         if self.controller_mode == 'dual':
