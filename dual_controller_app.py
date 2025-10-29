@@ -1382,6 +1382,12 @@ class ModbusMonitorApp:
             return # Do nothing if the mode is not actually changed
 
         if messagebox.askyesno(self.get_current_translation("CONFIRM_SWITCH_MODE_TITLE"), self.get_current_translation("CONFIRM_SWITCH_MODE_MSG")):
+            # --- FIX: Destroy existing chart window before switching mode ---
+            if self.chart_window and self.chart_window.winfo_exists():
+                self.chart_window.destroy()
+                self.chart_window = None
+            # --- END FIX ---
+
             # Disconnect if connected
             if self.modbus_master:
                 self._toggle_connection() # This will handle disconnection and UI clearing
@@ -1389,6 +1395,14 @@ class ModbusMonitorApp:
             # Switch mode
             self.controller_mode = target_mode
             
+            # --- FIX: Clear historical chart data ---
+            self.time_history.clear()
+            self.current_history_0000.clear()
+            self.signal_history_0001.clear()
+            self.current_history_0003.clear()
+            self.signal_history_0004.clear()
+            # --- END FIX ---
+
             # Update title
             app_title_key = "APP_TITLE_DUAL" if self.controller_mode == 'dual' else "APP_TITLE_SINGLE"
             self.master.title(self.get_current_translation(app_title_key))
