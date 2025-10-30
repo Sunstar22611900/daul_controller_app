@@ -2644,40 +2644,59 @@ class ModbusMonitorApp:
             messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("FILE_READ_ERROR").format(fname=selected_file.get(), e=e))
 
     def _validate_single_param_for_batch(self, param_config):
-        """在批次寫入前驗證單個參數。返回要寫入的值，或在失敗時返回None。"""
+        """
+        在批次寫入前驗證單個參數。
+        - 驗證成功，返回要寫入的整數值。
+        - 欄位為空，返回 'SKIP' 字串。
+        - 驗證失敗，顯示錯誤訊息並返回 None。
+        """
         reg_hex = param_config['reg']
         value_str = self.writable_entries[reg_hex].get().strip()
         control_type = param_config['type']
+        type_name = self.get_current_translation(param_config['title_key'])
 
-        if not value_str: return None # Skip empty values
+        if not value_str:
+            return 'SKIP'  # Return a special value for empty fields
 
         try:
             if control_type == 'combobox':
                 rev_map = param_config['rev_map']
                 if value_str not in rev_map:
+                    # This should not happen with a readonly combobox, but as a safeguard:
+                    messagebox.showwarning(self.get_current_translation("WARNING_TITLE"),
+                                           f"{type_name} ({reg_hex}): " + self.get_current_translation("COMBOBOX_SELECT_ERROR"))
                     return None
                 return rev_map[value_str]
             
             elif control_type in ['entry', 'entry_scaled']:
                 min_val = param_config['min']
                 max_val = param_config['max']
-                is_int = param_config.get('is_int', False)
                 scale = param_config.get('scale', 1)
                 unit_step = param_config.get('unit_step', 1)
 
                 num_value = float(value_str)
+                
                 if not (min_val <= num_value <= max_val):
+                    messagebox.showwarning(self.get_current_translation("WARNING_TITLE"),
+                                           f"{type_name} ({reg_hex}): " + self.get_current_translation("INPUT_RANGE_ERROR").format(type_name=type_name, min_val=min_val, max_val=max_val))
                     return None
 
                 if control_type == 'entry_scaled':
-                    if num_value % unit_step != 0:
+                    # Use a tolerance for float comparison
+                    if not math.isclose(num_value % unit_step, 0, rel_tol=1e-9, abs_tol=1e-9) and not math.isclose(num_value % unit_step, unit_step, rel_tol=1e-9, abs_tol=1e-9):
+                        messagebox.showwarning(self.get_current_translation("WARNING_TITLE"),
+                                           f"{type_name} ({reg_hex}): " + self.get_current_translation("UNIT_MULTIPLE_ERROR").format(display_value=num_value, unit_step=unit_step))
                         return None
-                    return int(num_value / scale)
+                    return int(round(num_value / scale))
                 else:
                     return convert_to_register_value(value_str, scale)
+
         except (ValueError, KeyError):
+            messagebox.showwarning(self.get_current_translation("WARNING_TITLE"),
+                                   f"{type_name} ({reg_hex}): " + self.get_current_translation("INPUT_VALUE_TYPE_ERROR").format(type_name=type_name))
             return None
-        return None
+        
+        return None # Default fail case
 
     def _batch_write_parameters(self):
         """批量寫入所有可寫入參數。"""
@@ -2718,6 +2737,24 @@ class ModbusMonitorApp:
                 messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("CURRENT_RANGE_ERROR_S"))
                 return
 
+        # --- Validate all parameters before starting to write ---
+        params_to_write = []
+        validation_passed = True
+        registers_to_check = [p for p in config if p['reg'] != reset_reg]
+
+        for param in registers_to_check:
+            value_to_write = self._validate_single_param_for_batch(param)
+            if value_to_write is None: # Validation failed, message was shown
+                validation_passed = False
+                break # Stop checking immediately
+            elif value_to_write == 'SKIP': # Empty field, skip it
+                continue
+            else:
+                params_to_write.append({'reg': param['reg'], 'value': value_to_write})
+        
+        if not validation_passed:
+            return # Exit if any parameter is invalid
+
         # --- Setup Progress Window ---
         progress_dialog = tk.Toplevel(self.master)
         progress_dialog.title(self.get_current_translation("BATCH_WRITE_PROGRESS_TITLE"))
@@ -2734,27 +2771,25 @@ class ModbusMonitorApp:
         self.master.update_idletasks()
 
         # --- Writing Logic ---
-        registers_to_write = [p for p in config if p['reg'] != reset_reg]
-        total_registers = len(registers_to_write)
+        total_registers = len(params_to_write)
         progressbar["maximum"] = total_registers
         success_count = 0
         failed_registers = []
 
-        for i, param in enumerate(registers_to_write):
-            reg_hex = param['reg']
+        for i, item in enumerate(params_to_write):
+            reg_hex = item['reg']
+            value_to_write = item['value']
+            
             progress_label.config(text=self.get_current_translation("BATCH_WRITE_IN_PROGRESS").format(register_address=int(reg_hex.replace('H',''), 16), i=i+1, total_registers=total_registers))
             progressbar["value"] = i + 1
             progress_dialog.update()
 
-            value_to_write = self._validate_single_param_for_batch(param)
-            
-            if value_to_write is not None:
-                if write_modbus_register(slave_id, int(reg_hex.replace('H',''), 16), value_to_write):
-                    success_count += 1
-                else:
-                    failed_registers.append(reg_hex)
-                    # Stop on first failure
-                    break 
+            if write_modbus_register(slave_id, int(reg_hex.replace('H',''), 16), value_to_write):
+                success_count += 1
+            else:
+                failed_registers.append(reg_hex)
+                # Stop on first write failure
+                break 
             time.sleep(0.05) # Small delay between writes
 
         progress_dialog.destroy()
