@@ -43,7 +43,7 @@ PARAMETERS_DIR = "modbus_parameters"
 # --- 語言包 ---
 TEXTS = {
     "zh": {
-        "APP_TITLE": "SUNSTAR Modbus RTU 雙控制器監控調整程式 V1.0",
+        "APP_TITLE": "STEED Modbus RTU 雙控制器監控調整程式 V1.0",
         "MODBUS_PARAMS_FRAME_TEXT": "Modbus通訊參數設置",
         "COM_PORT_LABEL": "通訊端口",
         "BAUDRATE_LABEL": "鮑率",
@@ -196,8 +196,8 @@ TEXTS = {
         "CHART_S_TITLE": "單組輸出",
 
         # --- 模式選擇與單組控制器 ---
-        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU 雙控制器監控調整程式 V2.0",
-        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU 單控制器監控調整程式 V2.0",
+        "APP_TITLE_DUAL": "STEED Modbus RTU 雙控制器監控調整程式 V2.0",
+        "APP_TITLE_SINGLE": "STEED Modbus RTU 單控制器監控調整程式 V2.0",
         "MODE_SELECTION_TITLE": "型號選擇",
         "MODE_SELECTION_PROMPT": "請選擇要操作的控制器型號：",
         "DUAL_CONTROLLER_BUTTON": "SY-DPCA-*-2",
@@ -300,7 +300,7 @@ TEXTS = {
         }
     },
     "en": {
-        "APP_TITLE": "SUNSTAR Modbus RTU Dual Controller Setup V1.0",
+        "APP_TITLE": "STEED Modbus RTU Dual Controller Setup V1.0",
         "MODBUS_PARAMS_FRAME_TEXT": "Modbus Setting",
         "COM_PORT_LABEL": "Port",
         "BAUDRATE_LABEL": "Baud Rate",
@@ -453,8 +453,8 @@ TEXTS = {
         "CHART_S_TITLE": "Single Output",
 
         # --- Mode Selection & Single Controller ---
-        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU Dual Controller Setup V2.0",
-        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU Single Controller Setup V2.0",
+        "APP_TITLE_DUAL": "STEED Modbus RTU Dual Controller Setup V2.0",
+        "APP_TITLE_SINGLE": "STEED Modbus RTU Single Controller Setup V2.0",
         "MODE_SELECTION_TITLE": "Model Selection",
         "MODE_SELECTION_PROMPT": "Please select the controller model:",
         "DUAL_CONTROLLER_BUTTON": "SY-DPCA-*-2",
@@ -901,7 +901,7 @@ class RealtimeChartWindow(tk.Toplevel):
 
 class ModbusMonitorApp:
     # 類級變量，用於獲取當前翻譯，以便於輔助函數使用
-    _current_translations = TEXTS["zh"] 
+    _current_translations = TEXTS["en"] 
 
     # --- 雙組控制器參數設定 ---
     writable_params_config = [
@@ -973,7 +973,7 @@ class ModbusMonitorApp:
         self.master.withdraw() # Hide main window
 
         # --- Initialize basic variables ---
-        self.current_language_code = tk.StringVar(value="zh")
+        self.current_language_code = tk.StringVar(value="en")
         self._current_translations = TEXTS[self.current_language_code.get()]
         self.translations = self._current_translations
         self.modbus_master = None
@@ -1023,7 +1023,7 @@ class ModbusMonitorApp:
 
     def _show_mode_selection_dialog(self):
         dialog = tk.Toplevel(self.master)
-        dialog.title(TEXTS["zh"]["MODE_SELECTION_TITLE"]) # Use a fixed language for this initial dialog
+        dialog.title(TEXTS["en"]["MODE_SELECTION_TITLE"]) # Use a fixed language for this initial dialog
         dialog.geometry("400x150")
         dialog.resizable(False, False)
         # Do not make it transient to the hidden master window
@@ -1037,7 +1037,7 @@ class ModbusMonitorApp:
         y = (screen_height // 2) - (dialog.winfo_height() // 2)
         dialog.geometry(f"+{x}+{y}")
 
-        label = ttk.Label(dialog, text=TEXTS["zh"]["MODE_SELECTION_PROMPT"], font=("", 12))
+        label = ttk.Label(dialog, text=TEXTS["en"]["MODE_SELECTION_PROMPT"], font=("", 12))
         label.pack(pady=20)
 
         button_frame = ttk.Frame(dialog)
@@ -1047,10 +1047,10 @@ class ModbusMonitorApp:
             self.controller_mode = mode
             dialog.destroy()
 
-        dual_button = ttk.Button(button_frame, text=TEXTS["zh"]["DUAL_CONTROLLER_BUTTON"], command=lambda: select_mode('dual'), width=20)
+        dual_button = ttk.Button(button_frame, text=TEXTS["en"]["DUAL_CONTROLLER_BUTTON"], command=lambda: select_mode('dual'), width=20)
         dual_button.pack(side=tk.LEFT, padx=10)
 
-        single_button = ttk.Button(button_frame, text=TEXTS["zh"]["SINGLE_CONTROLLER_BUTTON"], command=lambda: select_mode('single'), width=20)
+        single_button = ttk.Button(button_frame, text=TEXTS["en"]["SINGLE_CONTROLLER_BUTTON"], command=lambda: select_mode('single'), width=20)
         single_button.pack(side=tk.LEFT, padx=10)
 
         # If the user closes the dialog window, destroy the main window to exit the app
@@ -2813,7 +2813,7 @@ if __name__ == "__main__":
     try:
         root = ttk.Window(themename="litera")
         base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
-        icon_path = os.path.join(base_path, 'icon', '002.ico')
+        icon_path = os.path.join(base_path, 'icon', 'STEED_32px.ico')
         root.iconbitmap(icon_path)
         app = ModbusMonitorApp(root)
         if app.controller_mode: # Only start mainloop if a mode was selected
