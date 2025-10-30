@@ -13,6 +13,22 @@ import time
 import sys
 import os
 import math
+from collections import deque
+from datetime import datetime, timedelta
+import csv
+
+# Matplotlib imports for charting
+import matplotlib
+matplotlib.use("TkAgg")
+
+# --- Matplotlib 中文顯示設定 ---
+matplotlib.rcParams['font.sans-serif'] = ['Microsoft YaHei'] # 指定預設字體
+matplotlib.rcParams['axes.unicode_minus'] = False # 解決負號顯示問題
+# ---
+
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.dates import date2num, DateFormatter
 
 # --- 全局變量 ---
 # 用於儲存Modbus Master物件，方便在不同函數中存取
@@ -100,6 +116,8 @@ TEXTS = {
         "DELETE_SUCCESS": "參數已成功刪除為 \'{filename}\'.",
         "FACTORY_RESET_CONFIRM_BATCH_MSG": "即將將控制器恢復出廠設置，是否確定?",
         "FACTORY_RESET_COUNTDOWN_MSG": "控制器重置中，請稍候... {seconds} 秒後將重新讀取參數。",
+        "CHART_SAVE_SUCCESS_MSG": "圖表資料已成功儲存。",
+        "CHART_SAVE_ERROR_MSG": "儲存圖表資料失敗: {e}",
         
         # 新增/修改的可寫入參數區的翻譯鍵
         "COMMON_PARAMS_FRAME_TEXT": "通用參數",
@@ -157,9 +175,29 @@ TEXTS = {
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組輸出",
         "SINGLE_OUTPUT_MODE_TEXT": "單組輸出",
 
+        # --- Real-time Chart ---
+        "SHOW_CHART_BUTTON": "即時圖表",
+        "CLOSE_CHART_BUTTON": "關閉圖表",
+        "CHART_WINDOW_TITLE": "即時數據圖表",
+        "SAVE_CHART_DATA_BUTTON": "儲存圖表數據",
+        "Y_AXIS_CURRENT": "輸出電流 (A)",
+        "Y_AXIS_SIGNAL": "輸入信號 (%)",
+        "X_AXIS_TIME": "時間",
+        "SAVE_DIALOG_TITLE": "儲存數據為 CSV",
+        "FILE_TYPE_CSV": "CSV 檔案",
+        "LEGEND_CURRENT_A": "A組 電流",
+        "LEGEND_SIGNAL_A": "A組 信號",
+        "LEGEND_CURRENT_B": "B組 電流",
+        "LEGEND_SIGNAL_B": "B組 信號",
+        "LEGEND_CURRENT_S": "輸出電流",
+        "LEGEND_SIGNAL_S": "輸入信號",
+        "CHART_A_TITLE": "A組輸出",
+        "CHART_B_TITLE": "B組輸出",
+        "CHART_S_TITLE": "單組輸出",
+
         # --- 模式選擇與單組控制器 ---
-        "APP_TITLE_DUAL": "STEED Modbus RTU 雙控制器監控調整程式 V1.1",
-        "APP_TITLE_SINGLE": "STEED Modbus RTU 單控制器監控調整程式 V1.1",
+        "APP_TITLE_DUAL": "STEED Modbus RTU 雙控制器監控調整程式 V2.0",
+        "APP_TITLE_SINGLE": "STEED Modbus RTU 單控制器監控調整程式 V2.0",
         "MODE_SELECTION_TITLE": "型號選擇",
         "MODE_SELECTION_PROMPT": "請選擇要操作的控制器型號：",
         "DUAL_CONTROLLER_BUTTON": "SY-DPCA-*-2",
@@ -335,6 +373,8 @@ TEXTS = {
         "DELETE_SUCCESS": "Parameters successfully deleted as \'{filename}\'.",
         "FACTORY_RESET_CONFIRM_BATCH_MSG": "You are about to factory reset the controller. Are you sure?",
         "FACTORY_RESET_COUNTDOWN_MSG": "Controller is resetting, please wait... Re-reading parameters in {seconds} seconds.",
+        "CHART_SAVE_SUCCESS_MSG": "Chart data saved successfully.",
+        "CHART_SAVE_ERROR_MSG": "Failed to save chart data: {e}",
         
         # New/Modified writable parameter area translations
         "COMMON_PARAMS_FRAME_TEXT": "Common Parameters",
@@ -392,9 +432,29 @@ TEXTS = {
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Output Single Slope",
         "SINGLE_OUTPUT_MODE_TEXT": "Single Output",
 
+        # --- Real-time Chart ---
+        "SHOW_CHART_BUTTON": "Real-time Chart",
+        "CLOSE_CHART_BUTTON": "Close Chart",
+        "CHART_WINDOW_TITLE": "Real-time Data Chart",
+        "SAVE_CHART_DATA_BUTTON": "Save Chart Data",
+        "Y_AXIS_CURRENT": "Output Current (A)",
+        "Y_AXIS_SIGNAL": "Input Command (%)",
+        "X_AXIS_TIME": "Time",
+        "SAVE_DIALOG_TITLE": "Save Data as CSV",
+        "FILE_TYPE_CSV": "CSV Files",
+        "LEGEND_CURRENT_A": "Output A Current",
+        "LEGEND_SIGNAL_A": "Output A Command",
+        "LEGEND_CURRENT_B": "Output B Current",
+        "LEGEND_SIGNAL_B": "Output B Command",
+        "LEGEND_CURRENT_S": "Output Current",
+        "LEGEND_SIGNAL_S": "Input Command",
+        "CHART_A_TITLE": "Output A",
+        "CHART_B_TITLE": "Output B",
+        "CHART_S_TITLE": "Single Output",
+
         # --- Mode Selection & Single Controller ---
-        "APP_TITLE_DUAL": "STEED Modbus RTU Dual Controller Setup V1.1",
-        "APP_TITLE_SINGLE": "STEED Modbus RTU Single Controller Setup V1.1",
+        "APP_TITLE_DUAL": "STEED Modbus RTU Dual Controller Setup V2.0",
+        "APP_TITLE_SINGLE": "STEED Modbus RTU Single Controller Setup V2.0",
         "MODE_SELECTION_TITLE": "Model Selection",
         "MODE_SELECTION_PROMPT": "Please select the controller model:",
         "DUAL_CONTROLLER_BUTTON": "SY-DPCA-*-2",
@@ -591,6 +651,254 @@ def write_modbus_register(slave_id, register_address, value):
         return False
 
 # --- GUI 介面 ---
+class RealtimeChartWindow(tk.Toplevel):
+    def __init__(self, master, app_instance):
+        super().__init__(master)
+        self.app = app_instance # Reference to the main application instance
+        self.controller_mode = self.app.controller_mode
+
+        self.title(self.app.get_current_translation("CHART_WINDOW_TITLE"))
+        # 移除標題列
+        self.overrideredirect(True)
+        self.geometry("800x600")
+        self.protocol("WM_DELETE_WINDOW", self._on_closing)
+
+        # 用於記錄滑鼠點擊時的起始座標
+        self._drag_start_x = 0
+        self._drag_start_y = 0
+
+        # --- 綁定滑鼠事件以實現拖曳 ---
+        # 1. 左鍵按下時，記錄起始座標
+        self.bind('<Button-1>', self.start_drag)
+        # 2. 左鍵按住並移動時，移動視窗
+        self.bind('<B1-Motion>', self.drag_window)
+        # 3. 可以在釋放時清除，但通常非必要，因為 start_drag 會更新
+        # self.master.bind('<ButtonRelease-1>', self.stop_drag)
+
+        self._create_widgets()
+        self._create_charts() # Creates axes and empty plot lines
+        self._update_language() # Sets initial text and layout
+
+        # Start a periodic update for the chart
+        self.after_id = self.after(250, self._periodic_update) # Reduced frequency
+
+    def start_drag(self, event):
+        """滑鼠左鍵按下時，記錄相對於視窗左上角的座標"""
+        # 記錄滑鼠點擊位置相對於視窗左上角 (0, 0) 的偏移
+        self._drag_start_x = event.x
+        self._drag_start_y = event.y
+    def drag_window(self, event):
+        """滑鼠按住並移動時，計算並設定視窗的新位置"""
+        # 計算視窗的新位置：
+        # 新位置 = 滑鼠的螢幕絕對位置 - 滑鼠點擊時的偏移)
+        # event.x_root 和 event.y_root 是滑鼠相對於整個螢幕的絕對座標
+        new_x = event.x_root - self._drag_start_x
+        new_y = event.y_root - self._drag_start_y
+        # 移動視窗
+        self.geometry(f'+{new_x}+{new_y}')
+
+    def _create_widgets(self):
+        # Frame for charts
+        self.chart_frame = ttk.Frame(self)
+        self.chart_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        # Save button
+        self.save_button = ttk.Button(self, text=self.app.get_current_translation("SAVE_CHART_DATA_BUTTON"),
+                                      command=self._save_data)
+        self.save_button.pack(side=tk.BOTTOM, pady=5)
+
+    def _create_charts(self):
+        self.figure = Figure(figsize=(8, 5), dpi=100)
+        self.lines = {}
+        self.axes = []
+
+        if self.controller_mode == 'dual':
+            # Two subplots for dual mode, with explicit x-axis sharing
+            ax1_a = self.figure.add_subplot(211)
+            ax2_a = ax1_a.twinx()
+            self.axes.append((ax1_a, ax2_a))
+            self.lines['a_current'], = ax1_a.plot([], [], color='dodgerblue')
+            self.lines['a_signal'], = ax2_a.plot([], [], color='limegreen')
+
+            # Explicitly share the x-axis with the first plot
+            ax1_b = self.figure.add_subplot(212, sharex=ax1_a)
+            ax2_b = ax1_b.twinx()
+            self.axes.append((ax1_b, ax2_b))
+            self.lines['b_current'], = ax1_b.plot([], [], color='dodgerblue')
+            self.lines['b_signal'], = ax2_b.plot([], [], color='limegreen')
+        else:
+            # One subplot for single mode
+            ax1_s = self.figure.add_subplot(111)
+            ax2_s = ax1_s.twinx()
+            self.axes.append((ax1_s, ax2_s))
+            self.lines['s_current'], = ax1_s.plot([], [], color='dodgerblue')
+            self.lines['s_signal'], = ax2_s.plot([], [], color='limegreen')
+
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.chart_frame)
+        self.canvas_widget = self.canvas.get_tk_widget()
+        self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+    def _periodic_update(self):
+        self.update_chart_data()
+        self.after_id = self.after(250, self._periodic_update) # Reduced frequency
+
+    def update_chart_data(self):
+        # Create a consistent snapshot of the data under a lock
+        with self.app.chart_data_lock:
+            time_data = list(self.app.time_history)
+            if not time_data:
+                return
+
+            if self.controller_mode == 'dual':
+                current_a_data = list(self.app.current_history_0000)
+                signal_a_data = list(self.app.signal_history_0001)
+                current_b_data = list(self.app.current_history_0003)
+                signal_b_data = list(self.app.signal_history_0004)
+                # Basic validation to prevent crash on race condition
+                if not (len(time_data) == len(current_a_data) == len(signal_a_data) == len(current_b_data) == len(signal_b_data)):
+                    return # Skip this update cycle
+            else: # single
+                current_a_data = list(self.app.current_history_0000)
+                signal_a_data = list(self.app.signal_history_0001)
+                if not (len(time_data) == len(current_a_data) == len(signal_a_data)):
+                    return # Skip this update cycle
+
+        # GUI updates should happen outside the lock
+        time_data_dt = [datetime.fromtimestamp(t) for t in time_data]
+
+        if self.controller_mode == 'dual':
+            self.lines['a_current'].set_data(time_data_dt, current_a_data)
+            self.lines['a_signal'].set_data(time_data_dt, signal_a_data)
+            self.lines['b_current'].set_data(time_data_dt, current_b_data)
+            self.lines['b_signal'].set_data(time_data_dt, signal_b_data)
+        else: # single
+            self.lines['s_current'].set_data(time_data_dt, current_a_data)
+            self.lines['s_signal'].set_data(time_data_dt, signal_a_data)
+
+        # Update X-axis limits and redraw
+        end_time = time_data_dt[-1]
+        start_time = end_time - timedelta(seconds=20)
+
+        # Set the x-limit on the first subplot; others share the x-axis and will update.
+        if self.axes:
+            self.axes[0][0].set_xlim(start_time, end_time)
+
+        for ax1, ax2 in self.axes:
+            # Autoscale the y-axes only
+            ax1.relim()
+            ax1.autoscale_view(scalex=False, scaley=True)
+            ax2.relim()
+            ax2.autoscale_view(scalex=False, scaley=True)
+
+        self.canvas.draw_idle()
+
+    def _save_data(self):
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[(self.app.get_current_translation("FILE_TYPE_CSV"), "*.csv")],
+            title=self.app.get_current_translation("SAVE_DIALOG_TITLE")
+        )
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
+                # Write header based on mode
+                if self.controller_mode == 'dual':
+                    writer.writerow([
+                        self.app.get_current_translation("X_AXIS_TIME"),
+                        self.app.get_current_translation("LEGEND_CURRENT_A"),
+                        self.app.get_current_translation("LEGEND_SIGNAL_A"),
+                        self.app.get_current_translation("LEGEND_CURRENT_B"),
+                        self.app.get_current_translation("LEGEND_SIGNAL_B")
+                    ])
+                    for i in range(len(self.app.time_history)):
+                        writer.writerow([
+                            datetime.fromtimestamp(self.app.time_history[i]).strftime('%Y-%m-%d %H:%M:%S.%f'),
+                            self.app.current_history_0000[i],
+                            self.app.signal_history_0001[i],
+                            self.app.current_history_0003[i],
+                            self.app.signal_history_0004[i]
+                        ])
+                else: # single
+                    writer.writerow([
+                        self.app.get_current_translation("X_AXIS_TIME"),
+                        self.app.get_current_translation("LEGEND_CURRENT_S"),
+                        self.app.get_current_translation("LEGEND_SIGNAL_S")
+                    ])
+                    for i in range(len(self.app.time_history)):
+                        writer.writerow([
+                            datetime.fromtimestamp(self.app.time_history[i]).strftime('%Y-%m-%d %H:%M:%S.%f'),
+                            self.app.current_history_0000[i],
+                            self.app.signal_history_0001[i]
+                        ])
+            messagebox.showinfo(self.app.get_current_translation("INFO_TITLE"),
+                                self.app.get_current_translation("CHART_SAVE_SUCCESS_MSG"))
+        except Exception as e:
+            messagebox.showerror(self.app.get_current_translation("ERROR_TITLE"),
+                                 self.app.get_current_translation("CHART_SAVE_ERROR_MSG").format(e=e))
+
+    def _on_closing(self):
+        self.after_cancel(self.after_id) # Stop periodic updates
+        self.app.chart_window = None # Clear reference in main app
+        self.destroy()
+
+    def _update_language(self):
+        self.title(self.app.get_current_translation("CHART_WINDOW_TITLE"))
+        self.save_button.config(text=self.app.get_current_translation("SAVE_CHART_DATA_BUTTON"))
+        
+        # Set all text properties for the axes and legends
+        if self.controller_mode == 'dual':
+            ax1_a, ax2_a = self.axes[0]
+            ax1_b, ax2_b = self.axes[1]
+            
+            ax1_a.set_title(self.app.get_current_translation("CHART_A_TITLE"))
+            ax1_b.set_title(self.app.get_current_translation("CHART_B_TITLE"))
+            ax1_b.set_xlabel(self.app.get_current_translation("X_AXIS_TIME"))
+
+            # Update labels for lines
+            self.lines['a_current'].set_label(self.app.get_current_translation("LEGEND_CURRENT_A"))
+            self.lines['a_signal'].set_label(self.app.get_current_translation("LEGEND_SIGNAL_A"))
+            self.lines['b_current'].set_label(self.app.get_current_translation("LEGEND_CURRENT_B"))
+            self.lines['b_signal'].set_label(self.app.get_current_translation("LEGEND_SIGNAL_B"))
+
+            # Combine and create legends
+            lines_a = [self.lines['a_current'], self.lines['a_signal']]
+            ax1_a.legend(lines_a, [l.get_label() for l in lines_a], loc='upper left')
+
+            lines_b = [self.lines['b_current'], self.lines['b_signal']]
+            ax1_b.legend(lines_b, [l.get_label() for l in lines_b], loc='upper left')
+
+        else: # single
+            ax1, ax2 = self.axes[0]
+            ax1.set_title(self.app.get_current_translation("CHART_S_TITLE"))
+            ax1.set_xlabel(self.app.get_current_translation("X_AXIS_TIME"))
+            
+            # Update labels for lines
+            self.lines['s_current'].set_label(self.app.get_current_translation("LEGEND_CURRENT_S"))
+            self.lines['s_signal'].set_label(self.app.get_current_translation("LEGEND_SIGNAL_S"))
+
+            # Combine and create legend
+            lines_s = [self.lines['s_current'], self.lines['s_signal']]
+            ax1.legend(lines_s, [l.get_label() for l in lines_s], loc='upper left')
+
+        # Common axis properties
+        for ax1, ax2 in self.axes:
+            ax1.set_ylabel(self.app.get_current_translation("Y_AXIS_CURRENT"), color='dodgerblue')
+            ax2.set_ylabel(self.app.get_current_translation("Y_AXIS_SIGNAL"), color='limegreen')
+            ax1.tick_params(axis='y', labelcolor='dodgerblue')
+            ax2.yaxis.set_label_position("right")
+            ax2.yaxis.tick_right()
+            ax2.tick_params(axis='y', labelcolor='limegreen')
+            ax1.set_ylim(0, 3)
+            ax2.set_ylim(0, 100)
+            ax1.grid(True)
+            ax1.xaxis.set_major_formatter(DateFormatter('%H:%M:%S'))
+        
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
 class ModbusMonitorApp:
     # 類級變量，用於獲取當前翻譯，以便於輔助函數使用
     _current_translations = TEXTS["en"] 
@@ -660,8 +968,9 @@ class ModbusMonitorApp:
         self.master = master
         self.controller_mode = None
         self.main_widgets_created = False
+        self.chart_window = None # For chart window reference
 
-        self.master.withdraw() # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<- Hide main window
+        self.master.withdraw() # Hide main window
 
         # --- Initialize basic variables ---
         self.current_language_code = tk.StringVar(value="en")
@@ -678,6 +987,16 @@ class ModbusMonitorApp:
         self.monitor_labels_info_b, self.monitor_display_controls_b = {}, {}
         if not os.path.exists(PARAMETERS_DIR):
             os.makedirs(PARAMETERS_DIR)
+
+        self.chart_data_lock = threading.Lock()
+
+        # --- Chart Data History ---
+        self.MAX_HISTORY_POINTS = 2000 # 200 seconds * 10 samples/second (polling interval is 0.1s)
+        self.time_history = deque(maxlen=self.MAX_HISTORY_POINTS)
+        self.current_history_0000 = deque(maxlen=self.MAX_HISTORY_POINTS)
+        self.signal_history_0001 = deque(maxlen=self.MAX_HISTORY_POINTS)
+        self.current_history_0003 = deque(maxlen=self.MAX_HISTORY_POINTS) # For dual mode B group
+        self.signal_history_0004 = deque(maxlen=self.MAX_HISTORY_POINTS) # For dual mode B group
 
         # Show the mode selection dialog and wait for a choice
         self._show_mode_selection_dialog()
@@ -741,6 +1060,9 @@ class ModbusMonitorApp:
 
     def _on_closing(self):
         """處理視窗關閉事件，停止輪詢線程並關閉Modbus連接。"""
+        if self.chart_window: 
+            self.chart_window.destroy()
+
         # Ensure polling stops if active
         if self.polling_active:
             self.polling_active = False # Signal thread to stop
@@ -758,6 +1080,19 @@ class ModbusMonitorApp:
             except Exception as e:
                 print(f"Error closing Modbus master on exit: {e}") # Print to console, no messagebox on app close
         self.master.destroy()
+
+    def _toggle_chart_window(self):
+        """Toggle the real-time chart window."""
+        if self.chart_window and self.chart_window.winfo_exists():
+            self.chart_window.destroy()
+            self.chart_window = None
+            if hasattr(self, 'chart_button'):
+                self.chart_button.config(text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton")
+        else:
+            self.chart_window = RealtimeChartWindow(self.master, self) # Pass self (ModbusMonitorApp instance)
+            if hasattr(self, 'chart_button'):
+                self.chart_button.config(text=self.get_current_translation("CLOSE_CHART_BUTTON"), bootstyle="primary_button")
+
 
     def _create_widgets(self):
         """創建所有GUI元件並佈局。"""
@@ -814,7 +1149,7 @@ class ModbusMonitorApp:
         self.slave_id_spinbox.grid(row=0, column=5, padx=5, pady=5, sticky=tk.W)
         self.refresh_ports_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("REFRESH_PORTS_BUTTON"), bootstyle="primary.Outline", command=self._refresh_ports)
         self.refresh_ports_button.grid(row=0, column=6, padx=5, pady=5)
-        self.connect_button = ttk.Checkbutton(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="success-toolbutton", command=self._toggle_connection)
+        self.connect_button = ttk.Checkbutton(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_connection)
         self.connect_button.grid(row=0, column=7, padx=5, pady=5, sticky=tk.E)
 
         # --- 分隔線 ---
@@ -851,11 +1186,16 @@ class ModbusMonitorApp:
         monitor_area_frame.grid(row=0, column=0, sticky='ew', pady=(0, 5))
         monitor_area_frame.grid_columnconfigure(0, weight=1)
         monitor_area_frame.grid_columnconfigure(1, weight=1)
-
+        
+        # Monitor frames on row 0, below the button
         self.monitor_frame_a = ttk.LabelFrame(monitor_area_frame, text=self.get_current_translation("MONITOR_AREA_A_FRAME_TEXT"), padding="10")
-        self.monitor_frame_a.grid(row=0, column=0, sticky='nsew', padx=(0, 5))
+        self.monitor_frame_a.grid(row=0, column=0, sticky='nsew', padx=(0, 5), pady=(5,0))
         self.monitor_frame_b = ttk.LabelFrame(monitor_area_frame, text=self.get_current_translation("MONITOR_AREA_B_FRAME_TEXT"), padding="10")
-        self.monitor_frame_b.grid(row=0, column=1, sticky='nsew', padx=(5, 0))
+        self.monitor_frame_b.grid(row=0, column=1, sticky='nsew', padx=(5, 0), pady=(5,0))
+
+        # Chart Button on row 1, aligned to the right
+        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_chart_window)
+        self.chart_button.grid(row=0, column=1, sticky='ne', padx=5, pady=20)
 
         self.monitor_labels_info_a, self.monitor_display_controls_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
         self.monitor_labels_info_b, self.monitor_display_controls_b = self._create_monitor_widgets(self.monitor_frame_b, [("0003H", "OUTPUT_CURRENT_LABEL", "A"), ("0004H", "INPUT_SIGNAL_LABEL", "%"), ("0005H", "CURRENT_STATUS_LABEL", "")])
@@ -890,6 +1230,9 @@ class ModbusMonitorApp:
         self.writable_labels, self.writable_entries, self.writable_controls = {}, {}, {}
         self._create_parameter_controls(self.writable_params_config, tab_frames)
 
+        # --- 底部批量操作按鈕 ---
+        self._create_batch_buttons(self.writable_params_area_frame, 1)
+
         # --- 圖表區 ---
         self.chart_area_frame = ttk.Frame(self.dynamic_content_frame)
         self.chart_area_frame.grid(row=2, column=0, sticky='nsew', pady=5)
@@ -902,24 +1245,27 @@ class ModbusMonitorApp:
         self.chart_canvas = tk.Canvas(self.chart_frame, bg='white', highlightthickness=0)
         self.chart_canvas.grid(row=0, column=0, sticky="nsew")
 
-        # --- 底部批量操作按鈕 ---
-        self._create_batch_buttons(self.writable_params_area_frame, 1)
-
     def _create_single_controller_ui(self):
         """為單組控制器創建GUI元件。"""
         self.dynamic_content_frame.grid_rowconfigure(0, weight=0)  # 即時監控
         self.dynamic_content_frame.grid_rowconfigure(1, weight=1)  # 可寫入參數
+        self.dynamic_content_frame.grid_rowconfigure(2, weight=1)  # 圖表區
 
         # --- 即時監控區框架 ---
         monitor_area_frame = ttk.Frame(self.dynamic_content_frame)
         monitor_area_frame.grid(row=0, column=0, sticky='ew', pady=(0, 5))
         monitor_area_frame.grid_columnconfigure(0, weight=1)
+        monitor_area_frame.grid_columnconfigure(1, weight=0)
 
         self.monitor_frame_a = ttk.LabelFrame(monitor_area_frame, text=self.get_current_translation("MONITOR_AREA_SINGLE_FRAME_TEXT"), padding="10")
-        self.monitor_frame_a.grid(row=0, column=0, sticky='nsew')
-        # For single controller, we only need one set of monitor controls
+        self.monitor_frame_a.grid(row=0, column=0, sticky='nsew', pady=(5,0))
+
+        # Chart Button
+        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_chart_window)
+        self.chart_button.grid(row=0, column=0, sticky='ne', padx=5, pady=20)
+
         self.monitor_labels_info_a, self.monitor_display_controls_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
-        self.monitor_labels_info_b, self.monitor_display_controls_b = {}, {} # Empty for single mode
+        self.monitor_labels_info_b, self.monitor_display_controls_b = {}, {}
         self._clear_monitor_area()
 
         # --- 可寫入參數區 ---
@@ -928,7 +1274,6 @@ class ModbusMonitorApp:
         self.writable_params_area_frame.grid_rowconfigure(0, weight=1)
         self.writable_params_area_frame.grid_columnconfigure(0, weight=1)
 
-        # For single mode, we don't use a notebook, just a scrollable frame
         canvas = tk.Canvas(self.writable_params_area_frame, borderwidth=0, highlightthickness=0)
         scrollbar = ttk.Scrollbar(self.writable_params_area_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
@@ -942,8 +1287,20 @@ class ModbusMonitorApp:
         self.writable_labels, self.writable_entries, self.writable_controls = {}, {}, {}
         self._create_parameter_controls(self.single_writable_params_config, {"single": scrollable_frame})
 
-        # --- 底部批量操作按鈕 ---
         self._create_batch_buttons(self.writable_params_area_frame, 1)
+
+        # --- 圖表區 (for single controller) ---
+        self.chart_area_frame = ttk.Frame(self.dynamic_content_frame)
+        self.chart_area_frame.grid(row=2, column=0, sticky='nsew', pady=5)
+        self.chart_area_frame.grid_rowconfigure(0, weight=1)
+        self.chart_area_frame.grid_columnconfigure(0, weight=1)
+        self.chart_frame = ttk.LabelFrame(self.chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
+        self.chart_frame.grid(row=0, column=0, sticky="nsew")
+        self.chart_frame.grid_rowconfigure(0, weight=1)
+        self.chart_frame.grid_columnconfigure(0, weight=1)
+        self.chart_canvas = tk.Canvas(self.chart_frame, bg='white', highlightthickness=0)
+        self.chart_canvas.grid(row=0, column=0, sticky="nsew")
+
 
     def _create_parameter_controls(self, config, parent_frames):
         """通用函數: 根據設定檔和父框架創建參數控制元件。"""
@@ -972,14 +1329,14 @@ class ModbusMonitorApp:
             parent_frame.grid_columnconfigure(3, weight=1)
 
             num_params = len(params_in_group)
-            midpoint = math.floor(num_params / 2)
+            midpoint = math.ceil(num_params / 2)
 
             # Create controls in two columns
             for i, param in enumerate(params_in_group):
                 reg_hex = param['reg']
                 if i < midpoint:
                     col_offset = 0
-                    row_num = i % midpoint
+                    row_num = i
                 else:
                     col_offset = 2
                     row_num = i - midpoint
@@ -1025,6 +1382,12 @@ class ModbusMonitorApp:
             return # Do nothing if the mode is not actually changed
 
         if messagebox.askyesno(self.get_current_translation("CONFIRM_SWITCH_MODE_TITLE"), self.get_current_translation("CONFIRM_SWITCH_MODE_MSG")):
+            # --- FIX: Destroy existing chart window before switching mode ---
+            if self.chart_window and self.chart_window.winfo_exists():
+                self.chart_window.destroy()
+                self.chart_window = None
+            # --- END FIX ---
+
             # Disconnect if connected
             if self.modbus_master:
                 self._toggle_connection() # This will handle disconnection and UI clearing
@@ -1032,6 +1395,14 @@ class ModbusMonitorApp:
             # Switch mode
             self.controller_mode = target_mode
             
+            # --- FIX: Clear historical chart data ---
+            self.time_history.clear()
+            self.current_history_0000.clear()
+            self.signal_history_0001.clear()
+            self.current_history_0003.clear()
+            self.signal_history_0004.clear()
+            # --- END FIX ---
+
             # Update title
             app_title_key = "APP_TITLE_DUAL" if self.controller_mode == 'dual' else "APP_TITLE_SINGLE"
             self.master.title(self.get_current_translation(app_title_key))
@@ -1157,6 +1528,9 @@ class ModbusMonitorApp:
         self.save_params_button.config(text=self.translations["SAVE_PARAMS_BUTTON"])
         self.load_params_button.config(text=self.translations["LOAD_PARAMS_BUTTON"])
         self.batch_write_button.config(text=self.translations["BATCH_WRITE_BUTTON"])
+        if hasattr(self, 'chart_button'):
+            self.chart_button.config(text=self.translations["CLOSE_CHART_BUTTON"]) if self.chart_window and self.chart_window.winfo_exists() else self.chart_button.config(text=self.translations["SHOW_CHART_BUTTON"])
+
 
         # Update mode-specific UI
         if self.controller_mode == 'dual':
@@ -1193,12 +1567,12 @@ class ModbusMonitorApp:
         elif self.controller_mode == 'single':
             self.monitor_frame_a.config(text=self.translations["MONITOR_AREA_SINGLE_FRAME_TEXT"])
             self.writable_params_area_frame.config(text=self.translations["WRITABLE_PARAMS_FRAME_TEXT"])
+            self.chart_frame.config(text=self.translations["CONTROLLER_MODE_CHART_FRAME_TEXT"])
             
             # Update monitor meter subtext
             self.monitor_display_controls_a['0000H'].configure(subtext=self.translations["OUTPUT_CURRENT_LABEL"])
             self.monitor_display_controls_a['0001H'].configure(subtext=self.translations["INPUT_SIGNAL_LABEL"])
 
-            # Update monitor status text
             # Update monitor status text
             self.monitor_labels_info_a['0002H']['title_label'].config(text=self.translations["CURRENT_STATUS_LABEL"])
             if hasattr(self, 'last_status_code_a') and self.last_status_code_a is not None:
@@ -1206,6 +1580,7 @@ class ModbusMonitorApp:
                 self.monitor_display_controls_a['0002H'].config(text=status_text_a)
             
             config = self.single_writable_params_config
+            self._draw_single_controller_chart()
 
         # Update writable parameters labels and combobox values
         for param_config in config:
@@ -1229,6 +1604,91 @@ class ModbusMonitorApp:
                     self.writable_entries[reg_hex].set(new_map_values.get(current_numeric_value, ""))
                 else:
                     self.writable_entries[reg_hex].set("")
+
+        # Update chart window language if it exists
+        if self.chart_window and self.chart_window.winfo_exists():
+            self.chart_window._update_language()
+
+    def _get_single_controller_chart_xaxis_properties(self):
+        title = self.get_current_translation("S_SIGNAL_SELECTION")
+        min_label, max_label, mid_label = '0%', '100%', '50%'
+
+        try:
+            mode_map = self.translations.get("S_SIGNAL_SELECTION_MAP_VALUES", {})
+            mode_str = self.writable_entries['0003H'].get()
+            
+            if mode_str == mode_map.get(0): # 0-10V
+                min_label, max_label, mid_label = '0V', '10V', '5V'
+            elif mode_str == mode_map.get(1): # 0-5V
+                min_label, max_label, mid_label = '0V', '5V', '2.5V'
+            elif mode_str == mode_map.get(2): # 4-20mA
+                min_label, max_label, mid_label = '4mA', '20mA', '12mA'
+
+        except Exception as e:
+            print(f"Error in _get_single_controller_chart_xaxis_properties: {e}")
+
+        return {'title': title, 'min_label': min_label, 'max_label': max_label, 'mid_label': mid_label}
+
+    def _draw_single_controller_chart(self):
+        if not hasattr(self, 'chart_canvas') or not self.chart_canvas.winfo_exists():
+            return
+        
+        self.chart_canvas.delete("all")
+        canvas_width = self.chart_canvas.winfo_width()
+        canvas_height = self.chart_canvas.winfo_height()
+
+        if canvas_width <= 1 or canvas_height <= 1: # Not visible yet
+            return
+
+        # 參數
+        try:
+            max_current = float(self.writable_entries['0008H'].get())
+            min_current = float(self.writable_entries['0009H'].get())
+            dead_zone = float(self.writable_entries['000DH'].get())
+        except (ValueError, KeyError):
+            return # Not all params are available
+
+        xaxis_props = self._get_single_controller_chart_xaxis_properties()
+        max_y_val = 3.0
+        chart_w, chart_h = 250, canvas_height * 0.5
+        chart_x_start, chart_y_start = (canvas_width - chart_w) / 2, canvas_height * 0.25
+
+        def map_x(p): return chart_x_start + (p / 100.0) * chart_w
+        def map_y(c): return chart_y_start + chart_h * (1 - (c / max_y_val))
+
+        # 繪製外框和座標軸
+        self.chart_canvas.create_rectangle(chart_x_start, chart_y_start, chart_x_start + chart_w, chart_y_start + chart_h, outline="black")
+        self.chart_canvas.create_line(chart_x_start, chart_y_start + chart_h, chart_x_start + chart_w, chart_y_start + chart_h)
+        self.chart_canvas.create_line(chart_x_start, chart_y_start, chart_x_start, chart_y_start + chart_h)
+
+        # 座標軸標籤
+        self.chart_canvas.create_text(chart_x_start, chart_y_start + chart_h + 5, text=xaxis_props['min_label'], anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + chart_w, chart_y_start + chart_h + 5, text=xaxis_props['max_label'], anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start + chart_w / 2, chart_y_start + chart_h + 20, text=xaxis_props['title'], anchor=tk.N)
+        self.chart_canvas.create_text(chart_x_start - 5, chart_y_start + chart_h, text="0A", anchor=tk.E)
+        self.chart_canvas.create_text(chart_x_start - 5, chart_y_start, text=f"{max_y_val:.1f}A", anchor=tk.E)
+        self.chart_canvas.create_text(chart_x_start - 20, chart_y_start + chart_h / 2, text=self.get_current_translation("CURRENT"), anchor=tk.CENTER, angle=90)
+
+        # 格線
+        for p in range(10, 100, 10): self.chart_canvas.create_line(map_x(p), chart_y_start, map_x(p), chart_y_start + chart_h, fill="lightgray", dash=(2, 2))
+        for c in [0.5, 1.0, 1.5, 2.0, 2.5]: self.chart_canvas.create_line(chart_x_start, map_y(c), chart_x_start + chart_w, map_y(c), fill="lightgray", dash=(2, 2))
+
+        # 特性曲線
+        points = [
+            (map_x(0), map_y(0)),
+            (map_x(dead_zone), map_y(0)),
+            (map_x(dead_zone), map_y(min_current)),
+            (map_x(100), map_y(max_current))
+        ]
+        self.chart_canvas.create_line(points, fill="Coral", width=2)
+
+        # 參數文字
+        text_x = chart_x_start + chart_w + 10
+        text_y = chart_y_start + 10
+        self.chart_canvas.create_text(text_x, text_y, anchor=tk.W, text=f"{self.get_current_translation('S_MAX_CURRENT').split('(')[0]}: {max_current:.2f}A", font=("Arial", 8), fill="Coral")
+        self.chart_canvas.create_text(text_x, text_y + 15, anchor=tk.W, text=f"{self.get_current_translation('S_MIN_CURRENT').split('(')[0]}: {min_current:.2f}A", font=("Arial", 8), fill="Coral")
+        self.chart_canvas.create_text(text_x, text_y + 30, anchor=tk.W, text=f"{self.get_current_translation('S_DEAD_ZONE_SETTING').split('(')[0]}: {dead_zone:.0f}%", font=("Arial", 8), fill="Coral")
+
 
     def _get_chart_xaxis_properties(self, group):
         """
@@ -1645,10 +2105,7 @@ class ModbusMonitorApp:
             messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("COM_PORT_NOT_FOUND_WARNING"))
 
     def _toggle_connection(self):
-        """連接或斷開Modbus通訊。
-        修改: 連接成功後，讀取0003h~000dh並顯示於可寫入參數區，同時開始每秒更新0000h~0002h。
-        斷開時停止更新並清空。
-        """
+        """連接或斷開Modbus通訊。"""
         global MODBUS_MASTER
         if self.modbus_master:
             # 斷開連接邏輯
@@ -1724,16 +2181,18 @@ class ModbusMonitorApp:
                 registers = self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, start_addr, quantity)
                 print(f"讀取到的寄存器值: {registers}")
                 
-                self._update_monitor_area(registers)
-                self._update_writable_params_area(registers)
+                # Schedule GUI updates on the main thread
+                self.master.after(0, lambda: self._update_monitor_area(registers))
+                self.master.after(0, lambda: self._update_writable_params_area(registers))
+                
+                # Schedule chart update
                 if self.controller_mode == 'dual':
-                    self._draw_chart()
+                    self.master.after(10, self._draw_chart) # Small delay to ensure UI is ready
+                elif self.controller_mode == 'single':
+                    self.master.after(10, self._draw_single_controller_chart)
 
             except Exception as e:
                 messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("READ_REGISTERS_FAIL").format(e=e))
-                print(f"讀取所有寄存器失敗: {e}")
-                self._clear_monitor_area()
-                self._clear_writable_params()
 
     def _read_monitor_registers_only(self):
         """
@@ -1752,42 +2211,63 @@ class ModbusMonitorApp:
                     quantity = 3 # Only one group
 
                 registers = self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, start_addr, quantity)
-                self._update_monitor_area(registers)
+                self.master.after(0, lambda: self._update_monitor_area(registers))
 
             except Exception as e:
                 print(self.get_current_translation("READ_REGISTERS_POLLING_FAIL").format(e=e))
+                # In case of polling error, stop polling and clear the area to avoid stale data
                 self.polling_active = False
                 self.master.after(0, self._clear_monitor_area)
 
     def _update_monitor_area(self, registers):
-        """根據讀取的寄存器值更新即時監控區的顯示。"""
-        # Group A / Single Controller
-        # Register unit is 0.01A, Meter unit is mA. Multiply by 10.
-        # convert_to_float(value, 0.1) is equivalent to value * 10.
-        current_val_a = convert_to_float(registers[0], 0.1)
-        self.monitor_display_controls_a['0000H'].configure(amountused=current_val_a if current_val_a is not None else 0)
+        """
+        根據傳入的寄存器值更新即時監控區的GUI。
+        """
+        try:
+            # --- Update Chart History (under lock) ---
+            with self.chart_data_lock:
+                current_time = time.time()
+                if self.controller_mode == 'dual':
+                    if len(registers) >= 6:
+                        self.time_history.append(current_time)
+                        self.current_history_0000.append(registers[0] / 100.0)
+                        self.signal_history_0001.append(registers[1] / 10.0)
+                        self.current_history_0003.append(registers[3] / 100.0)
+                        self.signal_history_0004.append(registers[4] / 10.0)
+                elif self.controller_mode == 'single':
+                    if len(registers) >= 3:
+                        self.time_history.append(current_time)
+                        self.current_history_0000.append(registers[0] / 100.0)
+                        self.signal_history_0001.append(registers[1] / 10.0)
+                        self.current_history_0003.clear()
+                        self.signal_history_0004.clear()
 
-        signal_val_a = convert_to_float(registers[1], 10)
-        self.monitor_display_controls_a['0001H'].configure(amountused=signal_val_a if signal_val_a is not None else 0)
+            # --- Update GUI (outside lock) ---
+            if self.controller_mode == 'dual':
+                if len(registers) < 6: return
+                raw_current_a, raw_signal_a, status_a, raw_current_b, raw_signal_b, status_b = registers[:6]
+                self.last_status_code_a = status_a
+                self.last_status_code_b = status_b
 
-        status_code_a = registers[2]
-        self.last_status_code_a = status_code_a
-        status_map_key = "S_STATUS_MAP_VALUES" if self.controller_mode == 'single' else "STATUS_MAP_VALUES"
-        status_text_a = self.translations[status_map_key].get(status_code_a, self.get_current_translation("UNKNOWN_STATUS"))
-        self.monitor_display_controls_a['0002H'].config(text=status_text_a)
+                self.monitor_display_controls_a['0000H'].configure(amountused=raw_current_a * 10)
+                self.monitor_display_controls_a['0001H'].configure(amountused=raw_signal_a / 10.0)
+                self.monitor_display_controls_a['0002H'].config(text=self.translations["STATUS_MAP_VALUES"].get(status_a, self.translations["UNKNOWN_STATUS"]))
 
-        if self.controller_mode == 'dual' and len(registers) >= 6:
-            # Group B
-            current_val_b = convert_to_float(registers[3], 0.1)
-            self.monitor_display_controls_b['0003H'].configure(amountused=current_val_b if current_val_b is not None else 0)
+                self.monitor_display_controls_b['0003H'].configure(amountused=raw_current_b * 10)
+                self.monitor_display_controls_b['0004H'].configure(amountused=raw_signal_b / 10.0)
+                self.monitor_display_controls_b['0005H'].config(text=self.translations["STATUS_MAP_VALUES"].get(status_b, self.translations["UNKNOWN_STATUS"]))
 
-            signal_val_b = convert_to_float(registers[4], 10)
-            self.monitor_display_controls_b['0004H'].configure(amountused=signal_val_b if signal_val_b is not None else 0)
+            elif self.controller_mode == 'single':
+                if len(registers) < 3: return
+                raw_current_a, raw_signal_a, status_a = registers[:3]
+                self.last_status_code_a = status_a
 
-            status_code_b = registers[5]
-            self.last_status_code_b = status_code_b
-            status_text_b = self.translations["STATUS_MAP_VALUES"].get(status_code_b, self.get_current_translation("UNKNOWN_STATUS"))
-            self.monitor_display_controls_b['0005H'].config(text=status_text_b)
+                self.monitor_display_controls_a['0000H'].configure(amountused=raw_current_a * 10)
+                self.monitor_display_controls_a['0001H'].configure(amountused=raw_signal_a / 10.0)
+                self.monitor_display_controls_a['0002H'].config(text=self.translations["S_STATUS_MAP_VALUES"].get(status_a, self.translations["UNKNOWN_STATUS"]))
+
+        except Exception as e:
+            print(f"An unexpected error occurred in _update_monitor_area: {e}")
 
     def _clear_monitor_area(self):
         """清除即時監控區的所有顯示。"""
@@ -1852,8 +2332,8 @@ class ModbusMonitorApp:
     def _polling_loop(self):
         """每秒讀取一次即時監控區寄存器的後台迴圈。"""
         while self.polling_active:
-            self.master.after(0, self._read_monitor_registers_only) 
-            time.sleep(1) 
+            self._read_monitor_registers_only()
+            time.sleep(0.1) # Poll faster for chart
 
     def _write_single_register(self, reg_hex, tk_var, control_type, map_dict=None, min_val=None, max_val=None, scale=1, unit_step=1, is_int=False):
         """
@@ -1954,7 +2434,7 @@ class ModbusMonitorApp:
         if write_value is not None:
             if write_modbus_register(slave_id, register_address, write_value):
                 self._read_all_registers_and_update_gui()
-                self._draw_chart() # Update chart after single register write
+                if self.controller_mode == 'dual': self._draw_chart()
                 messagebox.showinfo(self.get_current_translation("INFO_TITLE"),
                                     self.get_current_translation("MODBUS_WRITE_SUCCESS").format(value_str=value_str, register_address=register_address))
         else:
@@ -1999,334 +2479,346 @@ class ModbusMonitorApp:
         def _update_countdown():
             current_remaining = remaining.get()
             if current_remaining > 0:
-                msg = self.get_current_translation("FACTORY_RESET_COUNTDOWN_MSG").format(seconds=current_remaining)
-                countdown_label.config(text=msg)
+                countdown_label.config(text=self.get_current_translation("FACTORY_RESET_COUNTDOWN_MSG").format(seconds=current_remaining))
                 remaining.set(current_remaining - 1)
                 countdown_dialog.after(1000, _update_countdown)
             else:
                 countdown_dialog.destroy()
                 if callback:
-                    self.master.after(100, callback) # Short delay before callback
-
+                    callback()
+        
         _update_countdown()
-        countdown_dialog.protocol("WM_DELETE_WINDOW", lambda: None) # Disable closing
+        self.master.wait_window(countdown_dialog)
 
     def _execute_factory_reset(self):
-        """
-        執行恢復出廠設置的完整流程：
-        1. 停止輪詢
-        2. 發送重置命令
-        3. 顯示10秒倒數
-        4. 倒數結束後，重新讀取所有參數並重新啟動輪詢
-        """
-        factory_reset_reg_hex = '000DH' if self.controller_mode == 'dual' else '0007H'
+        """執行恢復出廠設置的完整流程。"""
+        self.polling_active = False
+        time.sleep(0.2) # Give the polling loop a moment to stop
+
         slave_id = int(self.slave_id_spinbox.get())
-        register_address = int(factory_reset_reg_hex.replace('H', ''), 16)
-
-        # 1. 停止輪詢
-        was_polling = self.polling_active
-        if was_polling:
-            self.polling_active = False
-            if self.polling_thread and self.polling_thread.is_alive():
-                self.polling_thread.join(timeout=0.2) # Give it a moment to stop
-                self.polling_thread = None
-
-
-        def _reset_callback():
-            """倒數結束後執行的回調函數"""
-            # 4. 重新讀取參數
-            self._read_all_registers_and_update_gui()
-            # 重新啟動輪詢
-            if was_polling:
-                self.polling_active = True
-                self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
-                self.polling_thread.start()
-
-        # 2. 發送重置命令
-        if write_modbus_register(slave_id, register_address, 5):
-            # 3. 顯示倒數計時視窗
-            self._show_countdown_window(10, _reset_callback)
+        reg_addr = 0x000D if self.controller_mode == 'dual' else 0x0007
+        
+        print(f"Sending Factory Reset command to reg {reg_addr:04X}")
+        if write_modbus_register(slave_id, reg_addr, 5):
+            # Show countdown window
+            self._show_countdown_window(10, callback=self._post_reset_actions)
         else:
-            # 如果寫入失敗，需要恢復輪詢
-            if was_polling:
-                self.polling_active = True
-                self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
-                self.polling_thread.start()
+            # If write fails, just restart polling
+            self.polling_active = True
+            self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
+            self.polling_thread.start()
+
+    def _post_reset_actions(self):
+        """恢復出廠設置倒數結束後執行的操作。"""
+        print("Reset countdown finished. Re-reading all registers.")
+        self._read_all_registers_and_update_gui()
+        self.polling_active = True
+        self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
+        self.polling_thread.start()
+        messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("FACTORY_RESET_SUCCESS_MSG"))
 
     def _get_parameters_dir(self):
-        """根據當前模式和語言獲取參數存檔目錄。"""
-        lang = self.current_language_code.get()
-        mode = self.controller_mode
-        dir_name = f"{lang}_{mode}"
-        return os.path.join(PARAMETERS_DIR, dir_name)
+        """根據當前模式和語言獲取參數檔案的儲存目錄。"""
+        lang_code = self.current_language_code.get()
+        mode_code = self.controller_mode
+        return os.path.join(PARAMETERS_DIR, f"{lang_code}_{mode_code}")
 
     def _save_parameters_to_file(self):
-        """將"可寫入參數區"的參數儲存在本地檔案中。"""
-        params_to_save = self._get_current_writable_params()
-        target_dir = self._get_parameters_dir()
+        """將當前可寫入參數區的數值儲存到檔案。"""
+        params_dir = self._get_parameters_dir()
+        if not os.path.exists(params_dir):
+            os.makedirs(params_dir)
 
-        if not os.path.exists(target_dir):
-            os.makedirs(target_dir)
-
-        filename = simpledialog.askstring(self.get_current_translation("PARAM_SAVE_PROMPT_TITLE"),
-                                          self.get_current_translation("PARAM_SAVE_PROMPT"))
+        filename = simpledialog.askstring(self.get_current_translation("PARAM_SAVE_PROMPT_TITLE"), 
+                                          self.get_current_translation("PARAM_SAVE_PROMPT"),
+                                          parent=self.master)
         if not filename:
             return
 
-        file_path = os.path.join(target_dir, f"{filename}.json")
+        if not filename.endswith(".json"):
+            filename += ".json"
 
-        if os.path.exists(file_path):
-            if not messagebox.askyesno(self.get_current_translation("CONFIRM_TITLE"),
+        filepath = os.path.join(params_dir, filename)
+
+        if os.path.exists(filepath):
+            if not messagebox.askyesno(self.get_current_translation("CONFIRM_TITLE"), 
                                        self.get_current_translation("FILE_EXISTS_CONFIRM").format(filename=filename)):
                 return
 
+        current_params = self._get_current_writable_params()
         try:
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(params_to_save, f, indent=4, ensure_ascii=False)
-            messagebox.showinfo(self.get_current_translation("INFO_TITLE"),
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(current_params, f, indent=4, ensure_ascii=False)
+            messagebox.showinfo(self.get_current_translation("INFO_TITLE"), 
                                 self.get_current_translation("SAVE_SUCCESS").format(filename=filename))
         except Exception as e:
-            messagebox.showerror(self.get_current_translation("ERROR_TITLE"),
-                                 self.get_current_translation("SAVE_FAIL").format(e=e))
+            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), 
+                               self.get_current_translation("SAVE_FAIL").format(e=e))
 
     def _load_parameters_from_file(self):
-        """從本地讀取參數檔案，並在選單中顯示供使用者選擇。"""
-        target_dir = self._get_parameters_dir()
-        if not os.path.exists(target_dir):
+        """從檔案讀取參數並更新GUI。"""
+        params_dir = self._get_parameters_dir()
+        if not os.path.exists(params_dir) or not os.listdir(params_dir):
             messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("LOAD_FAIL_NO_FILES"))
             return
 
-        self.saved_parameters = {}
-        for fname in os.listdir(target_dir):
-            if fname.endswith(".json"):
-                name = os.path.splitext(fname)[0]
-                file_path = os.path.join(target_dir, fname)
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        self.saved_parameters[name] = data
-                except Exception as e:
-                    print(f"Error loading param file {fname}: {e}")
+        # Use a custom dialog to show files
+        dialog = tk.Toplevel(self.master)
+        dialog.title(self.get_current_translation("LOAD_PROMPT"))
+        dialog.geometry("400x300")
+        dialog.resizable(False, False)
+        dialog.transient(self.master)
+        dialog.grab_set()
 
-        if not self.saved_parameters:
-            messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("LOAD_FAIL_NO_FILES"))
-            return
+        listbox = tk.Listbox(dialog, selectmode=tk.SINGLE)
+        listbox.pack(pady=10, padx=10, expand=True, fill=tk.BOTH)
 
-        select_window = tk.Toplevel(self.master)
-        select_window.title(self.get_current_translation("LOAD_PROMPT"))
-        select_window.geometry("400x300")
-        select_window.transient(self.master)
-        select_window.grab_set()
+        files = [f for f in os.listdir(params_dir) if f.endswith('.json')]
+        for f in files:
+            listbox.insert(tk.END, f)
 
-        listbox = tk.Listbox(select_window, exportselection=False)
-        for name in self.saved_parameters.keys():
-            listbox.insert(tk.END, name)
-        listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+        selected_file = tk.StringVar()
 
         def on_select():
-            selected_index = listbox.curselection()
-            if selected_index:
-                selected_name = listbox.get(selected_index[0])
-                params = self.saved_parameters.get(selected_name)
-                if params:
-                    self._apply_parameters_to_gui(params)
-                    messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("LOAD_SUCCESS").format(selected_name=selected_name))
-                select_window.destroy()
+            if listbox.curselection():
+                selected_file.set(listbox.get(listbox.curselection()))
+                dialog.destroy()
             else:
-                messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("SELECT_ITEM_ERROR"))
-        
-        button_frame = ttk.Frame(select_window)
-        button_frame.pack(pady=5)
-        ttk.Button(button_frame, text=self.get_current_translation("LOAD_BUTTON"), command=on_select).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text=self.get_current_translation("CANCEL_BUTTON"), command=select_window.destroy).pack(side=tk.LEFT, padx=5)
-        select_window.wait_window()
+                messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("NO_ITEM_SELECTED_MSG"), parent=dialog)
 
-    def _apply_parameters_to_gui(self, params):
-        """將從檔案讀取到的參數填入GUI的相應欄位。"""
-        for reg_hex, value_str in params.items():
-            if reg_hex in self.writable_entries:
-                self.writable_entries[reg_hex].set(value_str)
+        def on_delete():
+            if not listbox.curselection():
+                messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("NO_ITEM_SELECTED_MSG"), parent=dialog)
+                return
+            
+            filename_to_delete = listbox.get(listbox.curselection())
+            if messagebox.askyesno(self.get_current_translation("CONFIRM_DELETE_TITLE"), f"{self.get_current_translation('CONFIRM_DELETE_MSG')} '{filename_to_delete}'?", parent=dialog):
+                filepath_to_delete = os.path.join(params_dir, filename_to_delete)
+                try:
+                    if os.path.exists(filepath_to_delete):
+                        os.remove(filepath_to_delete)
+                        messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("DELETE_SUCCESS").format(filename=filename_to_delete), parent=dialog)
+                        listbox.delete(listbox.curselection())
+                    else:
+                        messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("FILE_NOT_FOUND_FOR_DELETE").format(filename=filename_to_delete), parent=dialog)
+                except Exception as e:
+                    messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("DELETE_FAIL").format(filename=filename_to_delete, e=e), parent=dialog)
+
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(pady=5, fill=tk.X, padx=10)
+        
+        load_btn = ttk.Button(button_frame, text=self.get_current_translation("LOAD_BUTTON"), command=on_select)
+        load_btn.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
+        
+        delete_btn = ttk.Button(button_frame, text=self.get_current_translation("DELETE_BUTTON"), bootstyle="danger", command=on_delete)
+        delete_btn.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
+
+        cancel_btn = ttk.Button(button_frame, text=self.get_current_translation("CANCEL_BUTTON"), command=dialog.destroy)
+        cancel_btn.pack(side=tk.RIGHT, expand=True, fill=tk.X, padx=5)
+
+        dialog.wait_window()
+
+        if not selected_file.get():
+            return
+
+        filepath = os.path.join(params_dir, selected_file.get())
+
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                loaded_params = json.load(f)
+            
+            for reg_hex, value in loaded_params.items():
+                if reg_hex in self.writable_entries:
+                    self.writable_entries[reg_hex].set(value)
+            
+            # Redraw chart after loading parameters
+            if self.controller_mode == 'dual':
+                self._draw_chart()
+            elif self.controller_mode == 'single':
+                self._draw_single_controller_chart()
+
+            messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("LOAD_SUCCESS").format(selected_name=selected_file.get()))
+        except json.JSONDecodeError:
+            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("FILE_FORMAT_ERROR").format(fname=selected_file.get()))
+        except Exception as e:
+            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("FILE_READ_ERROR").format(fname=selected_file.get(), e=e))
+
+    def _validate_single_param_for_batch(self, param_config):
+        """
+        在批次寫入前驗證單個參數。
+        - 驗證成功，返回要寫入的整數值。
+        - 欄位為空，返回 'SKIP' 字串。
+        - 驗證失敗，顯示錯誤訊息並返回 None。
+        """
+        reg_hex = param_config['reg']
+        value_str = self.writable_entries[reg_hex].get().strip()
+        control_type = param_config['type']
+        type_name = self.get_current_translation(param_config['title_key'])
+
+        if not value_str:
+            return 'SKIP'  # Return a special value for empty fields
+
+        try:
+            if control_type == 'combobox':
+                rev_map = param_config['rev_map']
+                if value_str not in rev_map:
+                    # This should not happen with a readonly combobox, but as a safeguard:
+                    messagebox.showwarning(self.get_current_translation("WARNING_TITLE"),
+                                           f"{type_name} ({reg_hex}): " + self.get_current_translation("COMBOBOX_SELECT_ERROR"))
+                    return None
+                return rev_map[value_str]
+            
+            elif control_type in ['entry', 'entry_scaled']:
+                min_val = param_config['min']
+                max_val = param_config['max']
+                scale = param_config.get('scale', 1)
+                unit_step = param_config.get('unit_step', 1)
+
+                num_value = float(value_str)
+                
+                if not (min_val <= num_value <= max_val):
+                    messagebox.showwarning(self.get_current_translation("WARNING_TITLE"),
+                                           f"{type_name} ({reg_hex}): " + self.get_current_translation("INPUT_RANGE_ERROR").format(type_name=type_name, min_val=min_val, max_val=max_val))
+                    return None
+
+                if control_type == 'entry_scaled':
+                    # Use a tolerance for float comparison
+                    if not math.isclose(num_value % unit_step, 0, rel_tol=1e-9, abs_tol=1e-9) and not math.isclose(num_value % unit_step, unit_step, rel_tol=1e-9, abs_tol=1e-9):
+                        messagebox.showwarning(self.get_current_translation("WARNING_TITLE"),
+                                           f"{type_name} ({reg_hex}): " + self.get_current_translation("UNIT_MULTIPLE_ERROR").format(display_value=num_value, unit_step=unit_step))
+                        return None
+                    return int(round(num_value / scale))
+                else:
+                    return convert_to_register_value(value_str, scale)
+
+        except (ValueError, KeyError):
+            messagebox.showwarning(self.get_current_translation("WARNING_TITLE"),
+                                   f"{type_name} ({reg_hex}): " + self.get_current_translation("INPUT_VALUE_TYPE_ERROR").format(type_name=type_name))
+            return None
+        
+        return None # Default fail case
 
     def _batch_write_parameters(self):
-        """批量寫入參數，包含進度條和驗證。"""
+        """批量寫入所有可寫入參數。"""
         if not self.modbus_master:
             messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("MODBUS_NOT_CONNECTED_WARNING"))
             return
 
+        slave_id = int(self.slave_id_spinbox.get())
         config = self.writable_params_config if self.controller_mode == 'dual' else self.single_writable_params_config
 
-        # --- 驗證最大/最小電流 ---
-        try:
-            if self.controller_mode == 'dual':
-                # A組
-                max_a = float(self.writable_entries['0010H'].get())
-                min_a = float(self.writable_entries['0011H'].get())
-                if max_a < min_a + 0.1:
-                    messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("CURRENT_RANGE_ERROR_A"))
-                    return
-                # B組
-                max_b = float(self.writable_entries['001AH'].get())
-                min_b = float(self.writable_entries['001BH'].get())
-                if max_b < min_b + 0.1:
-                    messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("CURRENT_RANGE_ERROR_B"))
-                    return
-            else: # single
-                max_s = float(self.writable_entries['0008H'].get())
-                min_s = float(self.writable_entries['0009H'].get())
-                if max_s < min_s + 0.1:
-                    messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("CURRENT_RANGE_ERROR_S"))
-                    return
-        except (ValueError, KeyError) as e:
-            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), f"無法驗證電流範圍，請檢查參數是否為有效數字: {e}")
-            return
+        # --- Special handling for Factory Reset ---
+        reset_reg = '000DH' if self.controller_mode == 'dual' else '0007H'
+        reset_val_str = self.writable_entries[reset_reg].get()
+        reset_map = self.translations['FACTORY_RESET_MAP_VALUES' if self.controller_mode == 'dual' else 'S_FACTORY_RESET_MAP_VALUES']
+        reset_rev_map = {v: k for k, v in reset_map.items()}
+        
+        if reset_rev_map.get(reset_val_str) == 5:
+            if messagebox.askyesno(self.get_current_translation("CONFIRM_TITLE"), self.get_current_translation("FACTORY_RESET_CONFIRM_BATCH_MSG")):
+                self._execute_factory_reset()
+            return # Stop here whether reset is confirmed or cancelled
 
-        # --- 處理恢復出廠設置 ---
-        reset_reg_hex = '000DH' if self.controller_mode == 'dual' else '0007H'
-        if reset_reg_hex in self.writable_entries:
-            reset_val_str = self.writable_entries[reset_reg_hex].get()
-            reset_param_config = next((p for p in config if p['reg'] == reset_reg_hex), None)
-            if reset_param_config:
-                rev_map = {v: k for k, v in self.translations.get(reset_param_config['map_key'], {}).items()}
-                if rev_map.get(reset_val_str) == 5:
-                    if messagebox.askyesno(self.get_current_translation("CONFIRM_TITLE"), self.get_current_translation("FACTORY_RESET_CONFIRM_BATCH_MSG")):
-                        self._perform_factory_reset(int(reset_reg_hex.replace('H', ''), 16))
-                    return
+        # --- Pre-write validation for current ranges ---
+        if self.controller_mode == 'dual':
+            max_a = self.writable_entries['0010H'].get()
+            min_a = self.writable_entries['0011H'].get()
+            if float(max_a) < float(min_a) + 0.1:
+                messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("CURRENT_RANGE_ERROR_A"))
+                return
+            max_b = self.writable_entries['001AH'].get()
+            min_b = self.writable_entries['001BH'].get()
+            if float(max_b) < float(min_b) + 0.1:
+                messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("CURRENT_RANGE_ERROR_B"))
+                return
+        else: # single
+            max_s = self.writable_entries['0008H'].get()
+            min_s = self.writable_entries['0009H'].get()
+            if float(max_s) < float(min_s) + 0.1:
+                messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("CURRENT_RANGE_ERROR_S"))
+                return
 
-        # --- 準備寫入列表 ---
-        validated_writes = []
-        for param in config:
-            reg_hex = param['reg']
-            if (self.controller_mode == 'dual' and reg_hex == '000DH') or \
-               (self.controller_mode == 'single' and reg_hex == '0007H'):
-                continue
+        # --- Validate all parameters before starting to write ---
+        params_to_write = []
+        validation_passed = True
+        registers_to_check = [p for p in config if p['reg'] != reset_reg]
 
+        for param in registers_to_check:
             value_to_write = self._validate_single_param_for_batch(param)
-            if value_to_write is None:
-                return
-            validated_writes.append({'address': int(reg_hex.replace('H', ''), 16), 'value': value_to_write, 'reg_hex': reg_hex})
-
-        # --- 創建並顯示進度條視窗 ---
-        progress_window = tk.Toplevel(self.master)
-        progress_window.title(self.get_current_translation("BATCH_WRITE_PROGRESS_TITLE"))
-        progress_window.geometry("400x100")
-        progress_window.resizable(False, False)
-        progress_window.transient(self.master)
-        progress_window.grab_set()
-
-        progress_label = ttk.Label(progress_window, text="...")
-        progress_label.pack(pady=10, padx=10, fill=tk.X)
-        progress_bar = ttk.Progressbar(progress_window, orient='horizontal', length=380, mode='determinate')
-        progress_bar.pack(pady=10, padx=10)
-
-        # --- 執行寫入 ---
-        slave_id = int(self.slave_id_spinbox.get())
-        total_writes = len(validated_writes)
-        progress_bar["maximum"] = total_writes
-        
-        for i, write_op in enumerate(validated_writes):
-            # 更新進度條
-            progress_label.config(text=self.get_current_translation("BATCH_WRITE_IN_PROGRESS").format(
-                register_address=write_op['address'], i=i + 1, total_registers=total_writes
-            ))
-            progress_bar["value"] = i + 1
-            progress_window.update_idletasks()
-
-            if not write_modbus_register(slave_id, write_op['address'], write_op['value']):
-                messagebox.showerror(self.get_current_translation("ERROR_TITLE"), f"Failed to write to register 0x{write_op['address']:04X}. Aborting.")
-                progress_window.destroy()
-                self._read_all_registers_and_update_gui()
-                return
-            time.sleep(0.05)
-
-        progress_window.destroy()
-        messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("BATCH_WRITE_SUCCESS_ALL"))
-        self._read_all_registers_and_update_gui()
-
-    def _validate_single_param_for_batch(self, param_config):
-        """Helper for batch write. Validates and returns value to write, or None on error."""
-        reg_hex = param_config['reg']
-        value_str = self.writable_entries[reg_hex].get().strip()
-        
-        if not value_str:
-            messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("INPUT_EMPTY_ERROR").format(reg_hex=reg_hex))
-            return None
-
-        try:
-            if param_config['type'] == 'combobox':
-                rev_map = {v: k for k, v in self.translations.get(param_config['map_key'], {}).items()}
-                if value_str not in rev_map:
-                    messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("COMBOBOX_SELECT_ERROR").format(reg_hex=reg_hex))
-                    return None
-                return rev_map[value_str]
-            
-            is_int = param_config.get('is_int', False)
-            num_value = int(value_str) if is_int else float(value_str)
-            
-            if not (param_config['min'] <= num_value <= param_config['max']):
-                messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("INPUT_RANGE_ERROR").format(type_name=self.translations[param_config['title_key']], min_val=param_config['min'], max_val=param_config['max']))
-                return None
-
-            if param_config.get('type') == 'entry_scaled':
-                 if 'unit_step' in param_config and (num_value % param_config['unit_step'] != 0):
-                    messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("UNIT_MULTIPLE_ERROR").format(reg_hex=reg_hex, display_value=num_value, unit_step=param_config['unit_step']))
-                    return None
-                 return int(num_value / param_config['scale'])
-            else: 
-                return convert_to_register_value(value_str, param_config.get('scale', 1))
-
-        except ValueError:
-            messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("INPUT_VALUE_TYPE_ERROR").format(type_name=self.translations[param_config['title_key']]))
-            return None
-        except Exception as e:
-            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), f"Unknown error validating {reg_hex}: {e}")
-            return None
-
-    def _perform_factory_reset(self, register_address):
-        slave_id = int(self.slave_id_spinbox.get())
-        self._set_gui_state(tk.DISABLED)
-        if write_modbus_register(slave_id, register_address, 5):
-            messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("FACTORY_RESET_SUCCESS_MSG"))
-            self.master.after(5000, lambda: [self._set_gui_state(tk.NORMAL), self._read_all_registers_and_update_gui()])
-        else:
-            self._set_gui_state(tk.NORMAL)
-
-    def _set_gui_state(self, state):
-        """啟用或禁用所有相關的GUI元件。"""
-        for control in [self.connect_button, self.refresh_ports_button, self.save_params_button, self.load_params_button, self.batch_write_button, self.mode_combobox]:
-            control.config(state=state)
-        
-        for control, readonly_state in [(self.language_combobox, "readonly"), (self.port_combobox, "readonly"), (self.baudrate_combobox, "readonly")]:
-            control.config(state=state if state == tk.DISABLED else readonly_state)
-        
-        self.slave_id_spinbox.config(state=state if state == tk.DISABLED else "normal")
-
-        for control in self.writable_controls.values():
-            if isinstance(control, ttk.Combobox):
-                control.config(state=state if state == tk.DISABLED else "readonly")
+            if value_to_write is None: # Validation failed, message was shown
+                validation_passed = False
+                break # Stop checking immediately
+            elif value_to_write == 'SKIP': # Empty field, skip it
+                continue
             else:
-                control.config(state=state)
+                params_to_write.append({'reg': param['reg'], 'value': value_to_write})
+        
+        if not validation_passed:
+            return # Exit if any parameter is invalid
+
+        # --- Setup Progress Window ---
+        progress_dialog = tk.Toplevel(self.master)
+        progress_dialog.title(self.get_current_translation("BATCH_WRITE_PROGRESS_TITLE"))
+        progress_dialog.geometry("400x100")
+        progress_dialog.resizable(False, False)
+        progress_dialog.transient(self.master)
+        progress_dialog.grab_set()
+
+        progress_label = ttk.Label(progress_dialog, text=self.get_current_translation("BATCH_WRITE_PREPARING"))
+        progress_label.pack(pady=10, padx=10)
+        progressbar = ttk.Progressbar(progress_dialog, mode='determinate', length=380)
+        progressbar.pack(pady=10, padx=10)
+        
+        self.master.update_idletasks()
+
+        # --- Writing Logic ---
+        total_registers = len(params_to_write)
+        progressbar["maximum"] = total_registers
+        success_count = 0
+        failed_registers = []
+
+        for i, item in enumerate(params_to_write):
+            reg_hex = item['reg']
+            value_to_write = item['value']
+            
+            progress_label.config(text=self.get_current_translation("BATCH_WRITE_IN_PROGRESS").format(register_address=int(reg_hex.replace('H',''), 16), i=i+1, total_registers=total_registers))
+            progressbar["value"] = i + 1
+            progress_dialog.update()
+
+            if write_modbus_register(slave_id, int(reg_hex.replace('H',''), 16), value_to_write):
+                success_count += 1
+            else:
+                failed_registers.append(reg_hex)
+                # Stop on first write failure
+                break 
+            time.sleep(0.05) # Small delay between writes
+
+        progress_dialog.destroy()
+
+        # --- Final Report ---
+        if not failed_registers:
+            messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("BATCH_WRITE_SUCCESS_ALL"))
+        else:
+            failed_registers_list = ", ".join(failed_registers)
+            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("BATCH_WRITE_PARTIAL_FAIL").format(
+                success_count=success_count, 
+                total_registers=total_registers, 
+                failed_registers_list=failed_registers_list
+            ))
+
+        # Refresh all data from controller after writing
+        self._read_all_registers_and_update_gui()
 
 
 if __name__ == "__main__":
-    root = ttk.Window(themename="litera")
-    
     try:
+        root = ttk.Window(themename="litera")
         base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
         icon_path = os.path.join(base_path, 'icon', 'STEED_32px.ico')
         root.iconbitmap(icon_path)
-    except Exception as e:
-        print(f"Could not load icon: {e}")
-
-    # The app's __init__ now handles the entire startup sequence,
-    # including withdrawing, showing the dialog, and deiconifying.
-    app = ModbusMonitorApp(root)
-    
-    # The mainloop will start only if the window hasn't been destroyed 
-    # (which happens if the user closes the mode selection dialog).
-    try:
-        root.mainloop()
+        app = ModbusMonitorApp(root)
+        if app.controller_mode: # Only start mainloop if a mode was selected
+            root.mainloop()
     except tk.TclError as e:
-        # This can happen if the root window is destroyed before mainloop starts.
-        # It's a clean exit, so we can ignore it.
+        # This can happen if the root window is destroyed before mainloop starts
         if "can't invoke \"winfo\" command" not in str(e):
             raise
