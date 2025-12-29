@@ -1111,7 +1111,7 @@ class ModbusMonitorApp:
         top_frame.grid_columnconfigure(0, weight=1)
 
         # --- 模式切換 (Combobox) ---
-        self.mode_switch_frame = ttk.LabelFrame(top_frame, text=self.get_current_translation("SWITCH_MODE_FRAME_TEXT"), padding="10")
+        self.mode_switch_frame = ttk.Labelframe(top_frame, text=self.get_current_translation("SWITCH_MODE_FRAME_TEXT"), padding="10")
         self.mode_switch_frame.pack(side=tk.RIGHT, padx=(10, 0))
         self.mode_combobox_var = tk.StringVar()
         self.mode_combobox = ttk.Combobox(self.mode_switch_frame, textvariable=self.mode_combobox_var, values=[self.get_current_translation("DUAL_MODE_OPTION"), self.get_current_translation("SINGLE_MODE_OPTION")], state="readonly", width=12)
@@ -1122,7 +1122,7 @@ class ModbusMonitorApp:
         self.mode_combobox_var.set(current_mode_text)
 
         # --- 語言選擇 (通用) ---
-        self.language_frame = ttk.LabelFrame(top_frame, text=self.get_current_translation("LANGUAGE_LABEL"), padding="10")
+        self.language_frame = ttk.Labelframe(top_frame, text=self.get_current_translation("LANGUAGE_LABEL"), padding="10")
         self.language_frame.pack(side=tk.RIGHT, padx=(10, 0))
         self.language_combobox_var = tk.StringVar(value="中文")
         self.language_combobox = ttk.Combobox(self.language_frame, values=["中文", "English"], state="readonly", width=7, textvariable=self.language_combobox_var)
@@ -1130,7 +1130,7 @@ class ModbusMonitorApp:
         self.language_combobox.bind("<<ComboboxSelected>>", self._on_language_select)
 
         # --- Modbus通訊參數設置區域 (通用) ---
-        self.modbus_params_frame = ttk.LabelFrame(top_frame, text=self.get_current_translation("MODBUS_PARAMS_FRAME_TEXT"), padding="10")
+        self.modbus_params_frame = ttk.Labelframe(top_frame, text=self.get_current_translation("MODBUS_PARAMS_FRAME_TEXT"), padding="10")
         self.modbus_params_frame.pack(side=tk.LEFT, fill=tk.X, expand=True)
         # ... (內容與原版相同)
         self.com_port_label = ttk.Label(self.modbus_params_frame, text=self.get_current_translation("COM_PORT_LABEL"))
@@ -1188,9 +1188,9 @@ class ModbusMonitorApp:
         monitor_area_frame.grid_columnconfigure(1, weight=1)
         
         # Monitor frames on row 0, below the button
-        self.monitor_frame_a = ttk.LabelFrame(monitor_area_frame, text=self.get_current_translation("MONITOR_AREA_A_FRAME_TEXT"), padding="10")
+        self.monitor_frame_a = ttk.Labelframe(monitor_area_frame, text=self.get_current_translation("MONITOR_AREA_A_FRAME_TEXT"), padding="10")
         self.monitor_frame_a.grid(row=0, column=0, sticky='nsew', padx=(0, 5), pady=(5,0))
-        self.monitor_frame_b = ttk.LabelFrame(monitor_area_frame, text=self.get_current_translation("MONITOR_AREA_B_FRAME_TEXT"), padding="10")
+        self.monitor_frame_b = ttk.Labelframe(monitor_area_frame, text=self.get_current_translation("MONITOR_AREA_B_FRAME_TEXT"), padding="10")
         self.monitor_frame_b.grid(row=0, column=1, sticky='nsew', padx=(5, 0), pady=(5,0))
 
         # Chart Button on row 1, aligned to the right
@@ -1202,7 +1202,7 @@ class ModbusMonitorApp:
         self._clear_monitor_area()
 
         # --- 可寫入參數區 (Notebook) ---
-        self.writable_params_area_frame = ttk.LabelFrame(self.dynamic_content_frame, text=self.get_current_translation("WRITABLE_PARAMS_FRAME_TEXT"), padding="10")
+        self.writable_params_area_frame = ttk.Labelframe(self.dynamic_content_frame, text=self.get_current_translation("WRITABLE_PARAMS_FRAME_TEXT"), padding="10")
         self.writable_params_area_frame.grid(row=1, column=0, sticky='nsew', pady=5)
         self.writable_params_area_frame.grid_rowconfigure(0, weight=1)
         self.writable_params_area_frame.grid_columnconfigure(0, weight=1)
@@ -1238,7 +1238,7 @@ class ModbusMonitorApp:
         self.chart_area_frame.grid(row=2, column=0, sticky='nsew', pady=5)
         self.chart_area_frame.grid_rowconfigure(0, weight=1)
         self.chart_area_frame.grid_columnconfigure(0, weight=1)
-        self.chart_frame = ttk.LabelFrame(self.chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
+        self.chart_frame = ttk.Labelframe(self.chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
         self.chart_frame.grid(row=0, column=0, sticky="nsew")
         self.chart_frame.grid_rowconfigure(0, weight=1)
         self.chart_frame.grid_columnconfigure(0, weight=1)
@@ -1257,7 +1257,7 @@ class ModbusMonitorApp:
         monitor_area_frame.grid_columnconfigure(0, weight=1)
         monitor_area_frame.grid_columnconfigure(1, weight=0)
 
-        self.monitor_frame_a = ttk.LabelFrame(monitor_area_frame, text=self.get_current_translation("MONITOR_AREA_SINGLE_FRAME_TEXT"), padding="10")
+        self.monitor_frame_a = ttk.Labelframe(monitor_area_frame, text=self.get_current_translation("MONITOR_AREA_SINGLE_FRAME_TEXT"), padding="10")
         self.monitor_frame_a.grid(row=0, column=0, sticky='nsew', pady=(5,0))
 
         # Chart Button
@@ -1269,7 +1269,7 @@ class ModbusMonitorApp:
         self._clear_monitor_area()
 
         # --- 可寫入參數區 ---
-        self.writable_params_area_frame = ttk.LabelFrame(self.dynamic_content_frame, text=self.get_current_translation("WRITABLE_PARAMS_FRAME_TEXT"), padding="10")
+        self.writable_params_area_frame = ttk.Labelframe(self.dynamic_content_frame, text=self.get_current_translation("WRITABLE_PARAMS_FRAME_TEXT"), padding="10")
         self.writable_params_area_frame.grid(row=1, column=0, sticky='nsew', pady=5)
         self.writable_params_area_frame.grid_rowconfigure(0, weight=1)
         self.writable_params_area_frame.grid_columnconfigure(0, weight=1)
@@ -1294,7 +1294,7 @@ class ModbusMonitorApp:
         self.chart_area_frame.grid(row=2, column=0, sticky='nsew', pady=5)
         self.chart_area_frame.grid_rowconfigure(0, weight=1)
         self.chart_area_frame.grid_columnconfigure(0, weight=1)
-        self.chart_frame = ttk.LabelFrame(self.chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
+        self.chart_frame = ttk.Labelframe(self.chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
         self.chart_frame.grid(row=0, column=0, sticky="nsew")
         self.chart_frame.grid_rowconfigure(0, weight=1)
         self.chart_frame.grid_columnconfigure(0, weight=1)
@@ -1464,7 +1464,7 @@ class ModbusMonitorApp:
                 bootstyle='success',
                 metertype="semi",
                 interactive=False,
-                # amountformat='{:.1f}'
+                # textformat="%.1f",
             )
             signal_meter.grid(row=0, column=1, sticky='nsew', padx=5, pady=0)
             labels_info[reg_hex_signal] = {'title_label': None, 'unit': unit_signal, 'title_key': title_key_signal}
@@ -1475,7 +1475,7 @@ class ModbusMonitorApp:
         if status_config:
             reg_hex_status, title_key_status, unit_status = status_config
             initial_subtext_status = self.get_current_translation("CURRENT_STATUS_LABEL")
-            status_frame = ttk.LabelFrame(parent_frame, text=initial_subtext_status, padding=(10, 5))
+            status_frame = ttk.Labelframe(parent_frame, text=initial_subtext_status, padding=(10, 5))
             status_frame.grid(row=1, column=0, columnspan=2, sticky='nsew', padx=0, pady=0)
             status_label = ttk.Label(status_frame, text="----", anchor="center", font=('Arial', 16, 'bold'))
             status_label.pack(expand=True, fill='both')
