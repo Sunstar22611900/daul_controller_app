@@ -181,6 +181,9 @@ TEXTS = {
         "WIZARD_STEP_2_TITLE": "步驟 2/4: 選擇型號",
         "WIZARD_STEP_3_TITLE": "步驟 3/4: Modbus 連線",
         "WIZARD_STEP_4_TITLE": "步驟 4/4: 快速參數設定",
+        "WIZARD_STEP_4_TITLE_SINGLE": "步驟 4/6: 信號選擇",
+        "WIZARD_STEP_5_TITLE_SINGLE": "步驟 5/6: 輸出限制設定",
+        "WIZARD_STEP_6_TITLE_SINGLE": "步驟 6/6: 斜率設定 (可選)",
         "NEXT_BUTTON": "下一步 >",
         "BACK_BUTTON": "< 上一步",
         "FINISH_BUTTON": "完成",
@@ -454,6 +457,9 @@ TEXTS = {
         "WIZARD_STEP_2_TITLE": "Step 2/4: Select Model",
         "WIZARD_STEP_3_TITLE": "Step 3/4: Modbus Connection",
         "WIZARD_STEP_4_TITLE": "Step 4/4: Quick Parameter Setup",
+        "WIZARD_STEP_4_TITLE_SINGLE": "Step 4/6: Signal Selection",
+        "WIZARD_STEP_5_TITLE_SINGLE": "Step 5/6: Output Limits",
+        "WIZARD_STEP_6_TITLE_SINGLE": "Step 6/6: Ramp Settings (Optional)",
         "NEXT_BUTTON": "Next >",
         "BACK_BUTTON": "< Back",
         "FINISH_BUTTON": "Finish",
@@ -935,34 +941,39 @@ class QuickSetupWizard(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
         self.title("Quick Setup Wizard")
-        self.geometry("600x450")
+        self.geometry("800x600") # Increased size for chart
         self.resizable(False, False)
         
-        # Determine initial position (center of screen)
+        # Determine initial position
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
-        x = (screen_width // 2) - (600 // 2)
-        y = (screen_height // 2) - (450 // 2)
+        x = (screen_width // 2) - (800 // 2)
+        y = (screen_height // 2) - (600 // 2)
         self.geometry(f"+{x}+{y}")
         
         # State variables
         self.current_step = 1
-        self.total_steps = 4
-        self.language_code = "zh" # Default
+        self.language_code = "zh" 
         self.selected_mode = None
-        self.connection_info = {} # port, baud, id
+        self.connection_info = {} 
         self.modbus_master = None
-        self.parameters_to_write = {} # {reg_hex: value}
+        self.param_vars = {} # Stores current vars for data binding
         
-        # Return data container
+        # Wizard Internal Storage for Parameter Values (to persist between steps)
+        # {reg_hex: value}
+        self.wizard_params = {} 
+
         self.result_data = None
         
-        # Bind close event
         self.protocol("WM_DELETE_WINDOW", self._on_cancel)
         
         self._create_widgets()
         self._show_step(1)
         
+    @property
+    def total_steps(self):
+        return 6 if self.selected_mode == 'single' else 4
+
     def _create_widgets(self):
         # Header
         self.header_frame = ttk.Frame(self, bootstyle="primary")
@@ -974,7 +985,7 @@ class QuickSetupWizard(tk.Toplevel):
         self.content_frame = ttk.Frame(self, padding=20)
         self.content_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         
-        # Footer (Buttons)
+        # Footer
         self.footer_frame = ttk.Frame(self, padding=10)
         self.footer_frame.pack(side=tk.BOTTOM, fill=tk.X)
         
@@ -988,122 +999,95 @@ class QuickSetupWizard(tk.Toplevel):
         return TEXTS[self.language_code].get(key, key)
 
     def _update_ui_text(self):
-        # Update buttons
         self.back_button.config(text=self._get_text("BACK_BUTTON"))
         next_text = self._get_text("FINISH_BUTTON") if self.current_step == self.total_steps else self._get_text("NEXT_BUTTON")
         self.next_button.config(text=next_text)
         
-        # Update Header
         self.title(self._get_text("WIZARD_TITLE"))
-        step_title_key = f"WIZARD_STEP_{self.current_step}_TITLE"
+        
+        # Determine title key based on mode and step
+        key_suffix = "_SINGLE" if self.selected_mode == 'single' and self.current_step >= 4 else ""
+        step_title_key = f"WIZARD_STEP_{self.current_step}_TITLE{key_suffix}"
+        
+        # Fallback for dual mode step 4 (uses generic title)
+        if self.selected_mode == 'dual' and self.current_step == 4:
+             step_title_key = "WIZARD_STEP_4_TITLE"
+             
         self.header_label.config(text=self._get_text(step_title_key))
 
     def _show_step(self, step):
         self.current_step = step
         self._update_ui_text()
         
-        # Clear content frame
+        # Clear content
         for widget in self.content_frame.winfo_children():
             widget.destroy()
             
-        # Update Back button state
-        if step == 1:
-            self.back_button.config(state="disabled")
-        else:
-            self.back_button.config(state="normal")
+        self.back_button.config(state="disabled" if step == 1 else "normal")
             
-        # Render specific step content
-        if step == 1:
-            self._render_step_language()
-        elif step == 2:
-            self._render_step_model()
-        elif step == 3:
-            self._render_step_modbus()
+        # Router
+        if step == 1: self._render_step_language()
+        elif step == 2: self._render_step_model()
+        elif step == 3: self._render_step_modbus()
         elif step == 4:
-            self._render_step_parameters()
+            if self.selected_mode == 'single': self._render_step_signal_single()
+            else: self._render_step_parameters_dual()
+        elif step == 5 and self.selected_mode == 'single': self._render_step_limits_single()
+        elif step == 6 and self.selected_mode == 'single': self._render_step_ramp_single()
 
     # --- Step 1: Language ---
     def _render_step_language(self):
         lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_LANGUAGE_PROMPT"), font=("", 12))
         lbl.pack(pady=20)
-        
         self.lang_var = tk.StringVar(value=self.language_code)
-        
-        rb_zh = ttk.Radiobutton(self.content_frame, text="中文 (Chinese)", variable=self.lang_var, value="zh", command=self._on_lang_change)
-        rb_zh.pack(pady=10)
-        
-        rb_en = ttk.Radiobutton(self.content_frame, text="English", variable=self.lang_var, value="en", command=self._on_lang_change)
-        rb_en.pack(pady=10)
+        ttk.Radiobutton(self.content_frame, text="中文 (Chinese)", variable=self.lang_var, value="zh", command=self._on_lang_change).pack(pady=10)
+        ttk.Radiobutton(self.content_frame, text="English", variable=self.lang_var, value="en", command=self._on_lang_change).pack(pady=10)
         
     def _on_lang_change(self):
         self.language_code = self.lang_var.get()
         self._update_ui_text()
-        # Refresh current step text immediately
-        for widget in self.content_frame.winfo_children():
-             widget.destroy()
+        for widget in self.content_frame.winfo_children(): widget.destroy()
         self._render_step_language()
 
     # --- Step 2: Model ---
     def _render_step_model(self):
         lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_MODEL_PROMPT"), font=("", 12))
         lbl.pack(pady=20)
-        
         self.model_var = tk.StringVar(value=self.selected_mode if self.selected_mode else "dual")
-        
         frame = ttk.Frame(self.content_frame)
         frame.pack(pady=10)
-        
-        # Dual Model
-        btn_dual = ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="toolbutton-outline", width=25)
-        btn_dual.pack(pady=10)
-        
-        # Single Model
-        btn_single = ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="toolbutton-outline", width=25)
-        btn_single.pack(pady=10)
+        ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="toolbutton-outline", width=25).pack(pady=10)
+        ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="toolbutton-outline", width=25).pack(pady=10)
 
     # --- Step 3: Modbus ---
     def _render_step_modbus(self):
         lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_CONNECT_PROMPT"), font=("", 12))
         lbl.pack(pady=10)
-        
         params_frame = ttk.Frame(self.content_frame)
         params_frame.pack(pady=10)
         
-        # Port
         ttk.Label(params_frame, text=self._get_text("COM_PORT_LABEL")).grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
         self.w_port_cb = ttk.Combobox(params_frame, width=15, state="readonly")
         self.w_port_cb.grid(row=0, column=1, padx=5, pady=5)
+        ttk.Button(params_frame, text=self._get_text("REFRESH_PORTS_BUTTON"), command=self._refresh_ports, bootstyle="outline", width=8).grid(row=0, column=2, padx=5, pady=5)
         
-        # Refresh
-        btn_refresh = ttk.Button(params_frame, text=self._get_text("REFRESH_PORTS_BUTTON"), command=self._refresh_ports, bootstyle="outline", width=8)
-        btn_refresh.grid(row=0, column=2, padx=5, pady=5)
-        
-        # Baudrate
         ttk.Label(params_frame, text=self._get_text("BAUDRATE_LABEL")).grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
         self.w_baud_cb = ttk.Combobox(params_frame, values=[4800, 9600, 19200, 38400, 57600], width=15, state="readonly")
         self.w_baud_cb.set(19200)
         self.w_baud_cb.grid(row=1, column=1, padx=5, pady=5)
         
-        # ID
         ttk.Label(params_frame, text=self._get_text("SLAVE_ID_LABEL")).grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
         self.w_id_var = tk.StringVar(value="1")
         self.w_id_spin = ttk.Spinbox(params_frame, from_=1, to=247, increment=1, width=13, textvariable=self.w_id_var)
         self.w_id_spin.grid(row=2, column=1, padx=5, pady=5)
         
-        # Connect Button
         self.w_connect_btn = ttk.Button(self.content_frame, text=self._get_text("CONNECT_BUTTON"), command=self._try_connect, bootstyle="success", width=20)
         self.w_connect_btn.pack(pady=20)
-        
         self.w_status_lbl = ttk.Label(self.content_frame, text="", font=("", 10), foreground="green")
         self.w_status_lbl.pack()
         
         self._refresh_ports()
-        
-        # Pre-fill if we have data (e.g. from previous back/next)
-        if hasattr(self, 'last_port') and self.last_port:
-             self.w_port_cb.set(self.last_port)
-             
-        # If already connected, show status
+        if hasattr(self, 'last_port') and self.last_port: self.w_port_cb.set(self.last_port)
         if self.modbus_master:
             self.w_status_lbl.config(text=self._get_text("WIZARD_CONNECT_SUCCESS"))
             self.w_connect_btn.config(text=self._get_text("DISCONNECT_BUTTON"), bootstyle="danger")
@@ -1113,174 +1097,289 @@ class QuickSetupWizard(tk.Toplevel):
         ports = serial.tools.list_ports.comports()
         port_list = [port.device for port in ports]
         self.w_port_cb['values'] = port_list
-        if port_list:
-            self.w_port_cb.current(0)
+        if port_list: self.w_port_cb.current(0)
 
     def _toggle_inputs(self, enable):
         state = "readonly" if enable else "disabled"
-        btn_state = "normal" if enable else "disabled"
         self.w_port_cb.config(state=state)
         self.w_baud_cb.config(state=state)
-        # Spinbox state handling is tricky in ttk, disabled is safer
-        self.w_id_spin.config(state=btn_state) 
-        
+        self.w_id_spin.config(state="normal" if enable else "disabled") 
+
     def _try_connect(self):
         global MODBUS_MASTER
         if self.modbus_master:
-            # Disconnect
-            try:
-                self.modbus_master.close()
-            except:
-                pass
+            try: self.modbus_master.close()
+            except: pass
             self.modbus_master = None
             MODBUS_MASTER = None
-            
             self.w_status_lbl.config(text="")
             self.w_connect_btn.config(text=self._get_text("CONNECT_BUTTON"), bootstyle="success")
             self._toggle_inputs(True)
             return
 
-        # Connect
         port = self.w_port_cb.get()
-        if not port:
-            messagebox.showwarning("Warning", TEXTS[self.language_code]["COM_PORT_SELECT_ERROR"], parent=self)
-            return
-            
+        if not port: return
         try:
             baud = int(self.w_baud_cb.get())
             slave_id = int(self.w_id_var.get())
-            
-            master = modbus_tk.modbus_rtu.RtuMaster(
-                serial.Serial(port=port, baudrate=baud, bytesize=8, parity='N', stopbits=1, xonxoff=0)
-            )
+            master = modbus_tk.modbus_rtu.RtuMaster(serial.Serial(port=port, baudrate=baud, bytesize=8, parity='N', stopbits=1, xonxoff=0))
             master.set_timeout(1.0)
             master.set_verbose(True)
-            
-            # Test read to verify
-            # Read first register (0x0000) just to check connection
-            master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, 1)
-            
+            master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, 1) # Test
             self.modbus_master = master
             MODBUS_MASTER = master
-            
             self.last_port = port
             self.connection_info = {'port': port, 'baud': baud, 'id': slave_id}
-            
             self.w_status_lbl.config(text=self._get_text("WIZARD_CONNECT_SUCCESS"))
             self.w_connect_btn.config(text=self._get_text("DISCONNECT_BUTTON"), bootstyle="danger")
             self._toggle_inputs(False)
             
+            # Pre-fetch all registers into wizard_params to populate fields
+            self._read_initial_values(slave_id)
+            
         except Exception as e:
             messagebox.showerror("Error", f"{TEXTS[self.language_code]['MODBUS_CONNECT_FAIL'].format(e=e)}", parent=self)
 
-    # --- Step 4: Parameters ---
-    def _render_step_parameters(self):
+    def _read_initial_values(self, slave_id):
+        try:
+            # Read block 0 to 32 covers all needed registers
+            data = self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, 32)
+            for i, val in enumerate(data):
+                reg_hex = f"{i:04X}H"
+                self.wizard_params[reg_hex] = val
+        except Exception as e:
+            print(f"Wizard read error: {e}")
+
+    # --- Helper to create control ---
+    def _create_control_row(self, parent, row, config):
+        reg = config['reg']
+        label_text = TEXTS[self.language_code].get(config['key'], config['key'])
+        ttk.Label(parent, text=f"{label_text} ({reg})").grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
+        
+        var = tk.StringVar()
+        self.param_vars[reg] = {'var': var, 'config': config}
+        
+        # Get existing or default value
+        raw_val = self.wizard_params.get(reg, 0)
+        
+        if config['type'] == 'combo':
+            map_key = config['map']
+            map_vals = TEXTS[self.language_code].get(map_key, {})
+            display_val = map_vals.get(raw_val, str(raw_val))
+            var.set(display_val)
+            cb = ttk.Combobox(parent, textvariable=var, values=list(map_vals.values()), state="readonly", width=18)
+            cb.grid(row=row, column=1, padx=10, pady=5)
+            # Add binding for chart updates if needed
+            if 'update_chart' in config:
+                cb.bind("<<ComboboxSelected>>", self._update_wizard_chart)
+                
+        else:
+            scale = config.get('scale', 1)
+            display_val = str(float(raw_val) / scale)
+            var.set(display_val)
+            entry = ttk.Entry(parent, textvariable=var, width=20)
+            entry.grid(row=row, column=1, padx=10, pady=5)
+            # Add binding for chart updates if needed
+            if 'update_chart' in config:
+                entry.bind("<KeyRelease>", self._update_wizard_chart)
+
+    # --- Step 4 (Single): Signal Selection ---
+    def _render_step_signal_single(self):
         if not self.modbus_master:
-            lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_CONNECT_FIRST_WARNING"), foreground="red")
-            lbl.pack(pady=50)
+            ttk.Label(self.content_frame, text=self._get_text("WIZARD_CONNECT_FIRST_WARNING"), foreground="red").pack(pady=50)
+            return
+
+        lbl = ttk.Label(self.content_frame, text="Please select the input signal type:", font=("", 12))
+        lbl.pack(pady=10)
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=10)
+        
+        self.param_vars = {} # Clear previous step vars
+        
+        config = {'reg': '0003H', 'key': 'S_SIGNAL_SELECTION', 'type': 'combo', 'map': 'S_SIGNAL_SELECTION_MAP_VALUES'}
+        self._create_control_row(form_frame, 0, config)
+
+    # --- Step 5 (Single): Limits + Chart ---
+    def _render_step_limits_single(self):
+        if not self.modbus_master: return
+        
+        # Apply defaults if values are 0 (uninitialized)
+        if self.wizard_params.get('0008H', 0) == 0: self.wizard_params['0008H'] = 100 # 1.00A
+        if self.wizard_params.get('0009H', 0) == 0: self.wizard_params['0009H'] = 0   # 0.00A
+        if self.wizard_params.get('000DH', 0) == 0: self.wizard_params['000DH'] = 2   # 2%
+
+        # Left Panel: Controls
+        left_frame = ttk.Frame(self.content_frame)
+        left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10)
+        
+        # Right Panel: Chart
+        right_frame = ttk.Labelframe(self.content_frame, text="Preview")
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10)
+        
+        self.param_vars = {} 
+        
+        configs = [
+            {'reg': '0008H', 'key': 'S_MAX_CURRENT', 'type': 'entry', 'scale': 100, 'update_chart': True},
+            {'reg': '0009H', 'key': 'S_MIN_CURRENT', 'type': 'entry', 'scale': 100, 'update_chart': True},
+            {'reg': '000DH', 'key': 'S_DEAD_ZONE_SETTING', 'type': 'entry', 'scale': 1, 'update_chart': True} 
+        ]
+        
+        for i, cfg in enumerate(configs):
+            self._create_control_row(left_frame, i, cfg)
+            
+        # Canvas
+        self.chart_canvas = tk.Canvas(right_frame, bg='white')
+        self.chart_canvas.pack(fill=tk.BOTH, expand=True)
+        
+        # Initial Draw
+        self.after(100, self._update_wizard_chart)
+
+    def _update_wizard_chart(self, event=None):
+        # Read from current Entry vars
+        # If any value is invalid, just return
+        try:
+             # Need to fetch signal mode from saved params (from Step 4)
+             # Note: param_vars only contains CURRENT step vars.
+             # We need '0003H' value which should be in self.wizard_params
+             
+             # But wait, self.wizard_params is initial read.
+             # We need the dirty value from Step 4.
+             # Logic fix in _on_next: save step values back to wizard_params.
+             
+             max_curr = float(self.param_vars['0008H']['var'].get())
+             min_curr = float(self.param_vars['0009H']['var'].get())
+             dead_zone = float(self.param_vars['000DH']['var'].get())
+        except:
+             return
+
+        canvas = self.chart_canvas
+        canvas.delete("all")
+        w = canvas.winfo_width()
+        h = canvas.winfo_height()
+        if w < 10: return # Not rendered yet
+
+        # Simple drawing logic (Simplified from Main App)
+        padding = 30
+        graph_w = w - padding * 2
+        graph_h = h - padding * 2
+        
+        # Axis
+        canvas.create_line(padding, h-padding, w-padding, h-padding, fill="gray") # X
+        canvas.create_line(padding, h-padding, padding, padding, fill="gray") # Y
+        
+        # Labels
+        signal_mode = self.wizard_params.get('0003H', 0)
+        
+        # Determine labels based on signal mode
+        # 0: 0~10V, 1: 0~5V, 2: 4~20mA
+        x_min_str, x_max_str = "0%", "100%"
+        if signal_mode == 0: x_min_str, x_max_str = "0V", "10V"
+        elif signal_mode == 1: x_min_str, x_max_str = "0V", "5V"
+        elif signal_mode == 2: x_min_str, x_max_str = "4mA", "20mA"
+        
+        canvas.create_text(padding, h-padding+15, text=x_min_str)
+        canvas.create_text(w-padding, h-padding+15, text=x_max_str)
+        canvas.create_text(padding-15, h-padding, text="0A")
+        canvas.create_text(padding-15, padding, text="3A")
+        
+        # Curve
+        def to_x(pct): return padding + (pct/100)*graph_w
+        def to_y(amp): return (h-padding) - (amp/3.0)*graph_h
+        
+        # Points: (0,0) -> (dz, 0) -> (dz, min) -> (100, max)
+        pts = [
+            to_x(0), to_y(0),
+            to_x(dead_zone), to_y(0),
+            to_x(dead_zone), to_y(min_curr),
+            to_x(100), to_y(max_curr)
+        ]
+        
+        canvas.create_line(pts, fill="Coral", width=2)
+
+
+    # --- Step 6 (Single): Ramp ---
+    def _render_step_ramp_single(self):
+        # Apply defaults if values are 0 (uninitialized)
+        if self.wizard_params.get('000AH', 0) == 0: self.wizard_params['000AH'] = 1 # 0.1s
+        if self.wizard_params.get('000BH', 0) == 0: self.wizard_params['000BH'] = 1 # 0.1s
+
+        self.param_vars = {}
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=10)
+        
+        configs = [
+            {'reg': '000AH', 'key': 'S_CURRENT_RISE_TIME', 'type': 'entry', 'scale': 10},
+            {'reg': '000BH', 'key': 'S_CURRENT_FALL_TIME', 'type': 'entry', 'scale': 10}
+        ]
+        for i, cfg in enumerate(configs):
+            self._create_control_row(form_frame, i, cfg)
+
+
+    # --- Dual Mode (Step 4) ---
+    def _render_step_parameters_dual(self):
+        if not self.modbus_master:
+            ttk.Label(self.content_frame, text=self._get_text("WIZARD_CONNECT_FIRST_WARNING"), foreground="red").pack(pady=50)
             return
 
         lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_PARAMS_PROMPT"), font=("", 12))
         lbl.pack(pady=10)
         
         self.param_vars = {}
-        
         form_frame = ttk.Frame(self.content_frame)
         form_frame.pack(pady=10)
         
-        # Define params based on mode
-        # Using titles from TEXTS but simplified access
-        t = TEXTS[self.language_code]
+        params_to_show = [
+            {'reg': '0006H', 'key': 'SIGNAL_SELECTION_1', 'type': 'combo', 'map': 'SIGNAL_SELECTION_MAP_VALUES'},
+            {'reg': '0007H', 'key': 'SIGNAL_SELECTION_2', 'type': 'combo', 'map': 'SIGNAL_SELECTION_MAP_VALUES'},
+            {'reg': '0010H', 'key': 'A_MAX_CURRENT', 'type': 'entry', 'scale': 100},
+            {'reg': '001AH', 'key': 'B_MAX_CURRENT', 'type': 'entry', 'scale': 100}
+        ]
         
-        params_to_show = []
-        if self.selected_mode == 'dual':
-            # Signal 1, Signal 2, Max Current A, Max Current B
-            params_to_show = [
-                {'reg': '0006H', 'key': 'SIGNAL_SELECTION_1', 'type': 'combo', 'map': 'SIGNAL_SELECTION_MAP_VALUES'},
-                {'reg': '0007H', 'key': 'SIGNAL_SELECTION_2', 'type': 'combo', 'map': 'SIGNAL_SELECTION_MAP_VALUES'},
-                {'reg': '0010H', 'key': 'A_MAX_CURRENT', 'type': 'entry', 'scale': 100},
-                {'reg': '001AH', 'key': 'B_MAX_CURRENT', 'type': 'entry', 'scale': 100}
-            ]
-        else:
-            # Signal, Max Current
-            params_to_show = [
-                {'reg': '0003H', 'key': 'S_SIGNAL_SELECTION', 'type': 'combo', 'map': 'S_SIGNAL_SELECTION_MAP_VALUES'},
-                {'reg': '0008H', 'key': 'S_MAX_CURRENT', 'type': 'entry', 'scale': 100}
-            ]
-            
-        # Read current values first
-        slave_id = self.connection_info.get('id', 1)
-        current_vals = {}
-        try:
-            # We read a block large enough to cover all relevant registers
-            # 0x0000 to 0x0020 is enough
-            data = self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, 32)
-            # Helper to get val
-            def get_val(addr_hex):
-                addr = int(addr_hex.replace('H',''), 16)
-                if addr < len(data):
-                    return data[addr]
-                return 0
-            
-            for p in params_to_show:
-                reg = p['reg']
-                val = get_val(reg)
-                current_vals[reg] = val
-        except Exception as e:
-            print(f"Wizard read error: {e}")
-            # Non-fatal, just start empty or with defaults
-            
         for i, p in enumerate(params_to_show):
-            row = i
-            reg = p['reg']
-            # Label
-            label_text = t.get(p['key'], p['key'])
-            ttk.Label(form_frame, text=f"{label_text} ({reg})").grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
-            
-            # Input
-            var = tk.StringVar()
-            self.param_vars[reg] = {'var': var, 'config': p}
-            
-            # Set initial value
-            raw_val = current_vals.get(reg, 0)
-            
-            if p['type'] == 'combo':
-                map_vals = t.get(p['map'], {})
-                # raw_val is key in map_vals
-                display_val = map_vals.get(raw_val, str(raw_val))
-                var.set(display_val)
-                cb = ttk.Combobox(form_frame, textvariable=var, values=list(map_vals.values()), state="readonly", width=18)
-                cb.grid(row=row, column=1, padx=10, pady=5)
-            else:
-                # entry with scale
-                scale = p.get('scale', 1)
-                display_val = str(float(raw_val) / scale)
-                var.set(display_val)
-                entry = ttk.Entry(form_frame, textvariable=var, width=20)
-                entry.grid(row=row, column=1, padx=10, pady=5)
+            self._create_control_row(form_frame, i, p)
+
+    def _save_current_step_values(self):
+        """Save values from current UI form to wizard_params."""
+        t = TEXTS[self.language_code]
+        for reg, item in self.param_vars.items():
+            try:
+                var_val = item['var'].get()
+                config = item['config']
+                val_to_store = 0
+                
+                if config['type'] == 'combo':
+                     map_key = config['map']
+                     map_vals = t.get(map_key, {})
+                     for k, v in map_vals.items():
+                         if v == var_val:
+                             val_to_store = k
+                             break
+                else:
+                    scale = config.get('scale', 1)
+                    val_to_store = int(float(var_val) * scale)
+                
+                self.wizard_params[reg] = val_to_store
+            except: pass
 
     def _on_next(self):
-        if self.current_step == 1:
-            # Language selected
-            self._show_step(2)
-            
+        # Save current step values before moving
+        if self.current_step >= 4:
+            self._save_current_step_values()
+
+        if self.current_step == 1: self._show_step(2)
         elif self.current_step == 2:
-            # Model selected
             self.selected_mode = self.model_var.get()
             self._show_step(3)
-            
         elif self.current_step == 3:
-            # Modbus
             if not self.modbus_master:
                 messagebox.showwarning("Warning", self._get_text("WIZARD_CONNECT_FIRST_WARNING"), parent=self)
                 return
             self._show_step(4)
-            
-        elif self.current_step == 4:
+        elif self.current_step < self.total_steps:
+            self._show_step(self.current_step + 1)
+        else:
             # Finish
-            self._apply_parameters() # Write params to controller
-            
-            # Prepare result
+            self._apply_parameters() 
             self.result_data = {
                 'language': self.language_code,
                 'mode': self.selected_mode,
@@ -1290,46 +1389,35 @@ class QuickSetupWizard(tk.Toplevel):
             self.destroy()
 
     def _apply_parameters(self):
-        # Read from UI and Write to Controller
         if not self.modbus_master: return
-        
         slave_id = self.connection_info.get('id', 1)
         
-        for reg, item in self.param_vars.items():
-            try:
-                var_val = item['var'].get()
-                config = item['config']
-                
-                val_to_write = 0
-                
-                if config['type'] == 'combo':
-                     # Map display text back to int key
-                     map_key = config['map']
-                     map_vals = TEXTS[self.language_code].get(map_key, {})
-                     # Find key by value
-                     for k, v in map_vals.items():
-                         if v == var_val:
-                             val_to_write = k
-                             break
-                else:
-                    # Entry
-                    scale = config.get('scale', 1)
-                    val_to_write = int(float(var_val) * scale)
-                
-                # Write
+        # Write everything collected in wizard_params
+        # But only write if the value is different? Or just write all dirty ones?
+        # For simplicity, we write all that were part of the flow.
+        # However, wizard_params contains ALL registers read initially.
+        # We should track which ones were actually edited, OR just write the ones relevant to the mode.
+        
+        relevant_regs = []
+        if self.selected_mode == 'single':
+            relevant_regs = ['0003H', '0008H', '0009H', '000DH', '000AH', '000BH']
+        else:
+            relevant_regs = ['0006H', '0007H', '0010H', '001AH']
+            
+        for reg in relevant_regs:
+            if reg in self.wizard_params:
+                val = self.wizard_params[reg]
                 addr = int(reg.replace('H',''), 16)
-                self.modbus_master.execute(slave_id, defines.WRITE_SINGLE_REGISTER, addr, output_value=val_to_write)
-                
-            except Exception as e:
-                print(f"Failed to write wizard param {reg}: {e}")
-                # Optional: show error to user
+                try:
+                    self.modbus_master.execute(slave_id, defines.WRITE_SINGLE_REGISTER, addr, output_value=val)
+                except Exception as e:
+                    print(f"Write failed {reg}: {e}")
                 
     def _on_back(self):
         if self.current_step > 1:
             self._show_step(self.current_step - 1)
 
     def _on_cancel(self):
-        # User closed window without finishing
         self.result_data = None
         self.destroy()
 
