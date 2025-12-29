@@ -175,6 +175,22 @@ TEXTS = {
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組輸出",
         "SINGLE_OUTPUT_MODE_TEXT": "單組輸出",
 
+        # --- Quick Setup Wizard ---
+        "WIZARD_TITLE": "快速設定精靈",
+        "WIZARD_STEP_1_TITLE": "步驟 1/4: 選擇語言",
+        "WIZARD_STEP_2_TITLE": "步驟 2/4: 選擇型號",
+        "WIZARD_STEP_3_TITLE": "步驟 3/4: Modbus 連線",
+        "WIZARD_STEP_4_TITLE": "步驟 4/4: 快速參數設定",
+        "NEXT_BUTTON": "下一步 >",
+        "BACK_BUTTON": "< 上一步",
+        "FINISH_BUTTON": "完成",
+        "WIZARD_LANGUAGE_PROMPT": "請選擇應用程式語言：",
+        "WIZARD_MODEL_PROMPT": "請選擇控制器型號：",
+        "WIZARD_CONNECT_PROMPT": "請設定通訊參數並連接控制器：",
+        "WIZARD_PARAMS_PROMPT": "請設定以下常用參數 (可略過)：",
+        "WIZARD_CONNECT_SUCCESS": "連線成功！",
+        "WIZARD_CONNECT_FIRST_WARNING": "請先連接控制器才能繼續。",
+
         # --- Real-time Chart ---
         "SHOW_CHART_BUTTON": "即時圖表",
         "CLOSE_CHART_BUTTON": "關閉圖表",
@@ -218,7 +234,7 @@ TEXTS = {
         "S_DISPLAY_MODE": "顯示模式",
         "S_485_CONTROL_SIGNAL": "485控制信號 (0~100%)",
         "S_FACTORY_RESET": "恢復出廠設置",
-        "S_MAX_CURRENT": "最大電流 (0.00~3.00A)",
+        "S_MAX_CURRENT": "最大電流 (0.20~3.00A)",
         "S_MIN_CURRENT": "最小電流 (0.00~1.00A)",
         "S_CURRENT_RISE_TIME": "電流上升時間 (0.1~5.0s)",
         "S_CURRENT_FALL_TIME": "電流下降時間 (0.1~5.0s)",
@@ -432,6 +448,22 @@ TEXTS = {
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Output Single Slope",
         "SINGLE_OUTPUT_MODE_TEXT": "Single Output",
 
+        # --- Quick Setup Wizard ---
+        "WIZARD_TITLE": "Quick Setup Wizard",
+        "WIZARD_STEP_1_TITLE": "Step 1/4: Select Language",
+        "WIZARD_STEP_2_TITLE": "Step 2/4: Select Model",
+        "WIZARD_STEP_3_TITLE": "Step 3/4: Modbus Connection",
+        "WIZARD_STEP_4_TITLE": "Step 4/4: Quick Parameter Setup",
+        "NEXT_BUTTON": "Next >",
+        "BACK_BUTTON": "< Back",
+        "FINISH_BUTTON": "Finish",
+        "WIZARD_LANGUAGE_PROMPT": "Please select application language:",
+        "WIZARD_MODEL_PROMPT": "Please select controller model:",
+        "WIZARD_CONNECT_PROMPT": "Please set communication parameters and connect:",
+        "WIZARD_PARAMS_PROMPT": "Please set the following common parameters (Optional):",
+        "WIZARD_CONNECT_SUCCESS": "Connected Successfully!",
+        "WIZARD_CONNECT_FIRST_WARNING": "Please connect to the controller first.",
+
         # --- Real-time Chart ---
         "SHOW_CHART_BUTTON": "Real-time Chart",
         "CLOSE_CHART_BUTTON": "Close Chart",
@@ -475,7 +507,7 @@ TEXTS = {
         "S_DISPLAY_MODE": "Panel Display Mode",
         "S_485_CONTROL_SIGNAL": "RS485 Command (0~100%)",
         "S_FACTORY_RESET": "Factory Reset",
-        "S_MAX_CURRENT": "Max Output Current (0.00~3.00A)",
+        "S_MAX_CURRENT": "Max Output Current (0.20~3.00A)",
         "S_MIN_CURRENT": "Min Output Current (0.00~1.00A)",
         "S_CURRENT_RISE_TIME": "Ramp up Time (0.1~5.0s)",
         "S_CURRENT_FALL_TIME": "Ramp down Time (0.1~5.0s)",
@@ -899,6 +931,408 @@ class RealtimeChartWindow(tk.Toplevel):
         self.figure.tight_layout()
         self.canvas.draw_idle()
 
+class QuickSetupWizard(tk.Toplevel):
+    def __init__(self, master):
+        super().__init__(master)
+        self.title("Quick Setup Wizard")
+        self.geometry("600x450")
+        self.resizable(False, False)
+        
+        # Determine initial position (center of screen)
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width // 2) - (600 // 2)
+        y = (screen_height // 2) - (450 // 2)
+        self.geometry(f"+{x}+{y}")
+        
+        # State variables
+        self.current_step = 1
+        self.total_steps = 4
+        self.language_code = "zh" # Default
+        self.selected_mode = None
+        self.connection_info = {} # port, baud, id
+        self.modbus_master = None
+        self.parameters_to_write = {} # {reg_hex: value}
+        
+        # Return data container
+        self.result_data = None
+        
+        # Bind close event
+        self.protocol("WM_DELETE_WINDOW", self._on_cancel)
+        
+        self._create_widgets()
+        self._show_step(1)
+        
+    def _create_widgets(self):
+        # Header
+        self.header_frame = ttk.Frame(self, bootstyle="primary")
+        self.header_frame.pack(side=tk.TOP, fill=tk.X)
+        self.header_label = ttk.Label(self.header_frame, text="", font=("Arial", 16, "bold"), bootstyle="inverse-primary", padding=10)
+        self.header_label.pack(side=tk.LEFT)
+        
+        # Content
+        self.content_frame = ttk.Frame(self, padding=20)
+        self.content_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        
+        # Footer (Buttons)
+        self.footer_frame = ttk.Frame(self, padding=10)
+        self.footer_frame.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        self.back_button = ttk.Button(self.footer_frame, text="", command=self._on_back, width=15)
+        self.back_button.pack(side=tk.LEFT)
+        
+        self.next_button = ttk.Button(self.footer_frame, text="", command=self._on_next, width=15, bootstyle="primary")
+        self.next_button.pack(side=tk.RIGHT)
+
+    def _get_text(self, key):
+        return TEXTS[self.language_code].get(key, key)
+
+    def _update_ui_text(self):
+        # Update buttons
+        self.back_button.config(text=self._get_text("BACK_BUTTON"))
+        next_text = self._get_text("FINISH_BUTTON") if self.current_step == self.total_steps else self._get_text("NEXT_BUTTON")
+        self.next_button.config(text=next_text)
+        
+        # Update Header
+        self.title(self._get_text("WIZARD_TITLE"))
+        step_title_key = f"WIZARD_STEP_{self.current_step}_TITLE"
+        self.header_label.config(text=self._get_text(step_title_key))
+
+    def _show_step(self, step):
+        self.current_step = step
+        self._update_ui_text()
+        
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+            
+        # Update Back button state
+        if step == 1:
+            self.back_button.config(state="disabled")
+        else:
+            self.back_button.config(state="normal")
+            
+        # Render specific step content
+        if step == 1:
+            self._render_step_language()
+        elif step == 2:
+            self._render_step_model()
+        elif step == 3:
+            self._render_step_modbus()
+        elif step == 4:
+            self._render_step_parameters()
+
+    # --- Step 1: Language ---
+    def _render_step_language(self):
+        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_LANGUAGE_PROMPT"), font=("", 12))
+        lbl.pack(pady=20)
+        
+        self.lang_var = tk.StringVar(value=self.language_code)
+        
+        rb_zh = ttk.Radiobutton(self.content_frame, text="中文 (Chinese)", variable=self.lang_var, value="zh", command=self._on_lang_change)
+        rb_zh.pack(pady=10)
+        
+        rb_en = ttk.Radiobutton(self.content_frame, text="English", variable=self.lang_var, value="en", command=self._on_lang_change)
+        rb_en.pack(pady=10)
+        
+    def _on_lang_change(self):
+        self.language_code = self.lang_var.get()
+        self._update_ui_text()
+        # Refresh current step text immediately
+        for widget in self.content_frame.winfo_children():
+             widget.destroy()
+        self._render_step_language()
+
+    # --- Step 2: Model ---
+    def _render_step_model(self):
+        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_MODEL_PROMPT"), font=("", 12))
+        lbl.pack(pady=20)
+        
+        self.model_var = tk.StringVar(value=self.selected_mode if self.selected_mode else "dual")
+        
+        frame = ttk.Frame(self.content_frame)
+        frame.pack(pady=10)
+        
+        # Dual Model
+        btn_dual = ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="toolbutton-outline", width=25)
+        btn_dual.pack(pady=10)
+        
+        # Single Model
+        btn_single = ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="toolbutton-outline", width=25)
+        btn_single.pack(pady=10)
+
+    # --- Step 3: Modbus ---
+    def _render_step_modbus(self):
+        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_CONNECT_PROMPT"), font=("", 12))
+        lbl.pack(pady=10)
+        
+        params_frame = ttk.Frame(self.content_frame)
+        params_frame.pack(pady=10)
+        
+        # Port
+        ttk.Label(params_frame, text=self._get_text("COM_PORT_LABEL")).grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
+        self.w_port_cb = ttk.Combobox(params_frame, width=15, state="readonly")
+        self.w_port_cb.grid(row=0, column=1, padx=5, pady=5)
+        
+        # Refresh
+        btn_refresh = ttk.Button(params_frame, text=self._get_text("REFRESH_PORTS_BUTTON"), command=self._refresh_ports, bootstyle="outline", width=8)
+        btn_refresh.grid(row=0, column=2, padx=5, pady=5)
+        
+        # Baudrate
+        ttk.Label(params_frame, text=self._get_text("BAUDRATE_LABEL")).grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+        self.w_baud_cb = ttk.Combobox(params_frame, values=[4800, 9600, 19200, 38400, 57600], width=15, state="readonly")
+        self.w_baud_cb.set(19200)
+        self.w_baud_cb.grid(row=1, column=1, padx=5, pady=5)
+        
+        # ID
+        ttk.Label(params_frame, text=self._get_text("SLAVE_ID_LABEL")).grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+        self.w_id_var = tk.StringVar(value="1")
+        self.w_id_spin = ttk.Spinbox(params_frame, from_=1, to=247, increment=1, width=13, textvariable=self.w_id_var)
+        self.w_id_spin.grid(row=2, column=1, padx=5, pady=5)
+        
+        # Connect Button
+        self.w_connect_btn = ttk.Button(self.content_frame, text=self._get_text("CONNECT_BUTTON"), command=self._try_connect, bootstyle="success", width=20)
+        self.w_connect_btn.pack(pady=20)
+        
+        self.w_status_lbl = ttk.Label(self.content_frame, text="", font=("", 10), foreground="green")
+        self.w_status_lbl.pack()
+        
+        self._refresh_ports()
+        
+        # Pre-fill if we have data (e.g. from previous back/next)
+        if hasattr(self, 'last_port') and self.last_port:
+             self.w_port_cb.set(self.last_port)
+             
+        # If already connected, show status
+        if self.modbus_master:
+            self.w_status_lbl.config(text=self._get_text("WIZARD_CONNECT_SUCCESS"))
+            self.w_connect_btn.config(text=self._get_text("DISCONNECT_BUTTON"), bootstyle="danger")
+            self._toggle_inputs(False)
+
+    def _refresh_ports(self):
+        ports = serial.tools.list_ports.comports()
+        port_list = [port.device for port in ports]
+        self.w_port_cb['values'] = port_list
+        if port_list:
+            self.w_port_cb.current(0)
+
+    def _toggle_inputs(self, enable):
+        state = "readonly" if enable else "disabled"
+        btn_state = "normal" if enable else "disabled"
+        self.w_port_cb.config(state=state)
+        self.w_baud_cb.config(state=state)
+        # Spinbox state handling is tricky in ttk, disabled is safer
+        self.w_id_spin.config(state=btn_state) 
+        
+    def _try_connect(self):
+        global MODBUS_MASTER
+        if self.modbus_master:
+            # Disconnect
+            try:
+                self.modbus_master.close()
+            except:
+                pass
+            self.modbus_master = None
+            MODBUS_MASTER = None
+            
+            self.w_status_lbl.config(text="")
+            self.w_connect_btn.config(text=self._get_text("CONNECT_BUTTON"), bootstyle="success")
+            self._toggle_inputs(True)
+            return
+
+        # Connect
+        port = self.w_port_cb.get()
+        if not port:
+            messagebox.showwarning("Warning", TEXTS[self.language_code]["COM_PORT_SELECT_ERROR"], parent=self)
+            return
+            
+        try:
+            baud = int(self.w_baud_cb.get())
+            slave_id = int(self.w_id_var.get())
+            
+            master = modbus_tk.modbus_rtu.RtuMaster(
+                serial.Serial(port=port, baudrate=baud, bytesize=8, parity='N', stopbits=1, xonxoff=0)
+            )
+            master.set_timeout(1.0)
+            master.set_verbose(True)
+            
+            # Test read to verify
+            # Read first register (0x0000) just to check connection
+            master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, 1)
+            
+            self.modbus_master = master
+            MODBUS_MASTER = master
+            
+            self.last_port = port
+            self.connection_info = {'port': port, 'baud': baud, 'id': slave_id}
+            
+            self.w_status_lbl.config(text=self._get_text("WIZARD_CONNECT_SUCCESS"))
+            self.w_connect_btn.config(text=self._get_text("DISCONNECT_BUTTON"), bootstyle="danger")
+            self._toggle_inputs(False)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"{TEXTS[self.language_code]['MODBUS_CONNECT_FAIL'].format(e=e)}", parent=self)
+
+    # --- Step 4: Parameters ---
+    def _render_step_parameters(self):
+        if not self.modbus_master:
+            lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_CONNECT_FIRST_WARNING"), foreground="red")
+            lbl.pack(pady=50)
+            return
+
+        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_PARAMS_PROMPT"), font=("", 12))
+        lbl.pack(pady=10)
+        
+        self.param_vars = {}
+        
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=10)
+        
+        # Define params based on mode
+        # Using titles from TEXTS but simplified access
+        t = TEXTS[self.language_code]
+        
+        params_to_show = []
+        if self.selected_mode == 'dual':
+            # Signal 1, Signal 2, Max Current A, Max Current B
+            params_to_show = [
+                {'reg': '0006H', 'key': 'SIGNAL_SELECTION_1', 'type': 'combo', 'map': 'SIGNAL_SELECTION_MAP_VALUES'},
+                {'reg': '0007H', 'key': 'SIGNAL_SELECTION_2', 'type': 'combo', 'map': 'SIGNAL_SELECTION_MAP_VALUES'},
+                {'reg': '0010H', 'key': 'A_MAX_CURRENT', 'type': 'entry', 'scale': 100},
+                {'reg': '001AH', 'key': 'B_MAX_CURRENT', 'type': 'entry', 'scale': 100}
+            ]
+        else:
+            # Signal, Max Current
+            params_to_show = [
+                {'reg': '0003H', 'key': 'S_SIGNAL_SELECTION', 'type': 'combo', 'map': 'S_SIGNAL_SELECTION_MAP_VALUES'},
+                {'reg': '0008H', 'key': 'S_MAX_CURRENT', 'type': 'entry', 'scale': 100}
+            ]
+            
+        # Read current values first
+        slave_id = self.connection_info.get('id', 1)
+        current_vals = {}
+        try:
+            # We read a block large enough to cover all relevant registers
+            # 0x0000 to 0x0020 is enough
+            data = self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, 32)
+            # Helper to get val
+            def get_val(addr_hex):
+                addr = int(addr_hex.replace('H',''), 16)
+                if addr < len(data):
+                    return data[addr]
+                return 0
+            
+            for p in params_to_show:
+                reg = p['reg']
+                val = get_val(reg)
+                current_vals[reg] = val
+        except Exception as e:
+            print(f"Wizard read error: {e}")
+            # Non-fatal, just start empty or with defaults
+            
+        for i, p in enumerate(params_to_show):
+            row = i
+            reg = p['reg']
+            # Label
+            label_text = t.get(p['key'], p['key'])
+            ttk.Label(form_frame, text=f"{label_text} ({reg})").grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
+            
+            # Input
+            var = tk.StringVar()
+            self.param_vars[reg] = {'var': var, 'config': p}
+            
+            # Set initial value
+            raw_val = current_vals.get(reg, 0)
+            
+            if p['type'] == 'combo':
+                map_vals = t.get(p['map'], {})
+                # raw_val is key in map_vals
+                display_val = map_vals.get(raw_val, str(raw_val))
+                var.set(display_val)
+                cb = ttk.Combobox(form_frame, textvariable=var, values=list(map_vals.values()), state="readonly", width=18)
+                cb.grid(row=row, column=1, padx=10, pady=5)
+            else:
+                # entry with scale
+                scale = p.get('scale', 1)
+                display_val = str(float(raw_val) / scale)
+                var.set(display_val)
+                entry = ttk.Entry(form_frame, textvariable=var, width=20)
+                entry.grid(row=row, column=1, padx=10, pady=5)
+
+    def _on_next(self):
+        if self.current_step == 1:
+            # Language selected
+            self._show_step(2)
+            
+        elif self.current_step == 2:
+            # Model selected
+            self.selected_mode = self.model_var.get()
+            self._show_step(3)
+            
+        elif self.current_step == 3:
+            # Modbus
+            if not self.modbus_master:
+                messagebox.showwarning("Warning", self._get_text("WIZARD_CONNECT_FIRST_WARNING"), parent=self)
+                return
+            self._show_step(4)
+            
+        elif self.current_step == 4:
+            # Finish
+            self._apply_parameters() # Write params to controller
+            
+            # Prepare result
+            self.result_data = {
+                'language': self.language_code,
+                'mode': self.selected_mode,
+                'connection': self.connection_info,
+                'modbus_master': self.modbus_master
+            }
+            self.destroy()
+
+    def _apply_parameters(self):
+        # Read from UI and Write to Controller
+        if not self.modbus_master: return
+        
+        slave_id = self.connection_info.get('id', 1)
+        
+        for reg, item in self.param_vars.items():
+            try:
+                var_val = item['var'].get()
+                config = item['config']
+                
+                val_to_write = 0
+                
+                if config['type'] == 'combo':
+                     # Map display text back to int key
+                     map_key = config['map']
+                     map_vals = TEXTS[self.language_code].get(map_key, {})
+                     # Find key by value
+                     for k, v in map_vals.items():
+                         if v == var_val:
+                             val_to_write = k
+                             break
+                else:
+                    # Entry
+                    scale = config.get('scale', 1)
+                    val_to_write = int(float(var_val) * scale)
+                
+                # Write
+                addr = int(reg.replace('H',''), 16)
+                self.modbus_master.execute(slave_id, defines.WRITE_SINGLE_REGISTER, addr, output_value=val_to_write)
+                
+            except Exception as e:
+                print(f"Failed to write wizard param {reg}: {e}")
+                # Optional: show error to user
+                
+    def _on_back(self):
+        if self.current_step > 1:
+            self._show_step(self.current_step - 1)
+
+    def _on_cancel(self):
+        # User closed window without finishing
+        self.result_data = None
+        self.destroy()
+
 class ModbusMonitorApp:
     # 類級變量，用於獲取當前翻譯，以便於輔助函數使用
     _current_translations = TEXTS["zh"] 
@@ -952,7 +1386,7 @@ class ModbusMonitorApp:
         {'reg': '0005H', 'title_key': 'S_DISPLAY_MODE', 'type': 'combobox', 'map_key': 'S_DISPLAY_MODE_MAP_VALUES'},
         {'reg': '0006H', 'title_key': 'S_485_CONTROL_SIGNAL', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 1, 'is_int': True},
         {'reg': '0007H', 'title_key': 'S_FACTORY_RESET', 'type': 'combobox', 'map_key': 'S_FACTORY_RESET_MAP_VALUES'},
-        {'reg': '0008H', 'title_key': 'S_MAX_CURRENT', 'type': 'entry', 'min': 0.00, 'max': 3.00, 'scale': 100},
+        {'reg': '0008H', 'title_key': 'S_MAX_CURRENT', 'type': 'entry', 'min': 0.20, 'max': 3.00, 'scale': 100},
         {'reg': '0009H', 'title_key': 'S_MIN_CURRENT', 'type': 'entry', 'min': 0.00, 'max': 1.00, 'scale': 100},
         {'reg': '000AH', 'title_key': 'S_CURRENT_RISE_TIME', 'type': 'entry', 'min': 0.1, 'max': 5.0, 'scale': 10, 'unit_step': 0.1},
         {'reg': '000BH', 'title_key': 'S_CURRENT_FALL_TIME', 'type': 'entry', 'min': 0.1, 'max': 5.0, 'scale': 10, 'unit_step': 0.1},
@@ -998,19 +1432,37 @@ class ModbusMonitorApp:
         self.current_history_0003 = deque(maxlen=self.MAX_HISTORY_POINTS) # For dual mode B group
         self.signal_history_0004 = deque(maxlen=self.MAX_HISTORY_POINTS) # For dual mode B group
 
-        # Show the mode selection dialog and wait for a choice
-        self._show_mode_selection_dialog()
+        # Show the wizard and wait for a choice
+        self._show_wizard()
 
-        # If the dialog was closed, self.master is destroyed, and the script will terminate.
+        # If the wizard was closed (e.g. Cancel), self.master is destroyed, and the script will terminate.
         # If a mode was selected, proceed with building the main UI.
         if self.controller_mode is None:
+            self.master.destroy()
             return # Exit __init__ if no mode was selected
 
         self._setup_main_window()
         self._create_widgets()
         self._refresh_ports()
+         
+        # Apply connection settings from wizard if available
+        if hasattr(self, 'last_port') and self.last_port:
+             self.port_combobox.set(self.last_port)
+        if hasattr(self, 'last_baud') and self.last_baud:
+             self.baudrate_combobox.set(self.last_baud)
+        if hasattr(self, 'last_id') and self.last_id:
+             self.slave_id_var.set(str(self.last_id))
+        
+        # If connection was established in Wizard, update UI and start polling
+        if self.modbus_master:
+             self._on_connection_established_from_wizard()
+
         self.main_widgets_created = True
         self.current_language_code.trace_add("write", self._update_all_text)
+        
+        # Force initial text update to ensure correct language
+        self._update_all_text()
+        
         self.master.protocol("WM_DELETE_WINDOW", self._on_closing)
         self.master.deiconify() # Show the now fully configured window
 
@@ -1021,42 +1473,7 @@ class ModbusMonitorApp:
         self.master.geometry("960x1000")
         self.master.resizable(True, True)
 
-    def _show_mode_selection_dialog(self):
-        dialog = tk.Toplevel(self.master)
-        dialog.title(TEXTS["zh"]["MODE_SELECTION_TITLE"]) # Use a fixed language for this initial dialog
-        dialog.geometry("400x150")
-        dialog.resizable(False, False)
-        # Do not make it transient to the hidden master window
-        dialog.grab_set()
 
-        # Center the dialog on the screen
-        dialog.update_idletasks()
-        screen_width = dialog.winfo_screenwidth()
-        screen_height = dialog.winfo_screenheight()
-        x = (screen_width // 2) - (dialog.winfo_width() // 2)
-        y = (screen_height // 2) - (dialog.winfo_height() // 2)
-        dialog.geometry(f"+{x}+{y}")
-
-        label = ttk.Label(dialog, text=TEXTS["zh"]["MODE_SELECTION_PROMPT"], font=("", 12))
-        label.pack(pady=20)
-
-        button_frame = ttk.Frame(dialog)
-        button_frame.pack(pady=10)
-
-        def select_mode(mode):
-            self.controller_mode = mode
-            dialog.destroy()
-
-        dual_button = ttk.Button(button_frame, text=TEXTS["zh"]["DUAL_CONTROLLER_BUTTON"], command=lambda: select_mode('dual'), width=20)
-        dual_button.pack(side=tk.LEFT, padx=10)
-
-        single_button = ttk.Button(button_frame, text=TEXTS["zh"]["SINGLE_CONTROLLER_BUTTON"], command=lambda: select_mode('single'), width=20)
-        single_button.pack(side=tk.LEFT, padx=10)
-
-        # If the user closes the dialog window, destroy the main window to exit the app
-        dialog.protocol("WM_DELETE_WINDOW", self.master.destroy)
-
-        dialog.wait_window() # Wait until the dialog is closed or the master is destroyed
 
     def _on_closing(self):
         """處理視窗關閉事件，停止輪詢線程並關閉Modbus連接。"""
@@ -1372,6 +1789,33 @@ class ModbusMonitorApp:
         self.load_params_button.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
         self.batch_write_button = ttk.Button(buttons_frame, text=self.get_current_translation("BATCH_WRITE_BUTTON"), bootstyle="primary.Outline", command=self._batch_write_parameters, width=15)
         self.batch_write_button.grid(row=0, column=2, padx=5, pady=5, sticky='ew')
+
+    def _show_wizard(self):
+        wizard = QuickSetupWizard(self.master)
+        self.master.wait_window(wizard)
+        
+        if wizard.result_data:
+            data = wizard.result_data
+            self.controller_mode = data['mode']
+            self.current_language_code.set(data['language'])
+            
+            # Manually sync translations for UI creation
+            ModbusMonitorApp._current_translations = TEXTS[data['language']]
+            self.translations = ModbusMonitorApp._current_translations
+
+            # Connection info
+            conn = data['connection']
+            self.last_port = conn.get('port')
+            self.last_baud = conn.get('baud')
+            self.last_id = conn.get('id')
+            
+            # Master
+            if data['modbus_master']:
+                self.modbus_master = data['modbus_master']
+                global MODBUS_MASTER
+                MODBUS_MASTER = self.modbus_master
+        else:
+            self.controller_mode = None
 
     def _on_mode_select(self, event=None):
         """處理模式切換請求。"""
@@ -2093,6 +2537,24 @@ class ModbusMonitorApp:
         self.chart_canvas.create_text(text_x_offset, text_y_start + 3 * line_height, anchor=tk.W, 
                                       text=f"{self.get_current_translation('A_COMMAND_DEAD_ZONE').split('(')[0].strip()}: {a_command_dead_zone:.1f}%", 
                                       font=("Arial", 8), fill="Coral")
+
+    def _on_connection_established_from_wizard(self):
+        """Called when connection is passed from Wizard to Main App."""
+        # Update UI state
+        self.connect_button.config(text=self.get_current_translation("DISCONNECT_BUTTON"))
+        
+        try:
+            # Initial read of all registers to populate UI
+            self._read_all_registers_and_update_gui()
+            
+            # Start polling for monitor area
+            if not self.polling_active:
+                self.polling_active = True
+                self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
+                self.polling_thread.start()
+                
+        except Exception as e:
+            print(f"Error in Wizard handover: {e}")
 
     def _refresh_ports(self):
         """刷新電腦目前可用的串口。"""
