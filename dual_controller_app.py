@@ -176,14 +176,19 @@ TEXTS = {
         "SINGLE_OUTPUT_MODE_TEXT": "單組輸出",
 
         # --- Quick Setup Wizard ---
+        "WIZARD_BTN_MAIN_APP": "進入主程式",
+        "WIZARD_BTN_QUICK_SETUP": "快速設定精靈",
+
         "WIZARD_TITLE": "快速設定精靈",
-        "WIZARD_STEP_1_TITLE": "步驟 1/4: 選擇語言",
-        "WIZARD_STEP_2_TITLE": "步驟 2/4: 選擇型號",
-        "WIZARD_STEP_3_TITLE": "步驟 3/4: Modbus 連線",
-        "WIZARD_STEP_4_TITLE": "步驟 4/4: 快速參數設定",
-        "WIZARD_STEP_4_TITLE_SINGLE": "步驟 4/6: 信號選擇",
-        "WIZARD_STEP_5_TITLE_SINGLE": "步驟 5/6: 輸出限制設定",
-        "WIZARD_STEP_6_TITLE_SINGLE": "步驟 6/6: 斜率設定 (可選)",
+        "WIZARD_STEP_1_TITLE": "選擇語言",
+        "WIZARD_STEP_2_TITLE": "選擇型號",
+        "WIZARD_STEP_3_TITLE": "Modbus 連線",
+        "WIZARD_STEP_4_TITLE": "快速參數設定",
+        
+        "WIZARD_STEP_4_TITLE_SINGLE": "信號選擇",
+        "WIZARD_STEP_5_TITLE_SINGLE": "輸出限制設定",
+        "WIZARD_STEP_6_TITLE_SINGLE": "斜率設定 (可選)",
+        
         "NEXT_BUTTON": "下一步 >",
         "BACK_BUTTON": "< 上一步",
         "FINISH_BUTTON": "完成",
@@ -193,6 +198,38 @@ TEXTS = {
         "WIZARD_PARAMS_PROMPT": "請設定以下常用參數 (可略過)：",
         "WIZARD_CONNECT_SUCCESS": "連線成功！",
         "WIZARD_CONNECT_FIRST_WARNING": "請先連接控制器才能繼續。",
+
+        # --- Wizard Dual Advanced ---
+        "WIZARD_COIL_CONFIG_LABEL": "請選擇輸出線圈組數:",
+        "WIZARD_INPUT_MODE_LABEL": "請選擇輸入信號模式:",
+        "WIZARD_STEP_4_TITLE_DUAL": "輸出線圈設定",
+        "WIZARD_STEP_5_TITLE_1G": "A組輸入選擇 (1組)",
+        "WIZARD_STEP_5S_TITLE": "信號 1 設定", 
+        "WIZARD_STEP_6_TITLE_1G": "A組反饋選擇 (1組)",
+        "WIZARD_STEP_7_TITLE_1G_NO_FB": "A組參數設定 (1組)",
+        "WIZARD_STEP_7_TITLE_1G_FB": "A組頻率設定 (1組)",
+        
+        "WIZARD_STEP_5_TITLE_2G": "輸入模式設定 (2組)",
+        "WIZARD_STEP_6_TITLE_2G_INDEP": "A組輸入選擇 (2組獨立)",
+        "WIZARD_STEP_6S_TITLE": "信號 1 設定", 
+        "WIZARD_STEP_7_TITLE_2G_INDEP": "B組輸入選擇 (2組獨立)",
+        "WIZARD_STEP_7S2_TITLE": "信號 2 設定",
+        "WIZARD_STEP_6_TITLE_2G_LINK": "輸入信號選擇 (2組連動)",
+        "WIZARD_STEP_8_TITLE_2G": "A組反饋選擇 (2組)",
+        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "A組參數設定 (2組)",
+        "WIZARD_STEP_9_TITLE_2G_A_FB": "A組頻率設定 (2組)",
+        "WIZARD_STEP_10_TITLE_2G": "B組反饋選擇 (2組)",
+        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "B組參數設定 (2組)",
+        "WIZARD_STEP_11_TITLE_2G_B_FB": "B組頻率設定 (2組)",
+        
+        "WIZARD_COIL_CONFIG_MAP": {
+            0: "1組輸出線圈 (僅A組)",
+            1: "2組輸出線圈 (A組 + B組)"
+        },
+        "WIZARD_2G_INPUT_MODE_MAP": {
+            0: "獨立輸入信號",
+            1: "共用輸入信號"
+        },
 
         # --- Real-time Chart ---
         "SHOW_CHART_BUTTON": "即時圖表",
@@ -469,6 +506,41 @@ TEXTS = {
         "WIZARD_PARAMS_PROMPT": "Please set the following common parameters (Optional):",
         "WIZARD_CONNECT_SUCCESS": "Connected Successfully!",
         "WIZARD_CONNECT_FIRST_WARNING": "Please connect to the controller first.",
+
+        # --- Wizard Dual Advanced ---
+        "WIZARD_BTN_MAIN_APP": "Enter Main App",
+        "WIZARD_BTN_QUICK_SETUP": "Quick Setup Wizard",
+
+        "WIZARD_COIL_CONFIG_LABEL": "Select Output Coil Config:",
+        "WIZARD_INPUT_MODE_LABEL": "Select Input Signal Mode:",
+        "WIZARD_STEP_4_TITLE_DUAL": "Output Coil Setup",
+        "WIZARD_STEP_5_TITLE_1G": "A Input Selection (1G)",
+        "WIZARD_STEP_5S_TITLE": "Signal 1 Setup", 
+        "WIZARD_STEP_6_TITLE_1G": "A Feedback Selection (1G)",
+        "WIZARD_STEP_7_TITLE_1G_NO_FB": "A Output Params (1G)",
+        "WIZARD_STEP_7_TITLE_1G_FB": "A Frequency (1G)",
+        
+        "WIZARD_STEP_5_TITLE_2G": "Input Mode Setup (2G)",
+        "WIZARD_STEP_6_TITLE_2G_INDEP": "A Input Selection (2G Indep)",
+        "WIZARD_STEP_6S_TITLE": "Signal 1 Setup", 
+        "WIZARD_STEP_7_TITLE_2G_INDEP": "B Input Selection (2G Indep)",
+        "WIZARD_STEP_7S2_TITLE": "Signal 2 Setup",
+        "WIZARD_STEP_6_TITLE_2G_LINK": "Input Selection (2G Linked)",
+        "WIZARD_STEP_8_TITLE_2G": "A Feedback Selection (2G)",
+        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "A Output Params (2G)",
+        "WIZARD_STEP_9_TITLE_2G_A_FB": "A Frequency (2G)",
+        "WIZARD_STEP_10_TITLE_2G": "B Feedback Selection (2G)",
+        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "B Output Params (2G)",
+        "WIZARD_STEP_11_TITLE_2G_B_FB": "B Frequency (2G)",
+        
+        "WIZARD_COIL_CONFIG_MAP": {
+            0: "1 Output Coil (A Only)",
+            1: "2 Output Coils (A + B)"
+        },
+        "WIZARD_2G_INPUT_MODE_MAP": {
+            0: "Independent Inputs",
+            1: "Shared Inputs"
+        },
 
         # --- Real-time Chart ---
         "SHOW_CHART_BUTTON": "Real-time Chart",
@@ -941,7 +1013,7 @@ class QuickSetupWizard(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
         self.title("Quick Setup Wizard")
-        self.geometry("800x600") # Increased size for chart
+        self.geometry("800x600") 
         self.resizable(False, False)
         
         # Determine initial position
@@ -957,22 +1029,28 @@ class QuickSetupWizard(tk.Toplevel):
         self.selected_mode = None
         self.connection_info = {} 
         self.modbus_master = None
-        self.param_vars = {} # Stores current vars for data binding
+        self.param_vars = {} 
         
-        # Wizard Internal Storage for Parameter Values (to persist between steps)
-        # {reg_hex: value}
-        self.wizard_params = {} 
+        # Wizard Internal Storage
+        self.wizard_params = {}
+        
+        # State for Dual Mode Branching
+        # Keys: coil_mode(0/1), input_mode(0/1), a_input, b_input, a_fb, b_fb
+        self.dual_path_state = {} 
+        
+        # Track which registers were actually modified by the user
+        self.modified_regs = set()
 
         self.result_data = None
-        
         self.protocol("WM_DELETE_WINDOW", self._on_cancel)
-        
         self._create_widgets()
         self._show_step(1)
         
     @property
     def total_steps(self):
-        return 6 if self.selected_mode == 'single' else 4
+        # Total steps is dynamic in Dual Mode, return a placeholder or calculate based on path
+        if self.selected_mode == 'single': return 6
+        return 99 # Unknown max for dual, logic handles 'Finish' button explicitly
 
     def _create_widgets(self):
         # Header
@@ -1000,20 +1078,66 @@ class QuickSetupWizard(tk.Toplevel):
 
     def _update_ui_text(self):
         self.back_button.config(text=self._get_text("BACK_BUTTON"))
-        next_text = self._get_text("FINISH_BUTTON") if self.current_step == self.total_steps else self._get_text("NEXT_BUTTON")
+        
+        # Determine if it's the last step to show "Finish"
+        # Logic handled by checking specific step IDs or total_steps for Single
+        is_finish = False
+        if self.selected_mode == 'single' and self.current_step == 6: is_finish = True
+        # For Dual, we check specific final step IDs
+        dual_final_steps = ['7_1g_no_fb', '7_1g_fb', '11_2g_no_b_fb', '11_2g_b_fb']
+        if self.current_step in dual_final_steps: is_finish = True
+            
+        next_text = self._get_text("FINISH_BUTTON") if is_finish else self._get_text("NEXT_BUTTON")
         self.next_button.config(text=next_text)
         
         self.title(self._get_text("WIZARD_TITLE"))
         
-        # Determine title key based on mode and step
-        key_suffix = "_SINGLE" if self.selected_mode == 'single' and self.current_step >= 4 else ""
-        step_title_key = f"WIZARD_STEP_{self.current_step}_TITLE{key_suffix}"
+        # Resolve Title Key
+        s = self.current_step
+        key = ""
+        is_step_3_plus = False
         
-        # Fallback for dual mode step 4 (uses generic title)
-        if self.selected_mode == 'dual' and self.current_step == 4:
-             step_title_key = "WIZARD_STEP_4_TITLE"
+        if isinstance(s, int):
+            key = f"WIZARD_STEP_{s}_TITLE"
+            if s >= 3: is_step_3_plus = True
+            
+            if self.selected_mode == 'single' and s > 3:
+                 if s == 4: key = "WIZARD_STEP_4_TITLE_SINGLE"
+                 elif s == 5: key = "WIZARD_STEP_5_TITLE_SINGLE"
+                 elif s == 6: key = "WIZARD_STEP_6_TITLE_SINGLE"
+        else:
+            # String IDs for Dual Mode -> All are > 3
+            is_step_3_plus = True
+            id_map = {
+                '4_dual': 'WIZARD_STEP_4_TITLE_DUAL',
+                '5_1g': 'WIZARD_STEP_5_TITLE_1G',
+                '5s_1g': 'WIZARD_STEP_5S_TITLE',
+                '6_1g': 'WIZARD_STEP_6_TITLE_1G',
+                '7_1g_no_fb': 'WIZARD_STEP_7_TITLE_1G_NO_FB',
+                '7_1g_fb': 'WIZARD_STEP_7_TITLE_1G_FB',
+                
+                '5_2g': 'WIZARD_STEP_5_TITLE_2G',
+                '6_2g_indep': 'WIZARD_STEP_6_TITLE_2G_INDEP',
+                '6s_2g': 'WIZARD_STEP_6S_TITLE',
+                '7_2g_indep': 'WIZARD_STEP_7_TITLE_2G_INDEP',
+                '7s2_2g': 'WIZARD_STEP_7S2_TITLE',
+                '6_2g_link': 'WIZARD_STEP_6_TITLE_2G_LINK',
+                '8_2g': 'WIZARD_STEP_8_TITLE_2G',
+                '9_2g_no_a_fb': 'WIZARD_STEP_9_TITLE_2G_NO_A_FB',
+                '9_2g_a_fb': 'WIZARD_STEP_9_TITLE_2G_A_FB',
+                '10_2g': 'WIZARD_STEP_10_TITLE_2G',
+                '11_2g_no_b_fb': 'WIZARD_STEP_11_TITLE_2G_NO_B_FB',
+                '11_2g_b_fb': 'WIZARD_STEP_11_TITLE_2G_B_FB'
+            }
+            key = id_map.get(s, "")
+            
+        title_text = self._get_text(key)
+        if is_step_3_plus:
+            prefix = self._get_text("WIZARD_TITLE") # "Quick Setup Wizard"
+            # Avoid double prefix if it's already there (though keys were cleaned)
+            title_text = f"{prefix}: {title_text}"
              
-        self.header_label.config(text=self._get_text(step_title_key))
+        self.header_label.config(text=title_text)
 
     def _show_step(self, step):
         self.current_step = step
@@ -1031,9 +1155,35 @@ class QuickSetupWizard(tk.Toplevel):
         elif step == 3: self._render_step_modbus()
         elif step == 4:
             if self.selected_mode == 'single': self._render_step_signal_single()
-            else: self._render_step_parameters_dual()
+            else: self._render_step_parameters_dual() # Fallback? No, logic update for dual 4
+            
+        # Single Mode Steps
         elif step == 5 and self.selected_mode == 'single': self._render_step_limits_single()
         elif step == 6 and self.selected_mode == 'single': self._render_step_ramp_single()
+        
+        # Dual Mode Branches
+        elif step == '4_dual': self._render_step_coil_config()
+        elif step == '5_1g': self._render_step_a_input_1g()
+        elif step == '5s_1g': self._render_step_sig1_setup()
+        elif step == '6_1g': self._render_step_a_feedback_1g()
+        elif step == '7_1g_no_fb': self._render_step_a_params_1g()
+        elif step == '7_1g_fb': self._render_step_a_pwm_1g()
+
+        elif step == '5_2g': self._render_step_input_mode_2g()
+        elif step == '6_2g_indep': self._render_step_a_input_2g()
+        elif step == '6s_2g': self._render_step_sig1_setup() # Reused
+        elif step == '7_2g_indep': self._render_step_b_input_2g()
+        elif step == '7s1_2g': self._render_step_sig1_setup() # Reused
+        elif step == '7s2_2g': self._render_step_sig2_setup()
+        
+        elif step == '6_2g_link': self._render_step_a_input_link()
+        
+        elif step == '8_2g': self._render_step_a_feedback_2g()
+        elif step == '9_2g_no_a_fb': self._render_step_a_params_2g()
+        elif step == '9_2g_a_fb': self._render_step_a_pwm_2g()
+        elif step == '10_2g': self._render_step_b_feedback_2g()
+        elif step == '11_2g_no_b_fb': self._render_step_b_params_2g()
+        elif step == '11_2g_b_fb': self._render_step_b_pwm_2g()
 
     # --- Step 1: Language ---
     def _render_step_language(self):
@@ -1058,6 +1208,28 @@ class QuickSetupWizard(tk.Toplevel):
         frame.pack(pady=10)
         ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="toolbutton-outline", width=25).pack(pady=10)
         ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="toolbutton-outline", width=25).pack(pady=10)
+        
+        # Add "Enter Main App" button (skip wizard)
+        btn_frame = ttk.Frame(self.content_frame)
+        btn_frame.pack(pady=20)
+        ttk.Button(btn_frame, text=self._get_text("WIZARD_BTN_MAIN_APP"), command=self._on_enter_main_app, bootstyle="outline-secondary", width=20).pack()
+        
+        # Update Next Button text for this step
+        self.next_button.config(text=self._get_text("WIZARD_BTN_QUICK_SETUP"))
+
+    def _on_enter_main_app(self):
+        """Skip wizard and enter main app directly."""
+        self.selected_mode = self.model_var.get()
+        # Return basic result with no connection info
+        self.result_data = {
+            'action': 'finish',
+            'language': self.language_code,
+            'mode': self.selected_mode,
+            'connection': {}, 
+            'params': {},
+            'modbus_master': None
+        }
+        self.destroy()
 
     # --- Step 3: Modbus ---
     def _render_step_modbus(self):
@@ -1142,8 +1314,13 @@ class QuickSetupWizard(tk.Toplevel):
 
     def _read_initial_values(self, slave_id):
         try:
-            # Read block 0 to 32 covers all needed registers
-            data = self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, 32)
+            # Determine count based on mode (default to dual/max if unknown)
+            # Single: up to 000DH -> 14 regs
+            # Dual: up to 0027H -> 40 regs
+            count = 14 if self.selected_mode == 'single' else 40
+            
+            # Read block covers all needed registers
+            data = self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, count)
             for i, val in enumerate(data):
                 reg_hex = f"{i:04X}H"
                 self.wizard_params[reg_hex] = val
@@ -1151,20 +1328,41 @@ class QuickSetupWizard(tk.Toplevel):
             print(f"Wizard read error: {e}")
 
     # --- Helper to create control ---
-    def _create_control_row(self, parent, row, config):
+    def _create_control_row(self, parent, row, config, label_key_override=None):
         reg = config['reg']
-        label_text = TEXTS[self.language_code].get(config['key'], config['key'])
-        ttk.Label(parent, text=f"{label_text} ({reg})").grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
+        key = label_key_override if label_key_override else config['key']
+        label_text = TEXTS[self.language_code].get(key, key)
+        
+        # Display register only if it looks like a hex address (contains 'H')
+        display_text = f"{label_text} ({reg})" if "H" in reg else label_text
+        ttk.Label(parent, text=display_text).grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
         
         var = tk.StringVar()
-        self.param_vars[reg] = {'var': var, 'config': config}
+        self.param_vars[reg] = (var, config)
         
         # Get existing or default value
         raw_val = self.wizard_params.get(reg, 0)
         
-        if config['type'] == 'combo':
+        control_type = config.get('type')
+        if control_type == 'combo' or control_type == 'combobox':
             map_key = config['map']
             map_vals = TEXTS[self.language_code].get(map_key, {})
+            
+            # FIX 3: Default to first option if current value is invalid
+            # Check if raw_val is a valid key in the map
+            valid_keys = list(map_vals.keys())
+            if raw_val not in valid_keys and valid_keys:
+                # Select the first one (sorted logic or just first?)
+                # Usually sorting by key is safer if keys are 0,1,2...
+                try:
+                    sorted_keys = sorted(valid_keys)
+                    raw_val = sorted_keys[0]
+                except:
+                    raw_val = valid_keys[0]
+                    
+                # Update underlying param so it persists
+                self.wizard_params[reg] = raw_val
+
             display_val = map_vals.get(raw_val, str(raw_val))
             var.set(display_val)
             cb = ttk.Combobox(parent, textvariable=var, values=list(map_vals.values()), state="readonly", width=18)
@@ -1175,13 +1373,104 @@ class QuickSetupWizard(tk.Toplevel):
                 
         else:
             scale = config.get('scale', 1)
+            # FIX 1: PWM Scaling Handling
+            # If scale is 0.1 (for PWM), reg 7 -> display 70.
+            # Value stored is Reg Value.
+            # Display = Val / Scale. 7 / 0.1 = 70. Correct.
             display_val = str(float(raw_val) / scale)
+            # Clean up .0 if integer display
+            if display_val.endswith(".0"): display_val = display_val[:-2]
+            
             var.set(display_val)
             entry = ttk.Entry(parent, textvariable=var, width=20)
             entry.grid(row=row, column=1, padx=10, pady=5)
             # Add binding for chart updates if needed
             if 'update_chart' in config:
                 entry.bind("<KeyRelease>", self._update_wizard_chart)
+
+    # ... (Skipping unaffected methods) ...
+
+    def _render_step_a_params_1g(self):
+        # Step 7 (1G No FB): A Params
+        # Apply Defaults
+        regs = ['0010H', '0011H', '0012H', '0013H', '0014H', '0015H']
+        vals = [100, 0, 1, 1, 2, 70] # 70Hz -> Reg 70 for 0.1 scale? No.
+        # Defaults provided are REGISTER values usually? 
+        # Wait, previous default set was "70". If scale is 0.1, Reg 70 -> Display 700.
+        # User said: "Output 70, write 70, should be 7".
+        # So User Input 70 -> Reg 7.
+        # Default Reg Value should be 7?
+        # Let's adjust default val list.
+        vals = [100, 0, 1, 1, 2, 7] # 7 -> 70Hz
+        
+        self._apply_defaults(regs, vals)
+        
+        self.param_vars = {}
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=10)
+        
+        configs = [
+            {'reg': '0010H', 'key': 'A_MAX_CURRENT', 'type': 'entry', 'scale': 100},
+            {'reg': '0011H', 'key': 'A_MIN_CURRENT', 'type': 'entry', 'scale': 100},
+            {'reg': '0012H', 'key': 'A_CURRENT_RISE_TIME', 'type': 'entry', 'scale': 10},
+            {'reg': '0013H', 'key': 'A_CURRENT_FALL_TIME', 'type': 'entry', 'scale': 10},
+            {'reg': '0014H', 'key': 'A_COMMAND_DEAD_ZONE', 'type': 'entry', 'scale': 1},
+            {'reg': '0015H', 'key': 'A_PWM_FREQUENCY', 'type': 'entry', 'scale': 0.1} # FIX 1
+        ]
+        for i, cfg in enumerate(configs):
+            self._create_control_row(form_frame, i, cfg)
+
+    def _render_step_a_pwm_1g(self):
+        # Step 7 (1G FB): Only PWM
+        if self.wizard_params.get('0015H', 0) == 0: self.wizard_params['0015H'] = 7 # Default 7 (70Hz)
+        
+        self.param_vars = {}
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        cfg = {'reg': '0015H', 'key': 'A_PWM_FREQUENCY', 'type': 'entry', 'scale': 0.1} # FIX 1
+        self._create_control_row(form_frame, 0, cfg)
+
+    def _render_step_a_params_2g(self):
+        # Step 9 (2G No A FB): A Params
+        self._render_step_a_params_1g()
+
+    def _render_step_a_pwm_2g(self):
+        # Step 9 (2G A FB): Only PWM
+        self._render_step_a_pwm_1g()
+
+    def _render_step_b_params_2g(self):
+        # Step 11 (2G No B FB): B Params
+        regs = ['001AH', '001BH', '001CH', '001DH', '001EH', '001FH']
+        vals = [100, 0, 1, 1, 2, 7] # 7 -> 70Hz
+        self._apply_defaults(regs, vals)
+        
+        self.param_vars = {}
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=10)
+        
+        configs = [
+            {'reg': '001AH', 'key': 'B_MAX_CURRENT', 'type': 'entry', 'scale': 100},
+            {'reg': '001BH', 'key': 'B_MIN_CURRENT', 'type': 'entry', 'scale': 100},
+            {'reg': '001CH', 'key': 'B_CURRENT_RISE_TIME', 'type': 'entry', 'scale': 10},
+            {'reg': '001DH', 'key': 'B_CURRENT_FALL_TIME', 'type': 'entry', 'scale': 10},
+            {'reg': '001EH', 'key': 'B_COMMAND_DEAD_ZONE', 'type': 'entry', 'scale': 1},
+            {'reg': '001FH', 'key': 'B_PWM_FREQUENCY', 'type': 'entry', 'scale': 0.1} # FIX 1
+        ]
+        for i, cfg in enumerate(configs):
+            self._create_control_row(form_frame, i, cfg)
+
+    def _render_step_b_pwm_2g(self):
+        # Step 11 (2G B FB): Only PWM
+        if self.wizard_params.get('001FH', 0) == 0: self.wizard_params['001FH'] = 7
+        
+        self.param_vars = {}
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        cfg = {'reg': '001FH', 'key': 'B_PWM_FREQUENCY', 'type': 'entry', 'scale': 0.1} # FIX 1
+        self._create_control_row(form_frame, 0, cfg)
+
+    # Floating block removed
+    # --- Step 4 (Single): Signal Selection ---
 
     # --- Step 4 (Single): Signal Selection ---
     def _render_step_signal_single(self):
@@ -1246,9 +1535,9 @@ class QuickSetupWizard(tk.Toplevel):
              # We need the dirty value from Step 4.
              # Logic fix in _on_next: save step values back to wizard_params.
              
-             max_curr = float(self.param_vars['0008H']['var'].get())
-             min_curr = float(self.param_vars['0009H']['var'].get())
-             dead_zone = float(self.param_vars['000DH']['var'].get())
+             max_curr = float(self.param_vars['0008H'][0].get())
+             min_curr = float(self.param_vars['0009H'][0].get())
+             dead_zone = float(self.param_vars['000DH'][0].get())
         except:
              return
 
@@ -1314,111 +1603,447 @@ class QuickSetupWizard(tk.Toplevel):
         for i, cfg in enumerate(configs):
             self._create_control_row(form_frame, i, cfg)
 
-
-    # --- Dual Mode (Step 4) ---
-    def _render_step_parameters_dual(self):
-        if not self.modbus_master:
-            ttk.Label(self.content_frame, text=self._get_text("WIZARD_CONNECT_FIRST_WARNING"), foreground="red").pack(pady=50)
-            return
-
-        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_PARAMS_PROMPT"), font=("", 12))
-        lbl.pack(pady=10)
+    # --- Dual Mode Renderers ---
+    
+    def _render_step_coil_config(self):
+        # Step 4 Dual: Select 1 or 2 Groups
+        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_COIL_CONFIG_LABEL"), font=("", 12))
+        lbl.pack(pady=15)
         
         self.param_vars = {}
         form_frame = ttk.Frame(self.content_frame)
         form_frame.pack(pady=10)
         
-        params_to_show = [
-            {'reg': '0006H', 'key': 'SIGNAL_SELECTION_1', 'type': 'combo', 'map': 'SIGNAL_SELECTION_MAP_VALUES'},
-            {'reg': '0007H', 'key': 'SIGNAL_SELECTION_2', 'type': 'combo', 'map': 'SIGNAL_SELECTION_MAP_VALUES'},
-            {'reg': '0010H', 'key': 'A_MAX_CURRENT', 'type': 'entry', 'scale': 100},
-            {'reg': '001AH', 'key': 'B_MAX_CURRENT', 'type': 'entry', 'scale': 100}
-        ]
+        # Virtual Parameter "coil_config"
+        # 0: 1 Group, 1: 2 Groups
+        cfg = {'reg': 'coil_config', 'key': 'WIZARD_COIL_CONFIG_LABEL', 'type': 'combobox', 'map': 'WIZARD_COIL_CONFIG_MAP'}
+        self._create_control_row(form_frame, 0, cfg, label_key_override="WIZARD_COIL_CONFIG_LABEL")
+
+    def _render_step_a_input_1g(self):
+        # Step 5 (1G): A Input Selection (000EH)
+        # Options: "Signal 1" (0), "First 485" (1)
+        # Note: 1G Flow only allows these.
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        self.param_vars = {}
         
-        for i, p in enumerate(params_to_show):
-            self._create_control_row(form_frame, i, p)
+        cfg = {'reg': '000EH', 'key': 'A_INPUT_SIGNAL_SELECTION', 'type': 'combobox', 'map': 'A_INPUT_SIGNAL_SELECTION_MAP_VALUES'}
+        self._create_control_row(form_frame, 0, cfg)
+
+    def _render_step_sig1_setup(self):
+        # Step 5s/6s: Signal 1 Setup (0006H)
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        self.param_vars = {}
+        cfg = {'reg': '0006H', 'key': 'SIGNAL_SELECTION_1', 'type': 'combobox', 'map': 'SIGNAL_SELECTION_MAP_VALUES'}
+        self._create_control_row(form_frame, 0, cfg)
+
+    def _render_step_sig2_setup(self):
+        # Step 7s2: Signal 2 Setup (0007H)
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        self.param_vars = {}
+        cfg = {'reg': '0007H', 'key': 'SIGNAL_SELECTION_2', 'type': 'combobox', 'map': 'SIGNAL_SELECTION_MAP_VALUES'}
+        self._create_control_row(form_frame, 0, cfg)
+
+    def _render_step_input_mode_2g(self):
+        # Step 5 (2G): Input Mode (Shared/Indep)
+        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_INPUT_MODE_LABEL"), font=("", 12))
+        lbl.pack(pady=15)
+        
+        self.param_vars = {}
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=10)
+        
+        # Virtual Parameter "input_mode"
+        cfg = {'reg': 'input_mode', 'key': 'WIZARD_INPUT_MODE_LABEL', 'type': 'combobox', 'map': 'WIZARD_2G_INPUT_MODE_MAP'}
+        self._create_control_row(form_frame, 0, cfg, label_key_override="WIZARD_INPUT_MODE_LABEL")
+
+    def _setup_filtered_map(self, base_map_key, temp_map_key, exclude_vals=[]):
+        """Creates a temporary map in TEXTS without excluded values."""
+        base_map = TEXTS[self.language_code].get(base_map_key, {}).copy()
+        for val in exclude_vals:
+            if val in base_map:
+                del base_map[val]
+        TEXTS[self.language_code][temp_map_key] = base_map
 
     def _save_current_step_values(self):
-        """Save values from current UI form to wizard_params."""
-        t = TEXTS[self.language_code]
-        for reg, item in self.param_vars.items():
-            try:
-                var_val = item['var'].get()
-                config = item['config']
-                val_to_store = 0
-                
-                if config['type'] == 'combo':
-                     map_key = config['map']
-                     map_vals = t.get(map_key, {})
-                     for k, v in map_vals.items():
-                         if v == var_val:
-                             val_to_store = k
-                             break
-                else:
+        if not hasattr(self, 'param_vars'): return
+        
+        for reg, (var, config) in self.param_vars.items():
+            val = var.get()
+            
+            # Reverse map for ComboBox (display_val -> raw_val)
+            if config.get('type') in ['combo', 'combobox']:
+                map_key = config.get('map')
+                if map_key:
+                    map_vals = TEXTS[self.language_code].get(map_key, {})
+                    # Find key where val matches
+                    found_key = None
+                    for k, v in map_vals.items():
+                        if v == val:
+                            found_key = k
+                            break
+                    
+                    if found_key is not None:
+                        val = found_key
+                    else:
+                        pass
+            
+            # Scale handling for Entry
+            elif config.get('type') in ['entry', 'entry_scaled']:
+                try:
                     scale = config.get('scale', 1)
-                    val_to_store = int(float(var_val) * scale)
-                
-                self.wizard_params[reg] = val_to_store
-            except: pass
+                    val = float(val) * scale
+                    val = int(round(val))
+                except:
+                    continue
+            
+            self.wizard_params[reg] = val
+            self.modified_regs.add(reg)
+
+    def _render_step_a_input_2g(self):
+        # Step 6 (2G Indep): A Input (000EH)
+        # Full options allowed? Or restricted?
+        # 1G flow restricts to Sig1/485. 2G flow logic implies generic choice.
+        # Register 000EH map has: 0:Command 1, 1:RS485 Cmd 1.
+        # Wait, the Map in TEXTS (304) is minimal.
+        # Is there a specialized map for 2G?
+        # User logic: "If choose Sig1 -> 6s". "If choose Sig2..." (Wait, 000EH only has 0/1 in current map?)
+        # Let's check manual context or previous code.
+        # In Single mode (0003H map), we have 5 options.
+        # In Dual mode 000EH/0018H map...
+        # I suspect the map provided in TEXTS is incomplete or simplified.
+        # Let's stick to the map we have: "A_INPUT_SIGNAL_SELECTION_MAP_VALUES".
+        # If user needs more options, I might need to update the map, but for now I trust the map.
+        
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        self.param_vars = {}
+        cfg = {'reg': '000EH', 'key': 'A_INPUT_SIGNAL_SELECTION', 'type': 'combobox', 'map': 'A_INPUT_SIGNAL_SELECTION_MAP_VALUES'}
+        self._create_control_row(form_frame, 0, cfg)
+
+    def _render_step_b_input_2g(self):
+        # Step 7 (2G Indep): B Input (0018H)
+        # Exclude A Input Selection (000EH)
+        # B Input Map: 0:NoOut, 1:Sig1, 2:Sig2, 3:485_1, 4:485_2.
+        # A Input (000EH): 0:Sig1, 1:485_1.
+        a_input = self.wizard_params.get('000EH', -1)
+        exclude = [0] # Always exclude "No Output" in this step (as per logic "cannot be No Output")
+        
+        if a_input == 0: exclude.append(1) # Sig1
+        elif a_input == 1: exclude.append(3) # 485_1
+        
+        self._setup_filtered_map('B_INPUT_SIGNAL_SELECTION_MAP_VALUES', 'TEMP_B_INPUT_MAP', exclude)
+        
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        self.param_vars = {}
+        cfg = {'reg': '0018H', 'key': 'B_INPUT_SIGNAL_SELECTION', 'type': 'combobox', 'map': 'TEMP_B_INPUT_MAP'}
+        self._create_control_row(form_frame, 0, cfg)
+
+    def _render_step_a_input_link(self):
+        # Step 6 (2G Link): A Input Selection
+        # Same as _render_step_a_input_2g but context is Linked
+        self._render_step_a_input_2g()
+
+    def _render_step_a_feedback_2g(self):
+        # Step 8 (2G): A Feedback (000FH)
+        # Exclude A Input and B Input
+        a_input = self.wizard_params.get('000EH', -1)
+        b_input = self.wizard_params.get('0018H', -1)
+        
+        exclude = []
+        # A Input (0:Sig1, 1:485_1)
+        if a_input == 0: exclude.append(1) # FB Sig1
+        
+        # B Input (1:Sig1, 2:Sig2, 3:485_1, 4:485_2)
+        if b_input == 1: exclude.append(1) # FB Sig1
+        if b_input == 2: exclude.append(2) # FB Sig2
+        
+        self._setup_filtered_map('FEEDBACK_SIGNAL_MAP_VALUES', 'TEMP_A_FB_2G_MAP', exclude)
+        
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        self.param_vars = {}
+        cfg = {'reg': '000FH', 'key': 'A_FEEDBACK_SIGNAL', 'type': 'combobox', 'map': 'TEMP_A_FB_2G_MAP'}
+        self._create_control_row(form_frame, 0, cfg)
+
+    def _render_step_b_feedback_2g(self):
+        # Step 10 (2G): B Feedback (0019H)
+        # Exclude A Input, B Input, A Feedback
+        a_input = self.wizard_params.get('000EH', -1)
+        b_input = self.wizard_params.get('0018H', -1)
+        a_fb = self.wizard_params.get('000FH', -1)
+        
+        exclude = []
+        if a_input == 0: exclude.append(1)
+        if b_input == 1: exclude.append(1)
+        if b_input == 2: exclude.append(2)
+        if a_fb == 1: exclude.append(1)
+        if a_fb == 2: exclude.append(2)
+        
+        self._setup_filtered_map('FEEDBACK_SIGNAL_MAP_VALUES', 'TEMP_B_FB_MAP', exclude)
+        
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        self.param_vars = {}
+        cfg = {'reg': '0019H', 'key': 'B_FEEDBACK_SIGNAL', 'type': 'combobox', 'map': 'TEMP_B_FB_MAP'}
+        self._create_control_row(form_frame, 0, cfg)
+
+    # --- Parameter Setups ---
+    
+    def _apply_defaults(self, regs, vals):
+        """Helper to apply defaults if 0."""
+        for r, v in zip(regs, vals):
+            if self.wizard_params.get(r, 0) == 0: self.wizard_params[r] = v
+
+    def _render_step_a_params_1g(self):
+        # Step 7 (1G No FB): A Params
+        # Apply Defaults
+        regs = ['0010H', '0011H', '0012H', '0013H', '0014H', '0015H']
+        vals = [100, 0, 1, 1, 2, 14] # 14(Reg) -> 140Hz
+        self._apply_defaults(regs, vals)
+        
+        self.param_vars = {}
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=10)
+        
+        configs = [
+            {'reg': '0010H', 'key': 'A_MAX_CURRENT', 'type': 'entry', 'scale': 100},
+            {'reg': '0011H', 'key': 'A_MIN_CURRENT', 'type': 'entry', 'scale': 100},
+            {'reg': '0012H', 'key': 'A_CURRENT_RISE_TIME', 'type': 'entry', 'scale': 10},
+            {'reg': '0013H', 'key': 'A_CURRENT_FALL_TIME', 'type': 'entry', 'scale': 10},
+            {'reg': '0014H', 'key': 'A_COMMAND_DEAD_ZONE', 'type': 'entry', 'scale': 1},
+            {'reg': '0015H', 'key': 'A_PWM_FREQUENCY', 'type': 'entry', 'scale': 0.1}
+        ]
+        for i, cfg in enumerate(configs):
+            self._create_control_row(form_frame, i, cfg)
+
+    def _render_step_a_pwm_1g(self):
+        # Step 7 (1G FB): Only PWM
+        if self.wizard_params.get('0015H', 0) == 0: self.wizard_params['0015H'] = 14
+        
+        self.param_vars = {}
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        cfg = {'reg': '0015H', 'key': 'A_PWM_FREQUENCY', 'type': 'entry', 'scale': 0.1}
+        self._create_control_row(form_frame, 0, cfg)
+
+    def _render_step_a_params_2g(self):
+        # Step 9 (2G No A FB): A Params
+        # Same as 1G Params
+        self._render_step_a_params_1g()
+
+    def _render_step_a_pwm_2g(self):
+        # Step 9 (2G A FB): Only PWM
+        self._render_step_a_pwm_1g()
+
+    def _render_step_b_params_2g(self):
+        # Step 11 (2G No B FB): B Params
+        regs = ['001AH', '001BH', '001CH', '001DH', '001EH', '001FH']
+        vals = [100, 0, 1, 1, 2, 14]
+        self._apply_defaults(regs, vals)
+        
+        self.param_vars = {}
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=10)
+        
+        configs = [
+            {'reg': '001AH', 'key': 'B_MAX_CURRENT', 'type': 'entry', 'scale': 100},
+            {'reg': '001BH', 'key': 'B_MIN_CURRENT', 'type': 'entry', 'scale': 100},
+            {'reg': '001CH', 'key': 'B_CURRENT_RISE_TIME', 'type': 'entry', 'scale': 10},
+            {'reg': '001DH', 'key': 'B_CURRENT_FALL_TIME', 'type': 'entry', 'scale': 10},
+            {'reg': '001EH', 'key': 'B_COMMAND_DEAD_ZONE', 'type': 'entry', 'scale': 1},
+            {'reg': '001FH', 'key': 'B_PWM_FREQUENCY', 'type': 'entry', 'scale': 0.1}
+        ]
+        for i, cfg in enumerate(configs):
+            self._create_control_row(form_frame, i, cfg)
+
+    def _render_step_b_pwm_2g(self):
+        # Step 11 (2G B FB): Only PWM
+        if self.wizard_params.get('001FH', 0) == 0: self.wizard_params['001FH'] = 14
+        
+        self.param_vars = {}
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        cfg = {'reg': '001FH', 'key': 'B_PWM_FREQUENCY', 'type': 'entry', 'scale': 0.1}
+        self._create_control_row(form_frame, 0, cfg)
+
+
+    # --- Dual Mode (Step 4) ---
+    # Now handled by _render_step_coil_config
+    
+
 
     def _on_next(self):
-        # Save current step values before moving
-        if self.current_step >= 4:
-            self._save_current_step_values()
+        # 1. Save current values
+        self._save_current_step_values()
+        
+        # Initialize history if missing
+        if not hasattr(self, 'step_history'): self.step_history = []
 
-        if self.current_step == 1: self._show_step(2)
-        elif self.current_step == 2:
+        # 2. Logic to determine next step
+        next_step = None
+        current = self.current_step
+        
+        if current == 1: next_step = 2
+        elif current == 2:
             self.selected_mode = self.model_var.get()
-            self._show_step(3)
-        elif self.current_step == 3:
+            next_step = 3
+        elif current == 3:
             if not self.modbus_master:
                 messagebox.showwarning("Warning", self._get_text("WIZARD_CONNECT_FIRST_WARNING"), parent=self)
                 return
-            self._show_step(4)
-        elif self.current_step < self.total_steps:
-            self._show_step(self.current_step + 1)
-        else:
-            # Finish
-            self._apply_parameters() 
-            self.result_data = {
-                'language': self.language_code,
-                'mode': self.selected_mode,
-                'connection': self.connection_info,
-                'modbus_master': self.modbus_master
-            }
-            self.destroy()
+            # Branching Point based on Mode
+            if self.selected_mode == 'single': next_step = 4
+            else: next_step = '4_dual'
+            
+        elif self.selected_mode == 'single':
+            # Linear Single Flow
+            if current == 4: next_step = 5
+            elif current == 5: next_step = 6
+            elif current == 6: self._finish_wizard(); return
+            
+        elif self.selected_mode == 'dual':
+            # Complex Dual Flow
+            if current == '4_dual':
+                # coil_config: 0=1G, 1=2G
+                cfg = self.wizard_params.get('coil_config', 0)
+                if cfg == 0: 
+                    self.wizard_params['0018H'] = 0 # No Output for B
+                    next_step = '5_1g'
+                else: 
+                    next_step = '5_2g'
+                    
+            # --- 1 Group Branch ---
+            elif current == '5_1g':
+                # A Input (000EH)
+                inp = self.wizard_params.get('000EH', 0)
+                if inp == 0: next_step = '5s_1g' # Signal 1
+                else: next_step = '6_1g'
+            elif current == '5s_1g':
+                next_step = '6_1g'
+            elif current == '6_1g':
+                # A Feedback (000FH)
+                fb = self.wizard_params.get('000FH', 0)
+                if fb == 0: next_step = '7_1g_no_fb'
+                else: next_step = '7_1g_fb'
+            elif current in ['7_1g_no_fb', '7_1g_fb']:
+                self._finish_wizard(); return
+                
+            # --- 2 Group Branch ---
+            elif current == '5_2g':
+                # Input Mode (Virtual: 'input_mode')
+                mode = self.wizard_params.get('input_mode', 0)
+                if mode == 0: next_step = '6_2g_indep' # Independent
+                else: next_step = '6_2g_link' # Shared
+                
+            # --- 2G Independent ---
+            elif current == '6_2g_indep':
+                inp = self.wizard_params.get('000EH', 0)
+                if inp == 0: next_step = '6s_2g' 
+                else: next_step = '7_2g_indep'
+            elif current == '6s_2g':
+                # Determine path based on Input Mode
+                mode = self.wizard_params.get('input_mode', 0)
+                if mode == 1: # Shared (Linked)
+                     next_step = '8_2g'
+                else: # Independent
+                     next_step = '7_2g_indep'
+            elif current == '7_2g_indep':
+                inp = self.wizard_params.get('0018H', 0)
+                if inp == 1: next_step = '7s1_2g' 
+                elif inp == 2: next_step = '7s2_2g' 
+                else: next_step = '8_2g'
+            elif current in ['7s1_2g', '7s2_2g']:
+                 next_step = '8_2g'
+                 
+            # --- 2G Linked ---
+            elif current == '6_2g_link':
+                inp = self.wizard_params.get('000EH', 0) 
+                
+                # Map A Input (0:Sig1, 1:485_1) to B Input (1:Sig1, 3:485_1)
+                b_val = 0
+                if inp == 0: b_val = 1 # Signal 1
+                elif inp == 1: b_val = 3 # RS485 1
+                
+                self.wizard_params['0018H'] = b_val 
+                
+                if inp == 0: next_step = '6s_2g' # Reuse
+                else: next_step = '8_2g'
+            
+            # --- 2G Common Tail ---
+            elif current == '8_2g':
+                fb = self.wizard_params.get('000FH', 0)
+                if fb == 0: next_step = '9_2g_no_a_fb'
+                else: next_step = '9_2g_a_fb'
+            elif current in ['9_2g_no_a_fb', '9_2g_a_fb']:
+                next_step = '10_2g'
+            
+            elif current == '10_2g':
+                fb = self.wizard_params.get('0019H', 0)
+                if fb == 0: next_step = '11_2g_no_b_fb'
+                else: next_step = '11_2g_b_fb'
+            elif current in ['11_2g_no_b_fb', '11_2g_b_fb']:
+                self._finish_wizard(); return
+
+        if next_step:
+            self.step_history.append(current)
+            self._show_step(next_step)
+
+    def _finish_wizard(self):
+        self._apply_parameters() 
+        self.result_data = {
+            'action': 'finish',
+            'language': self.language_code,
+            'mode': self.selected_mode,
+            'connection': self.connection_info,
+            'modbus_master': self.modbus_master,
+            'params': getattr(self, 'wizard_params', {})
+        }
+        self.destroy()
 
     def _apply_parameters(self):
         if not self.modbus_master: return
         slave_id = self.connection_info.get('id', 1)
         
-        # Write everything collected in wizard_params
-        # But only write if the value is different? Or just write all dirty ones?
-        # For simplicity, we write all that were part of the flow.
-        # However, wizard_params contains ALL registers read initially.
-        # We should track which ones were actually edited, OR just write the ones relevant to the mode.
-        
-        relevant_regs = []
+        # Determine the allowed list of writable registers based on mode
+        allowed_regs = set()
         if self.selected_mode == 'single':
-            relevant_regs = ['0003H', '0008H', '0009H', '000DH', '000AH', '000BH']
+            config_list = ModbusMonitorApp.single_writable_params_config
         else:
-            relevant_regs = ['0006H', '0007H', '0010H', '001AH']
+            config_list = ModbusMonitorApp.writable_params_config
             
-        for reg in relevant_regs:
-            if reg in self.wizard_params:
-                val = self.wizard_params[reg]
-                addr = int(reg.replace('H',''), 16)
+        for item in config_list:
+            allowed_regs.add(item['reg'])
+            
+        print(f"DEBUG: Applying params for mode {self.selected_mode}. Allowed: {sorted(list(allowed_regs))}")
+        
+        # Write only parameters that are in the allowed list AND were modified
+        for reg, val in self.wizard_params.items():
+            if reg in allowed_regs and reg in self.modified_regs: 
                 try:
-                    self.modbus_master.execute(slave_id, defines.WRITE_SINGLE_REGISTER, addr, output_value=val)
+                    addr = int(reg.replace('H',''), 16)
+                    self.modbus_master.execute(slave_id, defines.WRITE_SINGLE_REGISTER, addr, output_value=int(val))
+                    print(f"DEBUG: Wrote {reg} = {val}")
                 except Exception as e:
                     print(f"Write failed {reg}: {e}")
-                
+            else:
+                # Optional: Log skipped registers if needed for debugging
+                # print(f"DEBUG: Skipped {reg} (not in allowed/modified list)")
+                pass
     def _on_back(self):
-        if self.current_step > 1:
+        if hasattr(self, 'step_history') and self.step_history:
+            prev_step = self.step_history.pop()
+            self._show_step(prev_step)
+        elif self.current_step > 1 and isinstance(self.current_step, int):
+            # Fallback for old linear style if history missing
             self._show_step(self.current_step - 1)
 
     def _on_cancel(self):
         self.result_data = None
+        self.destroy()
         self.destroy()
 
 class ModbusMonitorApp:
@@ -1519,6 +2144,8 @@ class ModbusMonitorApp:
         self.signal_history_0001 = deque(maxlen=self.MAX_HISTORY_POINTS)
         self.current_history_0003 = deque(maxlen=self.MAX_HISTORY_POINTS) # For dual mode B group
         self.signal_history_0004 = deque(maxlen=self.MAX_HISTORY_POINTS) # For dual mode B group
+
+        self.auto_batch_write_pending = False # Pending flag for wizard auto-run
 
         # Show the wizard and wait for a choice
         self._show_wizard()
@@ -1902,6 +2529,12 @@ class ModbusMonitorApp:
                 self.modbus_master = data['modbus_master']
                 global MODBUS_MASTER
                 MODBUS_MASTER = self.modbus_master
+                
+            # AUTO-RUN Batch Write if wizard finished (not skipped)
+            # Use safe flag instead of direct call
+            if data['action'] == 'finish' and data.get('params'):
+                self.auto_batch_write_pending = True
+                
         else:
             self.controller_mode = None
 
@@ -2635,11 +3268,18 @@ class ModbusMonitorApp:
             # Initial read of all registers to populate UI
             self._read_all_registers_and_update_gui()
             
+
+            
             # Start polling for monitor area
             if not self.polling_active:
                 self.polling_active = True
                 self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
                 self.polling_thread.start()
+
+            # Execute pending batch write if requested by wizard
+            if self.auto_batch_write_pending:
+                self.master.after(100, self._batch_write_parameters)
+                self.auto_batch_write_pending = False
                 
         except Exception as e:
             print(f"Error in Wizard handover: {e}")
