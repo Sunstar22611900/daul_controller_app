@@ -186,8 +186,8 @@ TEXTS = {
         "WIZARD_STEP_4_TITLE": "快速參數設定",
         
         "WIZARD_STEP_4_TITLE_SINGLE": "信號選擇",
-        "WIZARD_STEP_5_TITLE_SINGLE": "輸出限制設定",
-        "WIZARD_STEP_6_TITLE_SINGLE": "斜率設定 (可選)",
+        "WIZARD_STEP_5_TITLE_SINGLE": "輸出設定",
+        "WIZARD_STEP_6_TITLE_SINGLE": "斜率設定",
         
         "NEXT_BUTTON": "下一步 >",
         "BACK_BUTTON": "< 上一步",
@@ -202,33 +202,33 @@ TEXTS = {
         # --- Wizard Dual Advanced ---
         "WIZARD_COIL_CONFIG_LABEL": "請選擇輸出線圈組數:",
         "WIZARD_INPUT_MODE_LABEL": "請選擇輸入信號模式:",
-        "WIZARD_STEP_4_TITLE_DUAL": "輸出線圈設定",
-        "WIZARD_STEP_5_TITLE_1G": "A組輸入選擇 (1組)",
-        "WIZARD_STEP_5S_TITLE": "信號 1 設定", 
-        "WIZARD_STEP_6_TITLE_1G": "A組反饋選擇 (1組)",
-        "WIZARD_STEP_7_TITLE_1G_NO_FB": "A組參數設定 (1組)",
-        "WIZARD_STEP_7_TITLE_1G_FB": "A組頻率設定 (1組)",
+        "WIZARD_STEP_4_TITLE_DUAL": "選擇輸出線圈組數",
+        "WIZARD_STEP_5_TITLE_1G": "輸入信號選擇 (單線圈)",
+        "WIZARD_STEP_5S_TITLE": "信號 1 選擇 (單線圈)", 
+        "WIZARD_STEP_6_TITLE_1G": "反饋信號選擇 (單線圈)",
+        "WIZARD_STEP_7_TITLE_1G_NO_FB": "參數設定 (單線圈)",
+        "WIZARD_STEP_7_TITLE_1G_FB": "頻率設定 (單線圈)",
         
-        "WIZARD_STEP_5_TITLE_2G": "輸入模式設定 (2組)",
-        "WIZARD_STEP_6_TITLE_2G_INDEP": "A組輸入選擇 (2組獨立)",
-        "WIZARD_STEP_6S_TITLE": "信號 1 設定", 
-        "WIZARD_STEP_7_TITLE_2G_INDEP": "B組輸入選擇 (2組獨立)",
-        "WIZARD_STEP_7S2_TITLE": "信號 2 設定",
-        "WIZARD_STEP_6_TITLE_2G_LINK": "輸入信號選擇 (2組連動)",
-        "WIZARD_STEP_8_TITLE_2G": "A組反饋選擇 (2組)",
-        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "A組參數設定 (2組)",
-        "WIZARD_STEP_9_TITLE_2G_A_FB": "A組頻率設定 (2組)",
-        "WIZARD_STEP_10_TITLE_2G": "B組反饋選擇 (2組)",
-        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "B組參數設定 (2組)",
-        "WIZARD_STEP_11_TITLE_2G_B_FB": "B組頻率設定 (2組)",
+        "WIZARD_STEP_5_TITLE_2G": "控制模式選擇 (雙線圈)",
+        "WIZARD_STEP_6_TITLE_2G_INDEP": "A組輸入信號選擇 (雙線圈雙信號)",
+        "WIZARD_STEP_6S_TITLE": "信號 1 選擇 (雙線圈雙信號)", 
+        "WIZARD_STEP_7_TITLE_2G_INDEP": "B組輸入信號選擇 (雙線圈雙信號)",
+        "WIZARD_STEP_7S2_TITLE": "信號 2 選擇 (雙線圈雙信號)",
+        "WIZARD_STEP_6_TITLE_2G_LINK": "輸入信號選擇 (雙線圈單信號)",
+        "WIZARD_STEP_8_TITLE_2G": "A組反饋信號選擇 (雙線圈)",
+        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "A組參數設定 (雙線圈)",
+        "WIZARD_STEP_9_TITLE_2G_A_FB": "A組頻率設定 (雙線圈)",
+        "WIZARD_STEP_10_TITLE_2G": "B組反饋信號選擇 (雙線圈)",
+        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "B組參數設定 (雙線圈)",
+        "WIZARD_STEP_11_TITLE_2G_B_FB": "B組頻率設定 (雙線圈)",
         
         "WIZARD_COIL_CONFIG_MAP": {
             0: "1組輸出線圈 (僅A組)",
             1: "2組輸出線圈 (A組 + B組)"
         },
         "WIZARD_2G_INPUT_MODE_MAP": {
-            0: "獨立輸入信號",
-            1: "共用輸入信號"
+            0: "2組獨立輸入信號",
+            1: "共用1組輸入信號"
         },
 
         # --- Real-time Chart ---
@@ -490,13 +490,13 @@ TEXTS = {
 
         # --- Quick Setup Wizard ---
         "WIZARD_TITLE": "Quick Setup Wizard",
-        "WIZARD_STEP_1_TITLE": "Step 1/4: Select Language",
-        "WIZARD_STEP_2_TITLE": "Step 2/4: Select Model",
-        "WIZARD_STEP_3_TITLE": "Step 3/4: Modbus Connection",
-        "WIZARD_STEP_4_TITLE": "Step 4/4: Quick Parameter Setup",
-        "WIZARD_STEP_4_TITLE_SINGLE": "Step 4/6: Signal Selection",
-        "WIZARD_STEP_5_TITLE_SINGLE": "Step 5/6: Output Limits",
-        "WIZARD_STEP_6_TITLE_SINGLE": "Step 6/6: Ramp Settings (Optional)",
+        "WIZARD_STEP_1_TITLE": "Select Language",
+        "WIZARD_STEP_2_TITLE": "Select Model",
+        "WIZARD_STEP_3_TITLE": "Modbus Connection",
+        "WIZARD_STEP_4_TITLE": "Quick Parameter Setup",
+        "WIZARD_STEP_4_TITLE_SINGLE": "Command Selection",
+        "WIZARD_STEP_5_TITLE_SINGLE": "Output Setings",
+        "WIZARD_STEP_6_TITLE_SINGLE": "Ramp Settings",
         "NEXT_BUTTON": "Next >",
         "BACK_BUTTON": "< Back",
         "FINISH_BUTTON": "Finish",
@@ -513,33 +513,33 @@ TEXTS = {
 
         "WIZARD_COIL_CONFIG_LABEL": "Select Output Coil Config:",
         "WIZARD_INPUT_MODE_LABEL": "Select Input Signal Mode:",
-        "WIZARD_STEP_4_TITLE_DUAL": "Output Coil Setup",
-        "WIZARD_STEP_5_TITLE_1G": "A Input Selection (1G)",
-        "WIZARD_STEP_5S_TITLE": "Signal 1 Setup", 
-        "WIZARD_STEP_6_TITLE_1G": "A Feedback Selection (1G)",
-        "WIZARD_STEP_7_TITLE_1G_NO_FB": "A Output Params (1G)",
-        "WIZARD_STEP_7_TITLE_1G_FB": "A Frequency (1G)",
+        "WIZARD_STEP_4_TITLE_DUAL": "Select Output Coil Config",
+        "WIZARD_STEP_5_TITLE_1G": "Input Command Selection (Single Coil)",
+        "WIZARD_STEP_5S_TITLE": "Command 1 Selection (Single Coil)", 
+        "WIZARD_STEP_6_TITLE_1G": "Feedback Command Selection (Single Coil)",
+        "WIZARD_STEP_7_TITLE_1G_NO_FB": "Params Setup (Single Coil)",
+        "WIZARD_STEP_7_TITLE_1G_FB": "Frequency Setup (Single Coil)",
         
-        "WIZARD_STEP_5_TITLE_2G": "Input Mode Setup (2G)",
-        "WIZARD_STEP_6_TITLE_2G_INDEP": "A Input Selection (2G Indep)",
-        "WIZARD_STEP_6S_TITLE": "Signal 1 Setup", 
-        "WIZARD_STEP_7_TITLE_2G_INDEP": "B Input Selection (2G Indep)",
-        "WIZARD_STEP_7S2_TITLE": "Signal 2 Setup",
-        "WIZARD_STEP_6_TITLE_2G_LINK": "Input Selection (2G Linked)",
-        "WIZARD_STEP_8_TITLE_2G": "A Feedback Selection (2G)",
-        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "A Output Params (2G)",
-        "WIZARD_STEP_9_TITLE_2G_A_FB": "A Frequency (2G)",
-        "WIZARD_STEP_10_TITLE_2G": "B Feedback Selection (2G)",
-        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "B Output Params (2G)",
-        "WIZARD_STEP_11_TITLE_2G_B_FB": "B Frequency (2G)",
+        "WIZARD_STEP_5_TITLE_2G": "Control Mode Selection (Dual Coil)",
+        "WIZARD_STEP_6_TITLE_2G_INDEP": "Input Command Selection for Coil A (Dual Coil Dual Command)",
+        "WIZARD_STEP_6S_TITLE": "Command 1 Setup (Dual Coil Dual Command)", 
+        "WIZARD_STEP_7_TITLE_2G_INDEP": "Input Command Selection for Coil B (Dual Coil Dual Command)",
+        "WIZARD_STEP_7S2_TITLE": "Command 2 Setup (Dual Coil Dual Command)",
+        "WIZARD_STEP_6_TITLE_2G_LINK": "Input Command Selection (Dual Coil Single Command)",
+        "WIZARD_STEP_8_TITLE_2G": "Feedback Command Selection for Coil A (Dual Coil)",
+        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "Params Setup for Coil A (Dual Coil)",
+        "WIZARD_STEP_9_TITLE_2G_A_FB": "Frequency Setup for Coil A (Dual Coil)",
+        "WIZARD_STEP_10_TITLE_2G": "Feedback Command Selection for Coil B(Dual Coil)",
+        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "Params Setup for Coil B (Dual Coil)",
+        "WIZARD_STEP_11_TITLE_2G_B_FB": "Frequency Setup for Coil B (Dual Coil)",
         
         "WIZARD_COIL_CONFIG_MAP": {
             0: "1 Output Coil (A Only)",
             1: "2 Output Coils (A + B)"
         },
         "WIZARD_2G_INPUT_MODE_MAP": {
-            0: "Independent Inputs",
-            1: "Shared Inputs"
+            0: "Independent Input Commands",
+            1: "Shared Input Command"
         },
 
         # --- Real-time Chart ---
@@ -1166,6 +1166,8 @@ class QuickSetupWizard(tk.Toplevel):
         elif step == '5_1g': self._render_step_a_input_1g()
         elif step == '5s_1g': self._render_step_sig1_setup()
         elif step == '6_1g': self._render_step_a_feedback_1g()
+        elif step == '6_1g_sig1': self._render_step_sig1_setup()
+        elif step == '6_1g_sig2': self._render_step_sig2_setup()
         elif step == '7_1g_no_fb': self._render_step_a_params_1g()
         elif step == '7_1g_fb': self._render_step_a_pwm_1g()
 
@@ -1177,18 +1179,23 @@ class QuickSetupWizard(tk.Toplevel):
         elif step == '7s2_2g': self._render_step_sig2_setup()
         
         elif step == '6_2g_link': self._render_step_a_input_link()
+        elif step == '6s_2g_link': self._render_step_sig1_setup() # New link step if needed? Assuming link uses A input logic which might route to signal setup if A input is Sig1.
         
         elif step == '8_2g': self._render_step_a_feedback_2g()
+        elif step == '8_2g_sig1': self._render_step_sig1_setup()
+        elif step == '8_2g_sig2': self._render_step_sig2_setup()
         elif step == '9_2g_no_a_fb': self._render_step_a_params_2g()
         elif step == '9_2g_a_fb': self._render_step_a_pwm_2g()
         elif step == '10_2g': self._render_step_b_feedback_2g()
+        elif step == '10_2g_sig1': self._render_step_sig1_setup()
+        elif step == '10_2g_sig2': self._render_step_sig2_setup()
         elif step == '11_2g_no_b_fb': self._render_step_b_params_2g()
         elif step == '11_2g_b_fb': self._render_step_b_pwm_2g()
 
     # --- Step 1: Language ---
     def _render_step_language(self):
-        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_LANGUAGE_PROMPT"), font=("", 12))
-        lbl.pack(pady=20)
+        # lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_LANGUAGE_PROMPT"), font=("", 12))
+        # lbl.pack(pady=20)
         self.lang_var = tk.StringVar(value=self.language_code)
         ttk.Radiobutton(self.content_frame, text="中文 (Chinese)", variable=self.lang_var, value="zh", command=self._on_lang_change).pack(pady=10)
         ttk.Radiobutton(self.content_frame, text="English", variable=self.lang_var, value="en", command=self._on_lang_change).pack(pady=10)
@@ -1201,18 +1208,18 @@ class QuickSetupWizard(tk.Toplevel):
 
     # --- Step 2: Model ---
     def _render_step_model(self):
-        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_MODEL_PROMPT"), font=("", 12))
-        lbl.pack(pady=20)
+        # lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_MODEL_PROMPT"), font=("", 12))
+        # lbl.pack(pady=20)
         self.model_var = tk.StringVar(value=self.selected_mode if self.selected_mode else "dual")
         frame = ttk.Frame(self.content_frame)
         frame.pack(pady=10)
-        ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="toolbutton-outline", width=25).pack(pady=10)
-        ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="toolbutton-outline", width=25).pack(pady=10)
+        ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="success-toolbutton", width=25).pack(pady=10)
+        ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="success-toolbutton", width=25).pack(pady=10)
         
         # Add "Enter Main App" button (skip wizard)
         btn_frame = ttk.Frame(self.content_frame)
         btn_frame.pack(pady=20)
-        ttk.Button(btn_frame, text=self._get_text("WIZARD_BTN_MAIN_APP"), command=self._on_enter_main_app, bootstyle="outline-secondary", width=20).pack()
+        ttk.Button(btn_frame, text=self._get_text("WIZARD_BTN_MAIN_APP"), command=self._on_enter_main_app, bootstyle="primary", width=25).pack()
         
         # Update Next Button text for this step
         self.next_button.config(text=self._get_text("WIZARD_BTN_QUICK_SETUP"))
@@ -1233,8 +1240,8 @@ class QuickSetupWizard(tk.Toplevel):
 
     # --- Step 3: Modbus ---
     def _render_step_modbus(self):
-        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_CONNECT_PROMPT"), font=("", 12))
-        lbl.pack(pady=10)
+        # lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_CONNECT_PROMPT"), font=("", 12))
+        # lbl.pack(pady=10)
         params_frame = ttk.Frame(self.content_frame)
         params_frame.pack(pady=10)
         
@@ -1478,8 +1485,8 @@ class QuickSetupWizard(tk.Toplevel):
             ttk.Label(self.content_frame, text=self._get_text("WIZARD_CONNECT_FIRST_WARNING"), foreground="red").pack(pady=50)
             return
 
-        lbl = ttk.Label(self.content_frame, text="Please select the input signal type:", font=("", 12))
-        lbl.pack(pady=10)
+        # lbl = ttk.Label(self.content_frame, text="Please select the input signal type:", font=("", 12))
+        # lbl.pack(pady=10)
         form_frame = ttk.Frame(self.content_frame)
         form_frame.pack(pady=10)
         
@@ -1607,8 +1614,8 @@ class QuickSetupWizard(tk.Toplevel):
     
     def _render_step_coil_config(self):
         # Step 4 Dual: Select 1 or 2 Groups
-        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_COIL_CONFIG_LABEL"), font=("", 12))
-        lbl.pack(pady=15)
+        # lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_COIL_CONFIG_LABEL"), font=("", 12))
+        # lbl.pack(pady=15)
         
         self.param_vars = {}
         form_frame = ttk.Frame(self.content_frame)
@@ -1791,6 +1798,21 @@ class QuickSetupWizard(tk.Toplevel):
         cfg = {'reg': '0019H', 'key': 'B_FEEDBACK_SIGNAL', 'type': 'combobox', 'map': 'TEMP_B_FB_MAP'}
         self._create_control_row(form_frame, 0, cfg)
 
+    def _render_step_a_feedback_1g(self):
+        # Step 6 (1G): A Feedback (000FH)
+        # Exclude A Input (000EH)
+        a_input = self.wizard_params.get('000EH', -1)
+        exclude = []
+        if a_input == 0: exclude.append(1) # Exclude Sig1 if selected as input
+        
+        self._setup_filtered_map('FEEDBACK_SIGNAL_MAP_VALUES', 'TEMP_A_FB_1G_MAP', exclude)
+        
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20)
+        self.param_vars = {}
+        cfg = {'reg': '000FH', 'key': 'A_FEEDBACK_SIGNAL', 'type': 'combobox', 'map': 'TEMP_A_FB_1G_MAP'}
+        self._create_control_row(form_frame, 0, cfg)
+
     # --- Parameter Setups ---
     
     def _apply_defaults(self, regs, vals):
@@ -1912,6 +1934,7 @@ class QuickSetupWizard(tk.Toplevel):
                 cfg = self.wizard_params.get('coil_config', 0)
                 if cfg == 0: 
                     self.wizard_params['0018H'] = 0 # No Output for B
+                    self.modified_regs.add('0018H') # Track modification so it gets written
                     next_step = '5_1g'
                 else: 
                     next_step = '5_2g'
@@ -1924,11 +1947,18 @@ class QuickSetupWizard(tk.Toplevel):
                 else: next_step = '6_1g'
             elif current == '5s_1g':
                 next_step = '6_1g'
+            # --- 1 Group Branch (Continued) ---
             elif current == '6_1g':
-                # A Feedback (000FH)
                 fb = self.wizard_params.get('000FH', 0)
+                # Conditional routing for Feedback Signal Setup
                 if fb == 0: next_step = '7_1g_no_fb'
+                elif fb == 1: next_step = '6_1g_sig1'
+                elif fb == 2: next_step = '6_1g_sig2'
                 else: next_step = '7_1g_fb'
+                
+            elif current in ['6_1g_sig1', '6_1g_sig2']:
+                next_step = '7_1g_fb'
+
             elif current in ['7_1g_no_fb', '7_1g_fb']:
                 self._finish_wizard(); return
                 
@@ -1969,22 +1999,37 @@ class QuickSetupWizard(tk.Toplevel):
                 elif inp == 1: b_val = 3 # RS485 1
                 
                 self.wizard_params['0018H'] = b_val 
+                self.modified_regs.add('0018H') # Track modification
                 
-                if inp == 0: next_step = '6s_2g' # Reuse
+                if inp == 0: next_step = '6s_2g' # Reuse Sig1 Setup
                 else: next_step = '8_2g'
             
             # --- 2G Common Tail ---
             elif current == '8_2g':
                 fb = self.wizard_params.get('000FH', 0)
+                # Logic: 0->NoAFB, else->AFB.
+                # Insert Signal Setup if needed.
                 if fb == 0: next_step = '9_2g_no_a_fb'
+                elif fb == 1: next_step = '8_2g_sig1'
+                elif fb == 2: next_step = '8_2g_sig2'
                 else: next_step = '9_2g_a_fb'
+                
+            elif current in ['8_2g_sig1', '8_2g_sig2']:
+                next_step = '9_2g_a_fb'
+
             elif current in ['9_2g_no_a_fb', '9_2g_a_fb']:
                 next_step = '10_2g'
             
             elif current == '10_2g':
                 fb = self.wizard_params.get('0019H', 0)
                 if fb == 0: next_step = '11_2g_no_b_fb'
+                elif fb == 1: next_step = '10_2g_sig1'
+                elif fb == 2: next_step = '10_2g_sig2'
                 else: next_step = '11_2g_b_fb'
+            
+            elif current in ['10_2g_sig1', '10_2g_sig2']:
+                next_step = '11_2g_b_fb'
+
             elif current in ['11_2g_no_b_fb', '11_2g_b_fb']:
                 self._finish_wizard(); return
 
