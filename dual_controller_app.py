@@ -201,7 +201,7 @@ TEXTS = {
 
         # --- Wizard Dual Advanced ---
         "WIZARD_COIL_CONFIG_LABEL": "請選擇輸出線圈組數:",
-        "WIZARD_INPUT_MODE_LABEL": "請選擇輸入信號模式:",
+        "WIZARD_INPUT_MODE_LABEL": "請選擇控制模式:",
         "WIZARD_STEP_4_TITLE_DUAL": "選擇輸出線圈組數",
         "WIZARD_STEP_5_TITLE_1G": "輸入信號選擇 (單線圈)",
         "WIZARD_STEP_5S_TITLE": "信號 1 選擇 (單線圈)", 
@@ -211,9 +211,9 @@ TEXTS = {
         
         "WIZARD_STEP_5_TITLE_2G": "控制模式選擇 (雙線圈)",
         "WIZARD_STEP_6_TITLE_2G_INDEP": "A組輸入信號選擇 (雙線圈雙信號)",
-        "WIZARD_STEP_6S_TITLE": "信號 1 選擇 (雙線圈雙信號)", 
+        "WIZARD_STEP_6S_TITLE": "信號 1 選擇", 
         "WIZARD_STEP_7_TITLE_2G_INDEP": "B組輸入信號選擇 (雙線圈雙信號)",
-        "WIZARD_STEP_7S2_TITLE": "信號 2 選擇 (雙線圈雙信號)",
+        "WIZARD_STEP_7S2_TITLE": "信號 2 選擇",
         "WIZARD_STEP_6_TITLE_2G_LINK": "輸入信號選擇 (雙線圈單信號)",
         "WIZARD_STEP_8_TITLE_2G": "A組反饋信號選擇 (雙線圈)",
         "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "A組參數設定 (雙線圈)",
@@ -512,7 +512,7 @@ TEXTS = {
         "WIZARD_BTN_QUICK_SETUP": "Quick Setup Wizard",
 
         "WIZARD_COIL_CONFIG_LABEL": "Select Output Coil Config:",
-        "WIZARD_INPUT_MODE_LABEL": "Select Input Signal Mode:",
+        "WIZARD_INPUT_MODE_LABEL": "Control Mode Selection:",
         "WIZARD_STEP_4_TITLE_DUAL": "Select Output Coil Config",
         "WIZARD_STEP_5_TITLE_1G": "Input Command Selection (Single Coil)",
         "WIZARD_STEP_5S_TITLE": "Command 1 Selection (Single Coil)", 
@@ -521,17 +521,17 @@ TEXTS = {
         "WIZARD_STEP_7_TITLE_1G_FB": "Frequency Setup (Single Coil)",
         
         "WIZARD_STEP_5_TITLE_2G": "Control Mode Selection (Dual Coil)",
-        "WIZARD_STEP_6_TITLE_2G_INDEP": "Input Command Selection for Coil A (Dual Coil Dual Command)",
-        "WIZARD_STEP_6S_TITLE": "Command 1 Setup (Dual Coil Dual Command)", 
-        "WIZARD_STEP_7_TITLE_2G_INDEP": "Input Command Selection for Coil B (Dual Coil Dual Command)",
-        "WIZARD_STEP_7S2_TITLE": "Command 2 Setup (Dual Coil Dual Command)",
-        "WIZARD_STEP_6_TITLE_2G_LINK": "Input Command Selection (Dual Coil Single Command)",
-        "WIZARD_STEP_8_TITLE_2G": "Feedback Command Selection for Coil A (Dual Coil)",
-        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "Params Setup for Coil A (Dual Coil)",
-        "WIZARD_STEP_9_TITLE_2G_A_FB": "Frequency Setup for Coil A (Dual Coil)",
-        "WIZARD_STEP_10_TITLE_2G": "Feedback Command Selection for Coil B(Dual Coil)",
-        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "Params Setup for Coil B (Dual Coil)",
-        "WIZARD_STEP_11_TITLE_2G_B_FB": "Frequency Setup for Coil B (Dual Coil)",
+        "WIZARD_STEP_6_TITLE_2G_INDEP": "Coil A Command (Dual Coil Dual Command)",
+        "WIZARD_STEP_6S_TITLE": "Command 1 Selection", 
+        "WIZARD_STEP_7_TITLE_2G_INDEP": "Coil B Command (Dual Coil Dual Command)",
+        "WIZARD_STEP_7S2_TITLE": "Command 2 Selection",
+        "WIZARD_STEP_6_TITLE_2G_LINK": "Command Selection (Dual Coil Single Command)",
+        "WIZARD_STEP_8_TITLE_2G": "Coil A Feedback (Dual Coil)",
+        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "Coil A Params Setup (Dual Coil)",
+        "WIZARD_STEP_9_TITLE_2G_A_FB": "Coil A Params Setup (Dual Coil)",
+        "WIZARD_STEP_10_TITLE_2G": "Coil B Feedback (Dual Coil)",
+        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "Coil B Params Setup (Dual Coil)",
+        "WIZARD_STEP_11_TITLE_2G_B_FB": "Coil B Params Setup (Dual Coil)",
         
         "WIZARD_COIL_CONFIG_MAP": {
             0: "1 Output Coil (A Only)",
@@ -1655,8 +1655,8 @@ class QuickSetupWizard(tk.Toplevel):
 
     def _render_step_input_mode_2g(self):
         # Step 5 (2G): Input Mode (Shared/Indep)
-        lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_INPUT_MODE_LABEL"), font=("", 12))
-        lbl.pack(pady=15)
+        # lbl = ttk.Label(self.content_frame, text=self._get_text("WIZARD_INPUT_MODE_LABEL"), font=("", 12))
+        # lbl.pack(pady=15)
         
         self.param_vars = {}
         form_frame = ttk.Frame(self.content_frame)
