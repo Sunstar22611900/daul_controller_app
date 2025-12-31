@@ -254,6 +254,7 @@ TEXTS = {
         # --- 模式選擇與單組控制器 ---
         "APP_TITLE_DUAL": "SUNSTAR Modbus RTU 雙控制器監控調整程式 V2.0",
         "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU 單控制器監控調整程式 V2.0",
+        "QUICK_SETUP_BUTTON": "快速設定精靈",
         "MODE_SELECTION_TITLE": "型號選擇",
         "MODE_SELECTION_PROMPT": "請選擇要操作的控制器型號：",
         "DUAL_CONTROLLER_BUTTON": "SY-DPCA-*-2",
@@ -565,6 +566,7 @@ TEXTS = {
         # --- Mode Selection & Single Controller ---
         "APP_TITLE_DUAL": "SUNSTAR Modbus RTU Dual Controller Setup V2.0",
         "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU Single Controller Setup V2.0",
+        "QUICK_SETUP_BUTTON": "Quick Setup Wizard",
         "MODE_SELECTION_TITLE": "Model Selection",
         "MODE_SELECTION_PROMPT": "Please select the controller model:",
         "DUAL_CONTROLLER_BUTTON": "SY-DPCA-*-2",
@@ -1213,8 +1215,8 @@ class QuickSetupWizard(tk.Toplevel):
         self.model_var = tk.StringVar(value=self.selected_mode if self.selected_mode else "dual")
         frame = ttk.Frame(self.content_frame)
         frame.pack(pady=10)
-        ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="success-toolbutton", width=25).pack(pady=10)
-        ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="success-toolbutton", width=25).pack(pady=10)
+        ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="success-outline-toolbutton", width=25).pack(pady=10)
+        ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="success-outline-toolbutton", width=25).pack(pady=10)
         
         # Add "Enter Main App" button (skip wizard)
         btn_frame = ttk.Frame(self.content_frame)
@@ -2235,6 +2237,15 @@ class ModbusMonitorApp:
 
 
 
+    def _restart_to_wizard(self):
+        """Restarts the application to re-enter the wizard."""
+        if self.modbus_master:
+            try: self.modbus_master.close()
+            except: pass
+        self.master.destroy()
+        # Relaunch the current script
+        os.execl(sys.executable, sys.executable, *sys.argv)
+
     def _on_closing(self):
         """處理視窗關閉事件，停止輪詢線程並關閉Modbus連接。"""
         if self.chart_window: 
@@ -2283,8 +2294,17 @@ class ModbusMonitorApp:
         self.main_content_frame.grid_columnconfigure(0, weight=1)
 
         # --- 頂部區域框架 (通用) ---
+        # topoftop_frame = ttk.Frame(self.main_content_frame)
+        # topoftop_frame.grid(row=0, column=0, sticky='ew', pady=(0, 5))
+        # topoftop_frame.grid_columnconfigure(0, weight=1)
+        ## --- Quick Setup Button ---
+        ## Placed between Model (Rightmost) and Language (Left of Button)
+        # self.quick_setup_btn = ttk.Button(topoftop_frame, text=self.get_current_translation("QUICK_SETUP_BUTTON"), command=self._restart_to_wizard, bootstyle="primary.Outline")
+        # self.quick_setup_btn.pack(side=tk.RIGHT, padx=(10, 0))
+
+        # --- 頂部區域框架 (通用) ---
         top_frame = ttk.Frame(self.main_content_frame)
-        top_frame.grid(row=0, column=0, sticky='ew', pady=(0, 5))
+        top_frame.grid(row=1, column=0, sticky='ew', pady=(0, 5))
         top_frame.grid_columnconfigure(0, weight=1)
 
         # --- 模式切換 (Combobox) ---
@@ -2297,6 +2317,8 @@ class ModbusMonitorApp:
         # Set initial value
         current_mode_text = self.get_current_translation("DUAL_MODE_OPTION") if self.controller_mode == 'dual' else self.get_current_translation("SINGLE_MODE_OPTION")
         self.mode_combobox_var.set(current_mode_text)
+
+
 
         # --- 語言選擇 (通用) ---
         self.language_frame = ttk.Labelframe(top_frame, text=self.get_current_translation("LANGUAGE_LABEL"), padding="10")
@@ -2330,11 +2352,11 @@ class ModbusMonitorApp:
         self.connect_button.grid(row=0, column=7, padx=5, pady=5, sticky=tk.E)
 
         # --- 分隔線 ---
-        ttk.Separator(self.main_content_frame, orient='horizontal').grid(row=1, column=0, pady=5, sticky='ew')
+        ttk.Separator(self.main_content_frame, orient='horizontal').grid(row=2, column=0, pady=5, sticky='ew')
 
         # --- 動態內容框架 ---
         self.dynamic_content_frame = ttk.Frame(self.main_content_frame)
-        self.dynamic_content_frame.grid(row=2, column=0, sticky='nsew')
+        self.dynamic_content_frame.grid(row=3, column=0, sticky='nsew')
         self.dynamic_content_frame.grid_columnconfigure(0, weight=1)
         self.main_content_frame.grid_rowconfigure(2, weight=1)
 
@@ -2372,7 +2394,7 @@ class ModbusMonitorApp:
 
         # Chart Button on row 1, aligned to the right
         self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_chart_window)
-        self.chart_button.grid(row=0, column=1, sticky='ne', padx=5, pady=20)
+        self.chart_button.grid(row=0, column=1, sticky='ne', padx=10, pady=0)
 
         self.monitor_labels_info_a, self.monitor_display_controls_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
         self.monitor_labels_info_b, self.monitor_display_controls_b = self._create_monitor_widgets(self.monitor_frame_b, [("0003H", "OUTPUT_CURRENT_LABEL", "A"), ("0004H", "INPUT_SIGNAL_LABEL", "%"), ("0005H", "CURRENT_STATUS_LABEL", "")])
@@ -2383,6 +2405,10 @@ class ModbusMonitorApp:
         self.writable_params_area_frame.grid(row=1, column=0, sticky='nsew', pady=5)
         self.writable_params_area_frame.grid_rowconfigure(0, weight=1)
         self.writable_params_area_frame.grid_columnconfigure(0, weight=1)
+
+        # 快速設定按鈕, aligned to the right
+        self.quick_setup_btn = ttk.Button(self.dynamic_content_frame, text=self.get_current_translation("QUICK_SETUP_BUTTON"), bootstyle="primary.Outline", command=self._restart_to_wizard)
+        self.quick_setup_btn.grid(row=1, column=0, sticky='ne', padx=10, pady=20)
 
         self.writable_params_notebook = ttk.Notebook(self.writable_params_area_frame)
         self.writable_params_notebook.grid(row=0, column=0, sticky="nsew")
@@ -2439,7 +2465,7 @@ class ModbusMonitorApp:
 
         # Chart Button
         self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_chart_window)
-        self.chart_button.grid(row=0, column=0, sticky='ne', padx=5, pady=20)
+        self.chart_button.grid(row=0, column=0, sticky='ne', padx=10, pady=0)
 
         self.monitor_labels_info_a, self.monitor_display_controls_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
         self.monitor_labels_info_b, self.monitor_display_controls_b = {}, {}
@@ -2450,6 +2476,10 @@ class ModbusMonitorApp:
         self.writable_params_area_frame.grid(row=1, column=0, sticky='nsew', pady=5)
         self.writable_params_area_frame.grid_rowconfigure(0, weight=1)
         self.writable_params_area_frame.grid_columnconfigure(0, weight=1)
+
+        # 快速設定按鈕, aligned to the right
+        self.quick_setup_btn = ttk.Button(self.dynamic_content_frame, text=self.get_current_translation("QUICK_SETUP_BUTTON"), bootstyle="primary.Outline", command=self._restart_to_wizard)
+        self.quick_setup_btn.grid(row=1, column=0, sticky='ne', padx=10, pady=0)
 
         canvas = tk.Canvas(self.writable_params_area_frame, borderwidth=0, highlightthickness=0)
         scrollbar = ttk.Scrollbar(self.writable_params_area_frame, orient="vertical", command=canvas.yview)
@@ -2727,6 +2757,8 @@ class ModbusMonitorApp:
         
         # Update mode switch combobox
         self.mode_switch_frame.config(text=self.get_current_translation("SWITCH_MODE_FRAME_TEXT"))
+        if hasattr(self, 'quick_setup_btn'):
+            self.quick_setup_btn.config(text=self.get_current_translation("QUICK_SETUP_BUTTON"))
         dual_text = self.translations["DUAL_MODE_OPTION"]
         single_text = self.translations["SINGLE_MODE_OPTION"]
         self.mode_combobox.config(values=[dual_text, single_text])
