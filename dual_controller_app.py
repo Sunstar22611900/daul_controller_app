@@ -174,7 +174,16 @@ TEXTS = {
         "INPUT_SIGNAL": "輸入信號",
         "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "雙組信號-雙組輸出",
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組輸出",
+        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組輸出",
         "SINGLE_OUTPUT_MODE_TEXT": "單組輸出",
+        
+        # --- Auto Reconnect ---
+        "RECONNECT_TITLE": "連線中斷",
+        "RECONNECT_MSG": "控制器已斷線，將於 {seconds} 秒後嘗試重新連線...",
+        "RECONNECT_ATTEMPT": "正在嘗試重新連線 ({attempt}/{total})...",
+        "RECONNECT_FAIL_FINAL": "目前已斷線，請確認控制器連接狀況。\n請回到主畫面將控制器連線斷開。",
+        "RECONNECT_CLOSE_BTN": "關閉",
+
 
         # --- Quick Setup Wizard ---
         "WIZARD_BTN_MAIN_APP": "進入主程式",
@@ -489,7 +498,16 @@ TEXTS = {
         "INPUT_SIGNAL": "Input Command",
         "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "Dual Output Dual Slope",
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Output Single Slope",
+        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Output Single Slope",
         "SINGLE_OUTPUT_MODE_TEXT": "Single Output",
+
+        # --- Auto Reconnect ---
+        "RECONNECT_TITLE": "Connection Lost",
+        "RECONNECT_MSG": "Controller disconnected. Reconnecting in {seconds} seconds...",
+        "RECONNECT_ATTEMPT": "Attempting to reconnect ({attempt}/{total})...",
+        "RECONNECT_FAIL_FINAL": "Connection failed. Please check hardware connection.\nPlease return to main screen and disconnect.",
+        "RECONNECT_CLOSE_BTN": "Close",
+
 
         # --- Quick Setup Wizard ---
         "WIZARD_TITLE": "Quick Setup Wizard",
@@ -2200,6 +2218,8 @@ class ModbusMonitorApp:
         self.signal_history_0004 = deque(maxlen=self.MAX_HISTORY_POINTS) # For dual mode B group
 
         self.auto_batch_write_pending = False # Pending flag for wizard auto-run
+        self.is_reconnecting = False # Flag to prevent multiple reconnection windows
+
 
         # Show the wizard and wait for a choice
         self._show_wizard()
@@ -3500,6 +3520,92 @@ class ModbusMonitorApp:
                 # In case of polling error, stop polling and clear the area to avoid stale data
                 self.polling_active = False
                 self.master.after(0, self._clear_monitor_area)
+                self.master.after(0, lambda err=str(e): self._handle_disconnection_error(err))
+
+    def _handle_disconnection_error(self, error):
+        """處理斷線並嘗試自動重新連線。"""
+        if self.is_reconnecting:
+            return
+        
+        self.is_reconnecting = True
+        
+        # Create dialog
+        dialog = tk.Toplevel(self.master)
+        dialog.title(self.get_current_translation("RECONNECT_TITLE"))
+        dialog.geometry("400x200")
+        dialog.resizable(False, False)
+        dialog.transient(self.master)
+        dialog.grab_set()
+        
+        # Center dialog
+        self.master.update_idletasks()
+        try:
+            x = self.master.winfo_x() + (self.master.winfo_width() // 2) - 200
+            y = self.master.winfo_y() + (self.master.winfo_height() // 2) - 100
+            dialog.geometry(f"+{x}+{y}")
+        except:
+             pass 
+        
+        # UI Elements
+        lbl_msg = ttk.Label(dialog, text="", padding=20, font=("", 10), wraplength=350, justify="center")
+        lbl_msg.pack(expand=True, fill="both")
+        
+        btn_close = ttk.Button(dialog, text=self.get_current_translation("RECONNECT_CLOSE_BTN"), command=dialog.destroy, state="disabled")
+        btn_close.pack(pady=10)
+        
+        def on_dialog_close():
+             self.is_reconnecting = False
+             dialog.destroy()
+             
+        dialog.protocol("WM_DELETE_WINDOW", on_dialog_close)
+        btn_close.configure(command=on_dialog_close)
+
+        # Logic variables
+        retry_count = 0
+        max_retries = 3
+        countdown_sec = 10
+        
+        def do_reconnect_attempt():
+            nonlocal retry_count
+            retry_count += 1
+            lbl_msg.configure(text=self.get_current_translation("RECONNECT_ATTEMPT").format(attempt=retry_count, total=max_retries))
+            dialog.update()
+            
+            try:
+                 slave_id_str = self.slave_id_spinbox.get()
+                 if slave_id_str.isdigit():
+                    slave_id = int(slave_id_str)
+                    # Try reading register 0
+                    self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, 1)
+                    
+                    # If success:
+                    print("Reconnection successful!")
+                    self.polling_active = True
+                    self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
+                    self.polling_thread.start()
+                    on_dialog_close()
+                    return
+            except Exception as e:
+                print(f"Reconnection attempt {retry_count} failed: {e}")
+            
+            if retry_count < max_retries:
+                 # Schedule next attempt
+                 dialog.after(2000, do_reconnect_attempt) # Wait 2s between retries
+            else:
+                 # Final failure
+                 lbl_msg.configure(text=self.get_current_translation("RECONNECT_FAIL_FINAL"))
+                 btn_close.configure(state="normal")
+        
+        def start_countdown():
+            nonlocal countdown_sec
+            if countdown_sec > 0:
+                lbl_msg.configure(text=self.get_current_translation("RECONNECT_MSG").format(seconds=countdown_sec))
+                countdown_sec -= 1
+                dialog.after(1000, start_countdown)
+            else:
+                do_reconnect_attempt()
+
+        start_countdown()
 
     def _update_monitor_area(self, registers):
         """
