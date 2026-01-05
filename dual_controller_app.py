@@ -118,6 +118,7 @@ TEXTS = {
         "FACTORY_RESET_COUNTDOWN_MSG": "控制器重置中，請稍候... {seconds} 秒後將重新讀取參數。",
         "CHART_SAVE_SUCCESS_MSG": "圖表資料已成功儲存。",
         "CHART_SAVE_ERROR_MSG": "儲存圖表資料失敗: {e}",
+        "COPYRIGHT_LABEL": "© 2025 SUNSTAR. All rights reserved.",
         
         # 新增/修改的可寫入參數區的翻譯鍵
         "COMMON_PARAMS_FRAME_TEXT": "通用參數",
@@ -432,6 +433,7 @@ TEXTS = {
         "FACTORY_RESET_COUNTDOWN_MSG": "Controller is resetting, please wait... Re-reading parameters in {seconds} seconds.",
         "CHART_SAVE_SUCCESS_MSG": "Chart data saved successfully.",
         "CHART_SAVE_ERROR_MSG": "Failed to save chart data: {e}",
+        "COPYRIGHT_LABEL": "© 2025 SUNSTAR. All rights reserved.",
         
         # New/Modified writable parameter area translations
         "COMMON_PARAMS_FRAME_TEXT": "Common Parameters",
@@ -1015,13 +1017,13 @@ class QuickSetupWizard(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
         self.title("Quick Setup Wizard")
-        self.geometry("800x600") 
+        self.geometry("500x600") 
         self.resizable(False, False)
         
         # Determine initial position
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
-        x = (screen_width // 2) - (800 // 2)
+        x = (screen_width // 2) - (500 // 2)
         y = (screen_height // 2) - (600 // 2)
         self.geometry(f"+{x}+{y}")
         
@@ -1506,13 +1508,16 @@ class QuickSetupWizard(tk.Toplevel):
         if self.wizard_params.get('0009H', 0) == 0: self.wizard_params['0009H'] = 0   # 0.00A
         if self.wizard_params.get('000DH', 0) == 0: self.wizard_params['000DH'] = 2   # 2%
 
-        # Left Panel: Controls
-        left_frame = ttk.Frame(self.content_frame)
-        left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10)
-        
-        # Right Panel: Chart
-        right_frame = ttk.Labelframe(self.content_frame, text="Preview")
-        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10)
+        # Top Panel: Controls
+        top_frame = ttk.Frame(self.content_frame)
+        top_frame.pack(side=tk.TOP, fill=tk.X, expand=True, pady=0, padx=10)
+        top_frame.rowconfigure(0, weight=1)
+        top_frame.rowconfigure(1, weight=1)
+        top_frame.rowconfigure(2, weight=1)
+
+        # Bottom Panel: Chart
+        bottom_frame = ttk.Labelframe(self.content_frame, text="Preview")
+        bottom_frame.pack(side=tk.BOTTOM, fill=tk.X, expand=False, padx=10)
         
         self.param_vars = {} 
         
@@ -1523,10 +1528,12 @@ class QuickSetupWizard(tk.Toplevel):
         ]
         
         for i, cfg in enumerate(configs):
-            self._create_control_row(left_frame, i, cfg)
+            self._create_control_row(top_frame, i, cfg)
+
+
             
-        # Canvas
-        self.chart_canvas = tk.Canvas(right_frame, bg='white')
+        # Bottom Canvas
+        self.chart_canvas = tk.Canvas(bottom_frame, bg='white')
         self.chart_canvas.pack(fill=tk.BOTH, expand=True)
         
         # Initial Draw
@@ -2232,7 +2239,7 @@ class ModbusMonitorApp:
         """Configure the main window after mode selection."""
         app_title_key = "APP_TITLE_DUAL" if self.controller_mode == 'dual' else "APP_TITLE_SINGLE"
         self.master.title(self.get_current_translation(app_title_key))
-        self.master.geometry("960x1000")
+        self.master.geometry("960x1080")
         self.master.resizable(True, True)
 
 
@@ -2304,7 +2311,7 @@ class ModbusMonitorApp:
 
         # --- 頂部區域框架 (通用) ---
         top_frame = ttk.Frame(self.main_content_frame)
-        top_frame.grid(row=1, column=0, sticky='ew', pady=(0, 5))
+        top_frame.grid(row=0, column=0, sticky='ew', pady=(0, 5))
         top_frame.grid_columnconfigure(0, weight=1)
 
         # --- 模式切換 (Combobox) ---
@@ -2352,16 +2359,23 @@ class ModbusMonitorApp:
         self.connect_button.grid(row=0, column=7, padx=5, pady=5, sticky=tk.E)
 
         # --- 分隔線 ---
-        ttk.Separator(self.main_content_frame, orient='horizontal').grid(row=2, column=0, pady=5, sticky='ew')
+        ttk.Separator(self.main_content_frame, orient='horizontal').grid(row=1, column=0, pady=5, sticky='ew')
 
         # --- 動態內容框架 ---
         self.dynamic_content_frame = ttk.Frame(self.main_content_frame)
-        self.dynamic_content_frame.grid(row=3, column=0, sticky='nsew')
+        self.dynamic_content_frame.grid(row=2, column=0, sticky='nsew')
         self.dynamic_content_frame.grid_columnconfigure(0, weight=1)
         self.main_content_frame.grid_rowconfigure(2, weight=1)
 
         # 根據模式建立對應的UI
         self._build_ui_for_mode()
+
+        # --- 底部內容框架 ---
+        bottom_frame = ttk.Frame(self.main_content_frame)
+        bottom_frame.grid(row=3, column=0, sticky='ew', pady=(0, 5))
+        bottom_frame.grid_columnconfigure(0, weight=1)
+        self.company_label = ttk.Label(bottom_frame, text=self.get_current_translation("COPYRIGHT_LABEL"))
+        self.company_label.grid(row=0, column=0, padx=0, pady=0, sticky='e')
 
     def _build_ui_for_mode(self):
         """根據 self.controller_mode 建立對應的 UI。"""
@@ -2754,6 +2768,7 @@ class ModbusMonitorApp:
         self.refresh_ports_button.config(text=self.translations["REFRESH_PORTS_BUTTON"])
         self.connect_button.config(text=self.translations["DISCONNECT_BUTTON"] if self.modbus_master else self.translations["CONNECT_BUTTON"])
         self.language_frame.config(text=self.translations["LANGUAGE_LABEL"])
+        self.company_label.config(text=self.translations["COPYRIGHT_LABEL"])
         
         # Update mode switch combobox
         self.mode_switch_frame.config(text=self.get_current_translation("SWITCH_MODE_FRAME_TEXT"))
