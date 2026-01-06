@@ -1,3 +1,5 @@
+[English](README_EN.md) | [繁體中文](README.md)
+
 # SUNSTAR Modbus RTU 控制器監控軟體 (V3.0)
 
 ## 簡介
