@@ -1,7 +1,7 @@
 /modbus_parameters/
 /dist/
 /build/
-*.spec
+
 __pycache__/
 .pyc
 /OLD/
