@@ -2207,10 +2207,12 @@ class ModbusMonitorApp:
         if not os.path.exists(PARAMETERS_DIR):
             os.makedirs(PARAMETERS_DIR)
 
+        self.consecutive_read_failures = 0 # Counter for retry logic
+
         self.chart_data_lock = threading.Lock()
 
         # --- Chart Data History ---
-        self.MAX_HISTORY_POINTS = 2000 # 200 seconds * 10 samples/second (polling interval is 0.1s)
+        self.MAX_HISTORY_POINTS = 2000 # 400 seconds * 5 samples/second (polling interval is 0.2s)
         self.time_history = deque(maxlen=self.MAX_HISTORY_POINTS)
         self.current_history_0000 = deque(maxlen=self.MAX_HISTORY_POINTS)
         self.signal_history_0001 = deque(maxlen=self.MAX_HISTORY_POINTS)
@@ -3449,6 +3451,7 @@ class ModbusMonitorApp:
                 
                 # Initial read of all registers
                 self._read_all_registers_and_update_gui() 
+                self.consecutive_read_failures = 0 # Reset failure count on valid connection 
 
                 # Start polling for monitor area only
                 self.polling_active = True
@@ -3514,13 +3517,18 @@ class ModbusMonitorApp:
 
                 registers = self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, start_addr, quantity)
                 self.master.after(0, lambda: self._update_monitor_area(registers))
+                self.consecutive_read_failures = 0 # Reset on success
 
             except Exception as e:
-                print(self.get_current_translation("READ_REGISTERS_POLLING_FAIL").format(e=e))
-                # In case of polling error, stop polling and clear the area to avoid stale data
-                self.polling_active = False
-                self.master.after(0, self._clear_monitor_area)
-                self.master.after(0, lambda err=str(e): self._handle_disconnection_error(err))
+                self.consecutive_read_failures += 1
+                print(f"Polling failed ({self.consecutive_read_failures}/3): {e}")
+                
+                if self.consecutive_read_failures >= 3:
+                     print(self.get_current_translation("READ_REGISTERS_POLLING_FAIL").format(e=e))
+                     # In case of polling error, stop polling and clear the area to avoid stale data
+                     self.polling_active = False
+                     self.master.after(0, self._clear_monitor_area)
+                     self.master.after(0, lambda err=str(e): self._handle_disconnection_error(err))
 
     def _handle_disconnection_error(self, error):
         """處理斷線並嘗試自動重新連線。"""
@@ -3580,6 +3588,7 @@ class ModbusMonitorApp:
                     
                     # If success:
                     print("Reconnection successful!")
+                    self.consecutive_read_failures = 0 # Reset on success
                     self.polling_active = True
                     self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
                     self.polling_thread.start()
@@ -3721,7 +3730,7 @@ class ModbusMonitorApp:
         """每秒讀取一次即時監控區寄存器的後台迴圈。"""
         while self.polling_active:
             self._read_monitor_registers_only()
-            time.sleep(0.1) # Poll faster for chart
+            time.sleep(0.2) # Poll faster for chart
 
     def _write_single_register(self, reg_hex, tk_var, control_type, map_dict=None, min_val=None, max_val=None, scale=1, unit_step=1, is_int=False):
         """
