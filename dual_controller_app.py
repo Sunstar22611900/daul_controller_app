@@ -265,8 +265,8 @@ TEXTS = {
         "CHART_S_TITLE": "單組輸出",
 
         # --- 模式選擇與單組控制器 ---
-        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU 雙控制器監控調整程式 V3.0",
-        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU 單控制器監控調整程式 V3.0",
+        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU 雙控制器監控調整程式 V3.0a",
+        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU 單控制器監控調整程式 V3.0a",
         "QUICK_SETUP_BUTTON": "快速設定精靈",
         "MODE_SELECTION_TITLE": "型號選擇",
         "MODE_SELECTION_PROMPT": "請選擇要操作的控制器型號：",
@@ -590,8 +590,8 @@ TEXTS = {
         "CHART_S_TITLE": "Single Output",
 
         # --- Mode Selection & Single Controller ---
-        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU Dual Controller Setup V3.0",
-        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU Single Controller Setup V3.0",
+        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU Dual Controller Setup V3.0a",
+        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU Single Controller Setup V3.0a",
         "QUICK_SETUP_BUTTON": "Quick Setup Wizard",
         "MODE_SELECTION_TITLE": "Model Selection",
         "MODE_SELECTION_PROMPT": "Please select the controller model:",
