@@ -154,12 +154,12 @@ TEXTS = {
         "B_PWM_FREQUENCY": "PWM頻率 (70~1000Hz)",
         "B_TREMOR_FREQUENCY": "震顫頻率 (70~500Hz)",
         "B_DITHER_AMPLITUDE": "震顫幅度 (0~25%)",
-        "SIGNAL_1_P": "信號1 P (0~100)",
-        "SIGNAL_1_I": "信號1 I (0~100)",
-        "SIGNAL_1_D": "信號1 D (0~100)",
-        "SIGNAL_2_P": "信號2 P (0~100)",
-        "SIGNAL_2_I": "信號2 I (0~100)",
-        "SIGNAL_2_D": "信號2 D (0~100)",
+        "SIGNAL_1_P": "A組輸出 P (0~100)",
+        "SIGNAL_1_I": "A組輸出 I (0~100)",
+        "SIGNAL_1_D": "A組輸出 D (0~100)",
+        "SIGNAL_2_P": "B組輸出 P (0~100)",
+        "SIGNAL_2_I": "B組輸出 I (0~100)",
+        "SIGNAL_2_D": "B組輸出 D (0~100)",
         "LANGUAGE_LABEL": "Language",
         "UNKNOWN_STATUS": "未知狀態",
         "WARNING_READ_DATA_INSUFFICIENT": "警告: 讀取到的寄存器數據不足以更新所有可寫入參數。",
@@ -173,7 +173,6 @@ TEXTS = {
         "B_GROUP_LEGEND": "B組輸出曲線",
         "INPUT_SIGNAL": "輸入信號",
         "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "雙組信號-雙組輸出",
-        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組輸出",
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組輸出",
         "SINGLE_OUTPUT_MODE_TEXT": "單組輸出",
         
@@ -213,24 +212,28 @@ TEXTS = {
         "WIZARD_COIL_CONFIG_LABEL": "請選擇輸出線圈組數:",
         "WIZARD_INPUT_MODE_LABEL": "請選擇控制模式:",
         "WIZARD_STEP_4_TITLE_DUAL": "選擇輸出線圈組數",
-        "WIZARD_STEP_5_TITLE_1G": "輸入信號選擇 (單線圈)",
-        "WIZARD_STEP_5S_TITLE": "信號 1 選擇 (單線圈)", 
-        "WIZARD_STEP_6_TITLE_1G": "反饋信號選擇 (單線圈)",
-        "WIZARD_STEP_7_TITLE_1G_NO_FB": "參數設定 (單線圈)",
-        "WIZARD_STEP_7_TITLE_1G_FB": "頻率設定 (單線圈)",
+        "WIZARD_STEP_4_TITLE_DUAL_COMBINED": "選擇控制模式",
+        "WIZARD_MODE_1_LABEL": "模式一\n單組信號 vs 單組輸出",
+        "WIZARD_MODE_2_LABEL": "模式二\n雙組獨立信號 vs 雙組獨立輸出",
+        "WIZARD_MODE_3_LABEL": "模式三\n單組信號 vs 雙組連動輸出",
+        "WIZARD_STEP_5_TITLE_1G": "輸入信號選擇",
+        "WIZARD_STEP_5S_TITLE": "信號 1 選擇", 
+        "WIZARD_STEP_6_TITLE_1G": "反饋信號選擇",
+        "WIZARD_STEP_7_TITLE_1G_NO_FB": "參數設定",
+        "WIZARD_STEP_7_TITLE_1G_FB": "頻率設定",
         
-        "WIZARD_STEP_5_TITLE_2G": "控制模式選擇 (雙線圈)",
-        "WIZARD_STEP_6_TITLE_2G_INDEP": "A組輸入信號選擇 (雙線圈雙信號)",
+        "WIZARD_STEP_5_TITLE_2G": "控制模式選擇",
+        "WIZARD_STEP_6_TITLE_2G_INDEP": "A組輸入信號選擇",
         "WIZARD_STEP_6S_TITLE": "信號 1 選擇", 
-        "WIZARD_STEP_7_TITLE_2G_INDEP": "B組輸入信號選擇 (雙線圈雙信號)",
+        "WIZARD_STEP_7_TITLE_2G_INDEP": "B組輸入信號選擇",
         "WIZARD_STEP_7S2_TITLE": "信號 2 選擇",
-        "WIZARD_STEP_6_TITLE_2G_LINK": "輸入信號選擇 (雙線圈單信號)",
-        "WIZARD_STEP_8_TITLE_2G": "A組反饋信號選擇 (雙線圈)",
-        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "A組參數設定 (雙線圈)",
-        "WIZARD_STEP_9_TITLE_2G_A_FB": "A組頻率設定 (雙線圈)",
-        "WIZARD_STEP_10_TITLE_2G": "B組反饋信號選擇 (雙線圈)",
-        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "B組參數設定 (雙線圈)",
-        "WIZARD_STEP_11_TITLE_2G_B_FB": "B組頻率設定 (雙線圈)",
+        "WIZARD_STEP_6_TITLE_2G_LINK": "輸入信號選擇",
+        "WIZARD_STEP_8_TITLE_2G": "A組反饋信號選擇",
+        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "A組參數設定",
+        "WIZARD_STEP_9_TITLE_2G_A_FB": "A組頻率設定",
+        "WIZARD_STEP_10_TITLE_2G": "B組反饋信號選擇",
+        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "B組參數設定",
+        "WIZARD_STEP_11_TITLE_2G_B_FB": "B組頻率設定",
         
         "WIZARD_COIL_CONFIG_MAP": {
             0: "1組輸出線圈 (僅A組)",
@@ -262,8 +265,8 @@ TEXTS = {
         "CHART_S_TITLE": "單組輸出",
 
         # --- 模式選擇與單組控制器 ---
-        "APP_TITLE_DUAL": "STEED Modbus RTU 雙控制器監控調整程式 V3.0",
-        "APP_TITLE_SINGLE": "STEED Modbus RTU 單控制器監控調整程式 V3.0",
+        "APP_TITLE_DUAL": "STEED Modbus RTU 雙控制器監控調整程式 V3.0a",
+        "APP_TITLE_SINGLE": "STEED Modbus RTU 單控制器監控調整程式 V3.0a",
         "QUICK_SETUP_BUTTON": "快速設定精靈",
         "MODE_SELECTION_TITLE": "型號選擇",
         "MODE_SELECTION_PROMPT": "請選擇要操作的控制器型號：",
@@ -478,12 +481,12 @@ TEXTS = {
         "B_PWM_FREQUENCY": "PWM Frequency (70~1000Hz)",
         "B_TREMOR_FREQUENCY": "Dither Frequency (70~500Hz)",
         "B_DITHER_AMPLITUDE": "Dither Amplitude (0~25%)",
-        "SIGNAL_1_P": "Command 1 P (0~100)",
-        "SIGNAL_1_I": "Command 1 I (0~100)",
-        "SIGNAL_1_D": "Command 1 D (0~100)",
-        "SIGNAL_2_P": "Command 2 P (0~100)",
-        "SIGNAL_2_I": "Command 2 I (0~100)",
-        "SIGNAL_2_D": "Command 2 D (0~100)",
+        "SIGNAL_1_P": "Output A P (0~100)",
+        "SIGNAL_1_I": "Output A I (0~100)",
+        "SIGNAL_1_D": "Output A D (0~100)",
+        "SIGNAL_2_P": "Output B P (0~100)",
+        "SIGNAL_2_I": "Output B I (0~100)",
+        "SIGNAL_2_D": "Output B D (0~100)",
         "LANGUAGE_LABEL": "Language",
         "UNKNOWN_STATUS": "Unknown Status",
         "WARNING_READ_DATA_INSUFFICIENT": "Warning: Insufficient register data read to update all writable parameters.",
@@ -496,9 +499,8 @@ TEXTS = {
         "A_GROUP_LEGEND": "Output A Curve",
         "B_GROUP_LEGEND": "Output B Curve",
         "INPUT_SIGNAL": "Input Command",
-        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "Dual Output Dual Slope",
-        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Output Single Slope",
-        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Output Single Slope",
+        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "Dual Output Dual Command",
+        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Output Single Command",
         "SINGLE_OUTPUT_MODE_TEXT": "Single Output",
 
         # --- Auto Reconnect ---
@@ -535,24 +537,28 @@ TEXTS = {
         "WIZARD_COIL_CONFIG_LABEL": "Select Output Coil Config:",
         "WIZARD_INPUT_MODE_LABEL": "Control Mode Selection:",
         "WIZARD_STEP_4_TITLE_DUAL": "Select Output Coil Config",
-        "WIZARD_STEP_5_TITLE_1G": "Input Command Selection (Single Coil)",
-        "WIZARD_STEP_5S_TITLE": "Command 1 Selection (Single Coil)", 
-        "WIZARD_STEP_6_TITLE_1G": "Feedback Command Selection (Single Coil)",
-        "WIZARD_STEP_7_TITLE_1G_NO_FB": "Params Setup (Single Coil)",
-        "WIZARD_STEP_7_TITLE_1G_FB": "Frequency Setup (Single Coil)",
+        "WIZARD_STEP_4_TITLE_DUAL_COMBINED": "Select Control Mode",
+        "WIZARD_MODE_1_LABEL": "Mode 1\nSingle Command vs Single Output",
+        "WIZARD_MODE_2_LABEL": "Mode 2\nDual Indep. Command vs Dual Indep. Output",
+        "WIZARD_MODE_3_LABEL": "Mode 3\nSingle Command vs Dual Linked Output",
+        "WIZARD_STEP_5_TITLE_1G": "Input Command Selection",
+        "WIZARD_STEP_5S_TITLE": "Command 1 Selection", 
+        "WIZARD_STEP_6_TITLE_1G": "Feedback Command Selection",
+        "WIZARD_STEP_7_TITLE_1G_NO_FB": "Params Setup",
+        "WIZARD_STEP_7_TITLE_1G_FB": "Frequency Setup",
         
-        "WIZARD_STEP_5_TITLE_2G": "Control Mode Selection (Dual Coil)",
-        "WIZARD_STEP_6_TITLE_2G_INDEP": "Coil A Command (Dual Coil Dual Command)",
+        "WIZARD_STEP_5_TITLE_2G": "Control Mode Selection",
+        "WIZARD_STEP_6_TITLE_2G_INDEP": "Coil A Command",
         "WIZARD_STEP_6S_TITLE": "Command 1 Selection", 
-        "WIZARD_STEP_7_TITLE_2G_INDEP": "Coil B Command (Dual Coil Dual Command)",
+        "WIZARD_STEP_7_TITLE_2G_INDEP": "Coil B Command",
         "WIZARD_STEP_7S2_TITLE": "Command 2 Selection",
-        "WIZARD_STEP_6_TITLE_2G_LINK": "Command Selection (Dual Coil Single Command)",
-        "WIZARD_STEP_8_TITLE_2G": "Coil A Feedback (Dual Coil)",
-        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "Coil A Params Setup (Dual Coil)",
-        "WIZARD_STEP_9_TITLE_2G_A_FB": "Coil A Params Setup (Dual Coil)",
-        "WIZARD_STEP_10_TITLE_2G": "Coil B Feedback (Dual Coil)",
-        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "Coil B Params Setup (Dual Coil)",
-        "WIZARD_STEP_11_TITLE_2G_B_FB": "Coil B Params Setup (Dual Coil)",
+        "WIZARD_STEP_6_TITLE_2G_LINK": "Command Selection",
+        "WIZARD_STEP_8_TITLE_2G": "Coil A Feedback",
+        "WIZARD_STEP_9_TITLE_2G_NO_A_FB": "Coil A Params Setup",
+        "WIZARD_STEP_9_TITLE_2G_A_FB": "Coil A Params Setup",
+        "WIZARD_STEP_10_TITLE_2G": "Coil B Feedback",
+        "WIZARD_STEP_11_TITLE_2G_NO_B_FB": "Coil B Params Setup",
+        "WIZARD_STEP_11_TITLE_2G_B_FB": "Coil B Params Setup",
         
         "WIZARD_COIL_CONFIG_MAP": {
             0: "1 Output Coil (A Only)",
@@ -584,8 +590,8 @@ TEXTS = {
         "CHART_S_TITLE": "Single Output",
 
         # --- Mode Selection & Single Controller ---
-        "APP_TITLE_DUAL": "STEED Modbus RTU Dual Controller Setup V3.0",
-        "APP_TITLE_SINGLE": "STEED Modbus RTU Single Controller Setup V3.0",
+        "APP_TITLE_DUAL": "STEED Modbus RTU Dual Controller Setup V3.0a",
+        "APP_TITLE_SINGLE": "STEED Modbus RTU Single Controller Setup V3.0a",
         "QUICK_SETUP_BUTTON": "Quick Setup Wizard",
         "MODE_SELECTION_TITLE": "Model Selection",
         "MODE_SELECTION_PROMPT": "Please select the controller model:",
@@ -1132,6 +1138,7 @@ class QuickSetupWizard(tk.Toplevel):
             is_step_3_plus = True
             id_map = {
                 '4_dual': 'WIZARD_STEP_4_TITLE_DUAL',
+                '4_dual_combined': 'WIZARD_STEP_4_TITLE_DUAL_COMBINED',
                 '5_1g': 'WIZARD_STEP_5_TITLE_1G',
                 '5s_1g': 'WIZARD_STEP_5S_TITLE',
                 '6_1g': 'WIZARD_STEP_6_TITLE_1G',
@@ -1157,7 +1164,8 @@ class QuickSetupWizard(tk.Toplevel):
         if is_step_3_plus:
             prefix = self._get_text("WIZARD_TITLE") # "Quick Setup Wizard"
             # Avoid double prefix if it's already there (though keys were cleaned)
-            title_text = f"{prefix}: {title_text}"
+            # title_text = f"{prefix}: {title_text}"
+            title_text = f"{title_text}"
              
         self.header_label.config(text=title_text)
 
@@ -1185,6 +1193,7 @@ class QuickSetupWizard(tk.Toplevel):
         
         # Dual Mode Branches
         elif step == '4_dual': self._render_step_coil_config()
+        elif step == '4_dual_combined': self._render_step_dual_combined()
         elif step == '5_1g': self._render_step_a_input_1g()
         elif step == '5s_1g': self._render_step_sig1_setup()
         elif step == '6_1g': self._render_step_a_feedback_1g()
@@ -1528,14 +1537,16 @@ class QuickSetupWizard(tk.Toplevel):
 
         # Top Panel: Controls
         top_frame = ttk.Frame(self.content_frame)
-        top_frame.pack(side=tk.TOP, fill=tk.X, expand=True, pady=0, padx=10)
+        top_frame.pack(side=tk.TOP, pady=0, padx=10)
+        top_frame.columnconfigure(0, weight=1)
+
         top_frame.rowconfigure(0, weight=1)
         top_frame.rowconfigure(1, weight=1)
         top_frame.rowconfigure(2, weight=1)
 
         # Bottom Panel: Chart
         bottom_frame = ttk.Labelframe(self.content_frame, text="Preview")
-        bottom_frame.pack(side=tk.BOTTOM, fill=tk.X, expand=False, padx=10)
+        bottom_frame.pack(side=tk.BOTTOM, fill=tk.X, expand=False, padx=30)
         
         self.param_vars = {} 
         
@@ -1651,7 +1662,82 @@ class QuickSetupWizard(tk.Toplevel):
         # Virtual Parameter "coil_config"
         # 0: 1 Group, 1: 2 Groups
         cfg = {'reg': 'coil_config', 'key': 'WIZARD_COIL_CONFIG_LABEL', 'type': 'combobox', 'map': 'WIZARD_COIL_CONFIG_MAP'}
-        self._create_control_row(form_frame, 0, cfg, label_key_override="WIZARD_COIL_CONFIG_LABEL")
+    def _render_step_dual_combined(self):
+        # Step 4 Dual Combined: Select Control Mode
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=10, fill='x')
+
+        self.param_vars = {}
+        
+        # 1: Mode 1, 2: Mode 2, 3: Mode 3
+        var = tk.IntVar(value=0) 
+        prev_val = self.wizard_params.get('combined_mode_selection', 0)
+        if prev_val: var.set(prev_val)
+
+        # Grid layout for 3 buttons vertical (top-to-bottom)
+        form_frame.columnconfigure(0, weight=1)
+        
+        # Helper to create custom "Radio Button" using Frame + Labels
+        def _create_custom_radio_button(parent, text_key, variable, value, row):
+            # Get text and split by newline
+            full_text = self._get_text(text_key)
+            parts = full_text.split('\n')
+            title = parts[0] if len(parts) > 0 else ""
+            desc = parts[1] if len(parts) > 1 else ""
+            
+            # Container Frame (acts as button)
+            # Use 'default' style initially, will update based on selection
+            btn_frame = ttk.Frame(parent, bootstyle="secondary", relief="flat")
+            btn_frame.grid(row=row, column=0, padx=80, pady=20, sticky='ew')
+            
+            # Configure grid for centering
+            btn_frame.columnconfigure(0, weight=1)
+            
+            # Title Label (Bold, Larger)
+            lbl_title = ttk.Label(btn_frame, text=title, font=("Helvetica", 12, "bold"), anchor="center")
+            lbl_title.grid(row=0, column=0, padx=2, pady=(15, 5), sticky="ew")
+            
+            # Desc Label (Normal)
+            lbl_desc = ttk.Label(btn_frame, text=desc, font=("Helvetica", 10), anchor="center")
+            lbl_desc.grid(row=1, column=0, padx=2, pady=(0, 15), sticky="ew")
+            
+            # Bind Click Events
+            def on_click(event):
+                variable.set(value)
+                
+            btn_frame.bind("<Button-1>", on_click)
+            lbl_title.bind("<Button-1>", on_click)
+            lbl_desc.bind("<Button-1>", on_click)
+            
+            # Visual Update Logic
+            def update_visuals(*args):
+                current_val = variable.get()
+                if current_val == value:
+                    # Selected State
+                    btn_frame.configure(bootstyle="success") 
+                    lbl_title.configure(bootstyle="success-inverse")
+                    lbl_desc.configure(bootstyle="success-inverse")
+                else:
+                    # Unselected State
+                    btn_frame.configure(bootstyle="secondary") # or just base style
+                    lbl_title.configure(bootstyle="secondary-inverse")
+                    lbl_desc.configure(bootstyle="secondary-inverse")
+            
+            # Register trace
+            variable.trace_add("write", update_visuals)
+            
+            # Initial update
+            update_visuals()
+            
+            return btn_frame
+
+        # Create the 3 custom buttons
+        _create_custom_radio_button(form_frame, "WIZARD_MODE_1_LABEL", var, 1, 0)
+        _create_custom_radio_button(form_frame, "WIZARD_MODE_2_LABEL", var, 2, 1)
+        _create_custom_radio_button(form_frame, "WIZARD_MODE_3_LABEL", var, 3, 2)
+        
+        # Register in param_vars so _save_current_step_values can grab it
+        self.param_vars['combined_mode_selection'] = (var, {'type': 'virtual'})
 
     def _render_step_a_input_1g(self):
         # Step 5 (1G): A Input Selection (000EH)
@@ -1946,7 +2032,7 @@ class QuickSetupWizard(tk.Toplevel):
                 return
             # Branching Point based on Mode
             if self.selected_mode == 'single': next_step = 4
-            else: next_step = '4_dual'
+            else: next_step = '4_dual_combined' # Changed from '4_dual' to '4_dual_combined'
             
         elif self.selected_mode == 'single':
             # Linear Single Flow
@@ -1956,15 +2042,28 @@ class QuickSetupWizard(tk.Toplevel):
             
         elif self.selected_mode == 'dual':
             # Complex Dual Flow
-            if current == '4_dual':
-                # coil_config: 0=1G, 1=2G
-                cfg = self.wizard_params.get('coil_config', 0)
-                if cfg == 0: 
+            if current == '4_dual_combined':
+                mode_sel = self.wizard_params.get('combined_mode_selection', 0)
+                
+                if mode_sel == 0:
+                     messagebox.showwarning("Warning", self._get_text("NO_ITEM_SELECTED_MSG"), parent=self)
+                     return
+
+                if mode_sel == 1: # Mode 1: Single Signal 1-Output
+                    # Corresponds to Old Path: 1 Group (0018H=0) -> 1 Group Flow
                     self.wizard_params['0018H'] = 0 # No Output for B
-                    self.modified_regs.add('0018H') # Track modification so it gets written
+                    self.modified_regs.add('0018H') 
                     next_step = '5_1g'
-                else: 
-                    next_step = '5_2g'
+                    
+                elif mode_sel == 2: # Mode 2: 2-Signal & 2-Output (Indep)
+                     # Corresponds to Old Path: 2 Group -> Independent (Input Mode 0)
+                     self.wizard_params['input_mode'] = 0 # Independent
+                     next_step = '6_2g_indep'
+                     
+                elif mode_sel == 3: # Mode 3: 1-Signal & 2-Output (Linked)
+                     # Corresponds to Old Path: 2 Group -> Shared (Input Mode 1)
+                     self.wizard_params['input_mode'] = 1 # Linked
+                     next_step = '6_2g_link'
                     
             # --- 1 Group Branch ---
             elif current == '5_1g':
@@ -1988,13 +2087,6 @@ class QuickSetupWizard(tk.Toplevel):
 
             elif current in ['7_1g_no_fb', '7_1g_fb']:
                 self._finish_wizard(); return
-                
-            # --- 2 Group Branch ---
-            elif current == '5_2g':
-                # Input Mode (Virtual: 'input_mode')
-                mode = self.wizard_params.get('input_mode', 0)
-                if mode == 0: next_step = '6_2g_indep' # Independent
-                else: next_step = '6_2g_link' # Shared
                 
             # --- 2G Independent ---
             elif current == '6_2g_indep':
@@ -2304,11 +2396,11 @@ class ModbusMonitorApp:
             self.chart_window.destroy()
             self.chart_window = None
             if hasattr(self, 'chart_button'):
-                self.chart_button.config(text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton")
+                self.chart_button.config(text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="success_toolbutton")
         else:
             self.chart_window = RealtimeChartWindow(self.master, self) # Pass self (ModbusMonitorApp instance)
             if hasattr(self, 'chart_button'):
-                self.chart_button.config(text=self.get_current_translation("CLOSE_CHART_BUTTON"), bootstyle="primary_button")
+                self.chart_button.config(text=self.get_current_translation("CLOSE_CHART_BUTTON"), bootstyle="success_button")
 
 
     def _create_widgets(self):
@@ -2377,7 +2469,7 @@ class ModbusMonitorApp:
         self.slave_id_spinbox.grid(row=0, column=5, padx=5, pady=5, sticky=tk.W)
         self.refresh_ports_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("REFRESH_PORTS_BUTTON"), bootstyle="primary.Outline", command=self._refresh_ports)
         self.refresh_ports_button.grid(row=0, column=6, padx=5, pady=5)
-        self.connect_button = ttk.Checkbutton(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_connection)
+        self.connect_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="success", command=self._toggle_connection)
         self.connect_button.grid(row=0, column=7, padx=5, pady=5, sticky=tk.E)
 
         # --- 分隔線 ---
@@ -2429,7 +2521,7 @@ class ModbusMonitorApp:
         self.monitor_frame_b.grid(row=0, column=1, sticky='nsew', padx=(5, 0), pady=(5,0))
 
         # Chart Button on row 1, aligned to the right
-        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_chart_window)
+        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="success_toolbutton", command=self._toggle_chart_window)
         self.chart_button.grid(row=0, column=1, sticky='ne', padx=10, pady=0)
 
         self.monitor_labels_info_a, self.monitor_display_controls_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
@@ -2500,7 +2592,7 @@ class ModbusMonitorApp:
         self.monitor_frame_a.grid(row=0, column=0, sticky='nsew', pady=(5,0))
 
         # Chart Button
-        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_chart_window)
+        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="success_toolbutton", command=self._toggle_chart_window)
         self.chart_button.grid(row=0, column=0, sticky='ne', padx=10, pady=0)
 
         self.monitor_labels_info_a, self.monitor_display_controls_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
@@ -3376,7 +3468,7 @@ class ModbusMonitorApp:
     def _on_connection_established_from_wizard(self):
         """Called when connection is passed from Wizard to Main App."""
         # Update UI state
-        self.connect_button.config(text=self.get_current_translation("DISCONNECT_BUTTON"))
+        self.connect_button.config(text=self.get_current_translation("DISCONNECT_BUTTON"), bootstyle="danger")
         
         try:
             # Initial read of all registers to populate UI
@@ -3423,7 +3515,7 @@ class ModbusMonitorApp:
                 self.modbus_master.close()
                 self.modbus_master = None
                 MODBUS_MASTER = None 
-                self.connect_button.config(text=self.get_current_translation("CONNECT_BUTTON"))
+                self.connect_button.config(text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="success")
                 messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("MODBUS_DISCONNECTED"))
             except Exception as e:
                 messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("MODBUS_DISCONNECT_FAIL").format(e=e))
@@ -3446,7 +3538,7 @@ class ModbusMonitorApp:
                 self.modbus_master.set_timeout(1.0) 
                 self.modbus_master.open() 
                 MODBUS_MASTER = self.modbus_master 
-                self.connect_button.config(text=self.get_current_translation("DISCONNECT_BUTTON"))
+                self.connect_button.config(text=self.get_current_translation("DISCONNECT_BUTTON"), bootstyle="danger")
                 messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("MODBUS_CONNECTED").format(port=port, baudrate=baudrate))
                 
                 # Initial read of all registers
