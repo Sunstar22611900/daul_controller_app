@@ -2302,11 +2302,11 @@ class ModbusMonitorApp:
             self.chart_window.destroy()
             self.chart_window = None
             if hasattr(self, 'chart_button'):
-                self.chart_button.config(text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton")
+                self.chart_button.config(text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="success_toolbutton")
         else:
             self.chart_window = RealtimeChartWindow(self.master, self) # Pass self (ModbusMonitorApp instance)
             if hasattr(self, 'chart_button'):
-                self.chart_button.config(text=self.get_current_translation("CLOSE_CHART_BUTTON"), bootstyle="primary_button")
+                self.chart_button.config(text=self.get_current_translation("CLOSE_CHART_BUTTON"), bootstyle="success_button")
 
 
     def _create_widgets(self):
@@ -2375,7 +2375,7 @@ class ModbusMonitorApp:
         self.slave_id_spinbox.grid(row=0, column=5, padx=5, pady=5, sticky=tk.W)
         self.refresh_ports_button = ttk.Button(self.modbus_params_frame, text=self.get_current_translation("REFRESH_PORTS_BUTTON"), bootstyle="primary.Outline", command=self._refresh_ports)
         self.refresh_ports_button.grid(row=0, column=6, padx=5, pady=5)
-        self.connect_button = ttk.Checkbutton(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_connection)
+        self.connect_button = ttk.Checkbutton(self.modbus_params_frame, text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="success_toolbutton", command=self._toggle_connection)
         self.connect_button.grid(row=0, column=7, padx=5, pady=5, sticky=tk.E)
 
         # --- 分隔線 ---
@@ -2427,7 +2427,7 @@ class ModbusMonitorApp:
         self.monitor_frame_b.grid(row=0, column=1, sticky='nsew', padx=(5, 0), pady=(5,0))
 
         # Chart Button on row 1, aligned to the right
-        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_chart_window)
+        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="success_toolbutton", command=self._toggle_chart_window)
         self.chart_button.grid(row=0, column=1, sticky='ne', padx=10, pady=0)
 
         self.monitor_labels_info_a, self.monitor_display_controls_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
@@ -2498,7 +2498,7 @@ class ModbusMonitorApp:
         self.monitor_frame_a.grid(row=0, column=0, sticky='nsew', pady=(5,0))
 
         # Chart Button
-        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="primary_toolbutton", command=self._toggle_chart_window)
+        self.chart_button = ttk.Checkbutton(monitor_area_frame, text=self.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="success_toolbutton", command=self._toggle_chart_window)
         self.chart_button.grid(row=0, column=0, sticky='ne', padx=10, pady=0)
 
         self.monitor_labels_info_a, self.monitor_display_controls_a = self._create_monitor_widgets(self.monitor_frame_a, [("0000H", "OUTPUT_CURRENT_LABEL", "A"), ("0001H", "INPUT_SIGNAL_LABEL", "%"), ("0002H", "CURRENT_STATUS_LABEL", "")])
