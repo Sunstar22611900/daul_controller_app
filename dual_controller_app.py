@@ -212,6 +212,10 @@ TEXTS = {
         "WIZARD_COIL_CONFIG_LABEL": "請選擇輸出線圈組數:",
         "WIZARD_INPUT_MODE_LABEL": "請選擇控制模式:",
         "WIZARD_STEP_4_TITLE_DUAL": "選擇輸出線圈組數",
+        "WIZARD_STEP_4_TITLE_DUAL_COMBINED": "選擇控制模式",
+        "WIZARD_MODE_1_LABEL": "模式一\n單組信號 vs 單組輸出",
+        "WIZARD_MODE_2_LABEL": "模式二\n雙組獨立信號 vs 雙組獨立輸出",
+        "WIZARD_MODE_3_LABEL": "模式三\n單組信號 vs 雙組連動輸出",
         "WIZARD_STEP_5_TITLE_1G": "輸入信號選擇 (單線圈)",
         "WIZARD_STEP_5S_TITLE": "信號 1 選擇 (單線圈)", 
         "WIZARD_STEP_6_TITLE_1G": "反饋信號選擇 (單線圈)",
@@ -533,6 +537,10 @@ TEXTS = {
         "WIZARD_COIL_CONFIG_LABEL": "Select Output Coil Config:",
         "WIZARD_INPUT_MODE_LABEL": "Control Mode Selection:",
         "WIZARD_STEP_4_TITLE_DUAL": "Select Output Coil Config",
+        "WIZARD_STEP_4_TITLE_DUAL_COMBINED": "Select Control Mode",
+        "WIZARD_MODE_1_LABEL": "Mode 1\nSingle Command vs Single Output",
+        "WIZARD_MODE_2_LABEL": "Mode 2\nDual Indep. Command vs Dual Indep. Output",
+        "WIZARD_MODE_3_LABEL": "Mode 3\nSingle Command vs Dual Linked Output",
         "WIZARD_STEP_5_TITLE_1G": "Input Command Selection (Single Coil)",
         "WIZARD_STEP_5S_TITLE": "Command 1 Selection (Single Coil)", 
         "WIZARD_STEP_6_TITLE_1G": "Feedback Command Selection (Single Coil)",
@@ -1183,6 +1191,7 @@ class QuickSetupWizard(tk.Toplevel):
         
         # Dual Mode Branches
         elif step == '4_dual': self._render_step_coil_config()
+        elif step == '4_dual_combined': self._render_step_dual_combined()
         elif step == '5_1g': self._render_step_a_input_1g()
         elif step == '5s_1g': self._render_step_sig1_setup()
         elif step == '6_1g': self._render_step_a_feedback_1g()
@@ -1649,7 +1658,82 @@ class QuickSetupWizard(tk.Toplevel):
         # Virtual Parameter "coil_config"
         # 0: 1 Group, 1: 2 Groups
         cfg = {'reg': 'coil_config', 'key': 'WIZARD_COIL_CONFIG_LABEL', 'type': 'combobox', 'map': 'WIZARD_COIL_CONFIG_MAP'}
-        self._create_control_row(form_frame, 0, cfg, label_key_override="WIZARD_COIL_CONFIG_LABEL")
+    def _render_step_dual_combined(self):
+        # Step 4 Dual Combined: Select Control Mode
+        form_frame = ttk.Frame(self.content_frame)
+        form_frame.pack(pady=20, fill='x', expand=True)
+
+        self.param_vars = {}
+        
+        # 1: Mode 1, 2: Mode 2, 3: Mode 3
+        var = tk.IntVar(value=0) 
+        prev_val = self.wizard_params.get('combined_mode_selection', 0)
+        if prev_val: var.set(prev_val)
+
+        # Grid layout for 3 buttons vertical (top-to-bottom)
+        form_frame.columnconfigure(0, weight=1)
+        
+        # Helper to create custom "Radio Button" using Frame + Labels
+        def _create_custom_radio_button(parent, text_key, variable, value, row):
+            # Get text and split by newline
+            full_text = self._get_text(text_key)
+            parts = full_text.split('\n')
+            title = parts[0] if len(parts) > 0 else ""
+            desc = parts[1] if len(parts) > 1 else ""
+            
+            # Container Frame (acts as button)
+            # Use 'default' style initially, will update based on selection
+            btn_frame = ttk.Frame(parent, bootstyle="secondary", relief="flat")
+            btn_frame.grid(row=row, column=0, padx=80, pady=10, sticky='ew')
+            
+            # Configure grid for centering
+            btn_frame.columnconfigure(0, weight=1)
+            
+            # Title Label (Bold, Larger)
+            lbl_title = ttk.Label(btn_frame, text=title, font=("Helvetica", 12, "bold"), anchor="center")
+            lbl_title.grid(row=0, column=0, padx=2, pady=(10, 5), sticky="ew")
+            
+            # Desc Label (Normal)
+            lbl_desc = ttk.Label(btn_frame, text=desc, font=("Helvetica", 10), anchor="center")
+            lbl_desc.grid(row=1, column=0, padx=2, pady=(0, 10), sticky="ew")
+            
+            # Bind Click Events
+            def on_click(event):
+                variable.set(value)
+                
+            btn_frame.bind("<Button-1>", on_click)
+            lbl_title.bind("<Button-1>", on_click)
+            lbl_desc.bind("<Button-1>", on_click)
+            
+            # Visual Update Logic
+            def update_visuals(*args):
+                current_val = variable.get()
+                if current_val == value:
+                    # Selected State
+                    btn_frame.configure(bootstyle="success") 
+                    lbl_title.configure(bootstyle="success-inverse")
+                    lbl_desc.configure(bootstyle="success-inverse")
+                else:
+                    # Unselected State
+                    btn_frame.configure(bootstyle="secondary") # or just base style
+                    lbl_title.configure(bootstyle="secondary-inverse")
+                    lbl_desc.configure(bootstyle="secondary-inverse")
+            
+            # Register trace
+            variable.trace_add("write", update_visuals)
+            
+            # Initial update
+            update_visuals()
+            
+            return btn_frame
+
+        # Create the 3 custom buttons
+        _create_custom_radio_button(form_frame, "WIZARD_MODE_1_LABEL", var, 1, 0)
+        _create_custom_radio_button(form_frame, "WIZARD_MODE_2_LABEL", var, 2, 1)
+        _create_custom_radio_button(form_frame, "WIZARD_MODE_3_LABEL", var, 3, 2)
+        
+        # Register in param_vars so _save_current_step_values can grab it
+        self.param_vars['combined_mode_selection'] = (var, {'type': 'virtual'})
 
     def _render_step_a_input_1g(self):
         # Step 5 (1G): A Input Selection (000EH)
@@ -1944,7 +2028,7 @@ class QuickSetupWizard(tk.Toplevel):
                 return
             # Branching Point based on Mode
             if self.selected_mode == 'single': next_step = 4
-            else: next_step = '4_dual'
+            else: next_step = '4_dual_combined' # Changed from '4_dual' to '4_dual_combined'
             
         elif self.selected_mode == 'single':
             # Linear Single Flow
@@ -1954,15 +2038,28 @@ class QuickSetupWizard(tk.Toplevel):
             
         elif self.selected_mode == 'dual':
             # Complex Dual Flow
-            if current == '4_dual':
-                # coil_config: 0=1G, 1=2G
-                cfg = self.wizard_params.get('coil_config', 0)
-                if cfg == 0: 
+            if current == '4_dual_combined':
+                mode_sel = self.wizard_params.get('combined_mode_selection', 0)
+                
+                if mode_sel == 0:
+                     messagebox.showwarning("Warning", self._get_text("NO_ITEM_SELECTED_MSG"), parent=self)
+                     return
+
+                if mode_sel == 1: # Mode 1: Single Signal 1-Output
+                    # Corresponds to Old Path: 1 Group (0018H=0) -> 1 Group Flow
                     self.wizard_params['0018H'] = 0 # No Output for B
-                    self.modified_regs.add('0018H') # Track modification so it gets written
+                    self.modified_regs.add('0018H') 
                     next_step = '5_1g'
-                else: 
-                    next_step = '5_2g'
+                    
+                elif mode_sel == 2: # Mode 2: 2-Signal & 2-Output (Indep)
+                     # Corresponds to Old Path: 2 Group -> Independent (Input Mode 0)
+                     self.wizard_params['input_mode'] = 0 # Independent
+                     next_step = '6_2g_indep'
+                     
+                elif mode_sel == 3: # Mode 3: 1-Signal & 2-Output (Linked)
+                     # Corresponds to Old Path: 2 Group -> Shared (Input Mode 1)
+                     self.wizard_params['input_mode'] = 1 # Linked
+                     next_step = '6_2g_link'
                     
             # --- 1 Group Branch ---
             elif current == '5_1g':
@@ -1986,13 +2083,6 @@ class QuickSetupWizard(tk.Toplevel):
 
             elif current in ['7_1g_no_fb', '7_1g_fb']:
                 self._finish_wizard(); return
-                
-            # --- 2 Group Branch ---
-            elif current == '5_2g':
-                # Input Mode (Virtual: 'input_mode')
-                mode = self.wizard_params.get('input_mode', 0)
-                if mode == 0: next_step = '6_2g_indep' # Independent
-                else: next_step = '6_2g_link' # Shared
                 
             # --- 2G Independent ---
             elif current == '6_2g_indep':
