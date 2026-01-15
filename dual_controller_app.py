@@ -172,8 +172,8 @@ TEXTS = {
         "A_GROUP_LEGEND": "A組輸出曲線",
         "B_GROUP_LEGEND": "B組輸出曲線",
         "INPUT_SIGNAL": "輸入信號",
-        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "雙組信號-雙組輸出",
-        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組輸出",
+        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "雙組獨立信號-雙組獨立輸出",
+        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組連動輸出",
         "SINGLE_OUTPUT_MODE_TEXT": "單組輸出",
         
         # --- Auto Reconnect ---
@@ -499,8 +499,8 @@ TEXTS = {
         "A_GROUP_LEGEND": "Output A Curve",
         "B_GROUP_LEGEND": "Output B Curve",
         "INPUT_SIGNAL": "Input Command",
-        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "Dual Output Dual Command",
-        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Output Single Command",
+        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "Dual Independent Output - Dual Independent Command",
+        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Linked Output - Single Command",
         "SINGLE_OUTPUT_MODE_TEXT": "Single Output",
 
         # --- Auto Reconnect ---
