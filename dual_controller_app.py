@@ -1244,8 +1244,8 @@ class QuickSetupWizard(tk.Toplevel):
         self.model_var = tk.StringVar(value=self.selected_mode if self.selected_mode else "dual")
         frame = ttk.Frame(self.content_frame)
         frame.pack(pady=10)
-        ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="success-outline-toolbutton", width=25).pack(pady=10)
-        ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="success-outline-toolbutton", width=25).pack(pady=10)
+        ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="success-toolbutton", width=25).pack(pady=10)
+        ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="success-toolbutton", width=25).pack(pady=10)
         
         # Add "Enter Main App" button (skip wizard)
         btn_frame = ttk.Frame(self.content_frame)
@@ -2198,6 +2198,10 @@ class QuickSetupWizard(tk.Toplevel):
                 # print(f"DEBUG: Skipped {reg} (not in allowed/modified list)")
                 pass
     def _on_back(self):
+        # 如果在步驟3且已連線，則先斷開連線
+        if self.current_step == 3 and self.modbus_master:
+            self._try_connect() # 此函數在已連線時會斷開連線
+
         if hasattr(self, 'step_history') and self.step_history:
             prev_step = self.step_history.pop()
             self._show_step(prev_step)
