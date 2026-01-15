@@ -172,8 +172,8 @@ TEXTS = {
         "A_GROUP_LEGEND": "A組輸出曲線",
         "B_GROUP_LEGEND": "B組輸出曲線",
         "INPUT_SIGNAL": "輸入信號",
-        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "雙組信號-雙組輸出",
-        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組輸出",
+        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "雙組獨立信號-雙組獨立輸出",
+        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組連動輸出",
         "SINGLE_OUTPUT_MODE_TEXT": "單組輸出",
         
         # --- Auto Reconnect ---
@@ -499,8 +499,8 @@ TEXTS = {
         "A_GROUP_LEGEND": "Output A Curve",
         "B_GROUP_LEGEND": "Output B Curve",
         "INPUT_SIGNAL": "Input Command",
-        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "Dual Output Dual Command",
-        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Output Single Command",
+        "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "Dual Independent Output - Dual Independent Command",
+        "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Linked Output - Single Command",
         "SINGLE_OUTPUT_MODE_TEXT": "Single Output",
 
         # --- Auto Reconnect ---
@@ -1244,8 +1244,8 @@ class QuickSetupWizard(tk.Toplevel):
         self.model_var = tk.StringVar(value=self.selected_mode if self.selected_mode else "dual")
         frame = ttk.Frame(self.content_frame)
         frame.pack(pady=10)
-        ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="success-outline-toolbutton", width=25).pack(pady=10)
-        ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="success-outline-toolbutton", width=25).pack(pady=10)
+        ttk.Radiobutton(frame, text=self._get_text("DUAL_MODE_OPTION"), variable=self.model_var, value="dual", bootstyle="success-toolbutton", width=25).pack(pady=10)
+        ttk.Radiobutton(frame, text=self._get_text("SINGLE_MODE_OPTION"), variable=self.model_var, value="single", bootstyle="success-toolbutton", width=25).pack(pady=10)
         
         # Add "Enter Main App" button (skip wizard)
         btn_frame = ttk.Frame(self.content_frame)
@@ -2198,6 +2198,10 @@ class QuickSetupWizard(tk.Toplevel):
                 # print(f"DEBUG: Skipped {reg} (not in allowed/modified list)")
                 pass
     def _on_back(self):
+        # 如果在步驟3且已連線，則先斷開連線
+        if self.current_step == 3 and self.modbus_master:
+            self._try_connect() # 此函數在已連線時會斷開連線
+
         if hasattr(self, 'step_history') and self.step_history:
             prev_step = self.step_history.pop()
             self._show_step(prev_step)
