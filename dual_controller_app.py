@@ -2252,12 +2252,12 @@ class ModbusMonitorApp:
         {'reg': '0020H', 'title_key': 'B_TREMOR_FREQUENCY', 'type': 'entry_scaled', 'min': 70, 'max': 500, 'scale': 10, 'unit_step': 10, 'group': 'b_group'},
         {'reg': '0021H', 'title_key': 'B_DITHER_AMPLITUDE', 'type': 'entry', 'min': 0, 'max': 25, 'scale': 1, 'is_int': True, 'group': 'b_group'},
         # --- PID參數 ---
-        {'reg': '0022H', 'title_key': 'SIGNAL_1_P', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 1, 'is_int': True, 'group': 'pid'},
-        {'reg': '0023H', 'title_key': 'SIGNAL_1_I', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 1, 'is_int': True, 'group': 'pid'},
-        {'reg': '0024H', 'title_key': 'SIGNAL_1_D', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 1, 'is_int': True, 'group': 'pid'},
-        {'reg': '0025H', 'title_key': 'SIGNAL_2_P', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 1, 'is_int': True, 'group': 'pid'},
-        {'reg': '0026H', 'title_key': 'SIGNAL_2_I', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 1, 'is_int': True, 'group': 'pid'},
-        {'reg': '0027H', 'title_key': 'SIGNAL_2_D', 'type': 'entry', 'min': 0, 'max': 100, 'scale': 1, 'is_int': True, 'group': 'pid'},
+        {'reg': '0022H', 'title_key': 'SIGNAL_1_P', 'type': 'scale', 'min': 0, 'max': 1000, 'scale': 1, 'is_int': True, 'group': 'pid'},
+        {'reg': '0023H', 'title_key': 'SIGNAL_1_I', 'type': 'scale', 'min': 0, 'max': 1000, 'scale': 1, 'is_int': True, 'group': 'pid'},
+        {'reg': '0024H', 'title_key': 'SIGNAL_1_D', 'type': 'scale', 'min': 0, 'max': 1000, 'scale': 1, 'is_int': True, 'group': 'pid'},
+        {'reg': '0025H', 'title_key': 'SIGNAL_2_P', 'type': 'scale', 'min': 0, 'max': 1000, 'scale': 1, 'is_int': True, 'group': 'pid'},
+        {'reg': '0026H', 'title_key': 'SIGNAL_2_I', 'type': 'scale', 'min': 0, 'max': 1000, 'scale': 1, 'is_int': True, 'group': 'pid'},
+        {'reg': '0027H', 'title_key': 'SIGNAL_2_D', 'type': 'scale', 'min': 0, 'max': 1000, 'scale': 1, 'is_int': True, 'group': 'pid'},
     ]
 
     # --- 單組控制器參數設定 ---
@@ -2694,6 +2694,52 @@ class ModbusMonitorApp:
                     control = ttk.Combobox(parent_frame, textvariable=var, values=list(param['map'].values()), state="readonly", width=15)
                 elif param['type'] in ['entry', 'entry_scaled', 'spinbox']:
                     control = ttk.Entry(parent_frame, textvariable=var, width=17)
+                elif param['type'] == 'scale':
+                    control = ttk.Frame(parent_frame)
+                    
+                    # Create DoubleVar for the Scale
+                    scale_var = tk.DoubleVar()
+                    
+                    # Scale Widget
+                    scale_widget = ttk.Scale(control, from_=param['min'], to=param['max'], variable=scale_var, orient='horizontal')
+                    scale_widget.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+                    
+                    # Value Label
+                    val_label = ttk.Label(control, text="0", width=4, anchor="e")
+                    val_label.pack(side=tk.RIGHT)
+                    
+                    # Trace functions to sync
+                    def update_label_and_var(*args, sv=scale_var, v=var, vl=val_label):
+                        try:
+                            val = sv.get()
+                            int_val = int(round(val))
+                            vl.config(text=str(int_val))
+                            
+                            # Only update var if different to avoid loop
+                            if v.get() != str(int_val):
+                                v.set(str(int_val))
+                        except tk.TclError:
+                            pass
+
+                            
+                    def update_scale_from_var(*args, sv=scale_var, v=var, vl=val_label):
+                        try:
+                            val_str = v.get()
+                            if val_str:
+                                val = float(val_str)
+                                if abs(sv.get() - val) > 0.1:
+                                    sv.set(val)
+                                    vl.config(text=str(int(val)))
+                            else:
+                                # Handle empty/reset
+                                pass 
+                        except ValueError:
+                            pass
+                        except tk.TclError:
+                            pass
+
+                    scale_var.trace_add("write", update_label_and_var)
+                    var.trace_add("write", update_scale_from_var)
 
                 if control:
                     control.grid(row=row_num, column=col_offset + 1, padx=5, pady=5, sticky=tk.W)
@@ -3859,7 +3905,7 @@ class ModbusMonitorApp:
                 if not validate_input_range(value_str, min_val, max_val, type_name=f"寄存器 {reg_hex}", is_int=True):
                     return
                 write_value = int(value_str)
-            elif control_type == 'entry': 
+            elif control_type in ['entry', 'scale']: 
                 if not validate_input_range(value_str, min_val, max_val, type_name=f"寄存器 {reg_hex}", is_int=is_int):
                     return
                 write_value = convert_to_register_value(value_str, scale)
@@ -4161,7 +4207,7 @@ class ModbusMonitorApp:
                     return None
                 return rev_map[value_str]
             
-            elif control_type in ['entry', 'entry_scaled']:
+            elif control_type in ['entry', 'entry_scaled', 'scale']:
                 min_val = param_config['min']
                 max_val = param_config['max']
                 scale = param_config.get('scale', 1)
