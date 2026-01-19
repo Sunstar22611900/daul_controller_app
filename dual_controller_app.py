@@ -265,8 +265,8 @@ TEXTS = {
         "CHART_S_TITLE": "單組輸出",
 
         # --- 模式選擇與單組控制器 ---
-        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU 雙控制器監控調整程式 V3.0a",
-        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU 單控制器監控調整程式 V3.0a",
+        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU 雙控制器監控調整程式 V3.0b",
+        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU 單控制器監控調整程式 V3.0b",
         "QUICK_SETUP_BUTTON": "快速設定精靈",
         "MODE_SELECTION_TITLE": "型號選擇",
         "MODE_SELECTION_PROMPT": "請選擇要操作的控制器型號：",
@@ -590,8 +590,8 @@ TEXTS = {
         "CHART_S_TITLE": "Single Output",
 
         # --- Mode Selection & Single Controller ---
-        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU Dual Controller Setup V3.0a",
-        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU Single Controller Setup V3.0a",
+        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU Dual Controller Setup V3.0b",
+        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU Single Controller Setup V3.0b",
         "QUICK_SETUP_BUTTON": "Quick Setup Wizard",
         "MODE_SELECTION_TITLE": "Model Selection",
         "MODE_SELECTION_PROMPT": "Please select the controller model:",
@@ -2299,6 +2299,16 @@ class ModbusMonitorApp:
 
         # --- Initialize basic variables ---
         self.current_language_code = tk.StringVar(value="zh")
+        
+        # --- Frameless Window Setup ---
+        self.master.overrideredirect(True) # Remove default border
+        self.master.geometry("960x1080") # Set initial size
+        self._center_window(960, 1080)
+        
+        # Determine mode
+        self.controller_mode = None 
+        self._show_wizard()
+        
         self._current_translations = TEXTS[self.current_language_code.get()]
         self.translations = self._current_translations
         self.modbus_master = None
@@ -2330,7 +2340,7 @@ class ModbusMonitorApp:
 
 
         # Show the wizard and wait for a choice
-        self._show_wizard()
+        # self._show_wizard() # Moved up for frameless window setup
 
         # If the wizard was closed (e.g. Cancel), self.master is destroyed, and the script will terminate.
         # If a mode was selected, proceed with building the main UI.
@@ -2364,14 +2374,11 @@ class ModbusMonitorApp:
         self.master.deiconify() # Show the now fully configured window
 
     def _setup_main_window(self):
-        """Configure the main window after mode selection."""
+        """設定主視窗的基本屬性。"""
         app_title_key = "APP_TITLE_DUAL" if self.controller_mode == 'dual' else "APP_TITLE_SINGLE"
         self.master.title(self.get_current_translation(app_title_key))
-        self.master.geometry("960x1080")
-        self.master.resizable(True, True)
-
-
-
+        # Geometry is already set in __init__ for frameless window
+            
     def _restart_to_wizard(self):
         """Restarts the application to re-enter the wizard."""
         if self.modbus_master:
@@ -2416,30 +2423,92 @@ class ModbusMonitorApp:
             if hasattr(self, 'chart_button'):
                 self.chart_button.config(text=self.get_current_translation("CLOSE_CHART_BUTTON"), bootstyle="success_button")
 
+    def _center_window(self, width, height):
+        self.master.update_idletasks()
+        screen_width = self.master.winfo_screenwidth()
+        screen_height = self.master.winfo_screenheight()
+        x = (screen_width // 2) - (width // 2)
+        y = (screen_height // 2) - (height // 2)
+        self.master.geometry(f'{width}x{height}+{x}+{y}')
+
+    def _create_custom_title_bar(self):
+        """Create a custom title bar for the frameless window."""
+        title_bar = ttk.Frame(self.main_content_frame, bootstyle="secondary")
+        title_bar.grid(row=0, column=0, sticky="ew")
+        
+        # Title Label
+        app_title_key = "APP_TITLE_DUAL" if self.controller_mode == 'dual' else "APP_TITLE_SINGLE"
+        self.title_label = ttk.Label(title_bar, text=self.get_current_translation(app_title_key), font=("Arial", 10, "bold"), bootstyle="inverse-secondary")
+        self.title_label.pack(side=tk.LEFT, padx=10, pady=5)
+        
+        # Window Dragging Logic
+        def start_move(event):
+            self.master.x = event.x
+            self.master.y = event.y
+
+        def do_move(event):
+            delta_x = event.x - self.master.x
+            delta_y = event.y - self.master.y
+            x = self.master.winfo_x() + delta_x
+            y = self.master.winfo_y() + delta_y
+            self.master.geometry(f"+{x}+{y}")
+
+        title_bar.bind("<Button-1>", start_move)
+        title_bar.bind("<B1-Motion>", do_move)
+        self.title_label.bind("<Button-1>", start_move)
+        self.title_label.bind("<B1-Motion>", do_move)
+
+        # Window Controls
+        def close_app():
+            self.master.destroy()
+
+        def minimize_app():
+            self.master.overrideredirect(False)
+            self.master.iconify()
+            self.master.bind("<FocusIn>", on_restore)
+            
+        def on_restore(event):
+             if self.master.state() == 'normal':
+                self.master.overrideredirect(True)
+                self.master.unbind("<FocusIn>")
+
+        close_btn = ttk.Button(title_bar, text="✕", command=close_app, bootstyle="danger", width=4)
+        close_btn.pack(side=tk.RIGHT, padx=5, pady=2)
+        
+        min_btn = ttk.Button(title_bar, text="─", command=minimize_app, bootstyle="secondary", width=4)
+        min_btn.pack(side=tk.RIGHT, padx=0, pady=2)
 
     def _create_widgets(self):
-        """創建所有GUI元件並佈局。"""
-        # --- 主窗口網格佈局設定 ---
-        self.master.grid_rowconfigure(0, weight=1)
-        self.master.grid_columnconfigure(0, weight=1)
-
-        # --- 主內容框架 (固定寬度) ---
+        """
+        建立所有GUI元件。
+        """
+        # Main container
         self.main_content_frame = ttk.Frame(self.master)
-        self.main_content_frame.grid(row=0, column=0, sticky='nsew', padx=10, pady=10)
+        self.main_content_frame.pack(fill=tk.BOTH, expand=True)
+        # Fix width to 1000
+        self.main_content_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=960, height=1080)
+        self.main_content_frame.pack_propagate(False) # Prevent shrinking
+
+        # Custom Title Bar
+        self._create_custom_title_bar()
+
+        # Content Frame (holds the rest of the app)
+        content_frame = ttk.Frame(self.main_content_frame)
+        content_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
+        
+        # Configure grid for main_content_frame
         self.main_content_frame.grid_columnconfigure(0, weight=1)
-
-        # --- 頂部區域框架 (通用) ---
-        # topoftop_frame = ttk.Frame(self.main_content_frame)
-        # topoftop_frame.grid(row=0, column=0, sticky='ew', pady=(0, 5))
-        # topoftop_frame.grid_columnconfigure(0, weight=1)
-        ## --- Quick Setup Button ---
-        ## Placed between Model (Rightmost) and Language (Left of Button)
-        # self.quick_setup_btn = ttk.Button(topoftop_frame, text=self.get_current_translation("QUICK_SETUP_BUTTON"), command=self._restart_to_wizard, bootstyle="primary.Outline")
-        # self.quick_setup_btn.pack(side=tk.RIGHT, padx=(10, 0))
-
-        # --- 頂部區域框架 (通用) ---
-        top_frame = ttk.Frame(self.main_content_frame)
+        self.main_content_frame.grid_rowconfigure(1, weight=1)
+        
+        content_frame.grid_columnconfigure(0, weight=1)
+        content_frame.grid_rowconfigure(1, weight=1)
+        # --- Top Control Frame ---
+        top_frame = ttk.Frame(content_frame)
         top_frame.grid(row=0, column=0, sticky='ew', pady=(0, 5))
+
+        # --- 頂部區域框架 (通用) ---
+        # top_frame = ttk.Frame(self.main_content_frame) # Changed to content_frame
+        # top_frame.grid(row=0, column=0, sticky='ew', pady=(0, 5)) # This was row 0, now it's row 1 in main_content_frame, and row 0 in content_frame
         top_frame.grid_columnconfigure(0, weight=1)
 
         # --- 模式切換 (Combobox) ---
@@ -2487,19 +2556,19 @@ class ModbusMonitorApp:
         self.connect_button.grid(row=0, column=7, padx=5, pady=5, sticky=tk.E)
 
         # --- 分隔線 ---
-        ttk.Separator(self.main_content_frame, orient='horizontal').grid(row=1, column=0, pady=5, sticky='ew')
+        ttk.Separator(content_frame, orient='horizontal').grid(row=1, column=0, sticky='ew', pady=5)
 
         # --- 動態內容框架 ---
-        self.dynamic_content_frame = ttk.Frame(self.main_content_frame)
+        self.dynamic_content_frame = ttk.Frame(content_frame)
         self.dynamic_content_frame.grid(row=2, column=0, sticky='nsew')
         self.dynamic_content_frame.grid_columnconfigure(0, weight=1)
-        self.main_content_frame.grid_rowconfigure(2, weight=1)
+        content_frame.grid_rowconfigure(2, weight=1)
 
         # 根據模式建立對應的UI
         self._build_ui_for_mode()
 
         # --- 底部內容框架 ---
-        bottom_frame = ttk.Frame(self.main_content_frame)
+        bottom_frame = ttk.Frame(content_frame)
         bottom_frame.grid(row=3, column=0, sticky='ew', pady=(0, 5))
         bottom_frame.grid_columnconfigure(0, weight=1)
         self.company_label = ttk.Label(bottom_frame, text=self.get_current_translation("COPYRIGHT_LABEL"))
@@ -2834,6 +2903,7 @@ class ModbusMonitorApp:
             # Update title
             app_title_key = "APP_TITLE_DUAL" if self.controller_mode == 'dual' else "APP_TITLE_SINGLE"
             self.master.title(self.get_current_translation(app_title_key))
+            self.title_label.config(text=self.get_current_translation(app_title_key))
 
             # Re-build UI for the new mode
             self._build_ui_for_mode()
@@ -2933,6 +3003,7 @@ class ModbusMonitorApp:
 
         app_title_key = "APP_TITLE_DUAL" if self.controller_mode == 'dual' else "APP_TITLE_SINGLE"
         self.master.title(self.translations[app_title_key])
+        self.title_label.config(text=self.get_current_translation(app_title_key))
         
         # Update common widgets
         self.modbus_params_frame.config(text=self.translations["MODBUS_PARAMS_FRAME_TEXT"])
