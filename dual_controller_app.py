@@ -2394,10 +2394,8 @@ class ModbusMonitorApp:
         self.master.geometry("960x800") # Set initial size
         self._center_window(960, 800)
         
-        # Determine mode
-        self.controller_mode = None 
-        self._show_wizard()
         
+        # --- Move Initializations BEFORE Wizard to preserve connection ---
         self._current_translations = TEXTS[self.current_language_code.get()]
         self.translations = self._current_translations
         self.modbus_master = None
@@ -2432,6 +2430,11 @@ class ModbusMonitorApp:
         # --- 初始化UI ---
         self.auto_batch_write_pending = False # Pending flag for wizard auto-run
         self.is_reconnecting = False # Flag to prevent multiple reconnection windows
+        self.initial_wizard_params = {} # Store params from wizard
+
+        # Determine mode & Show Wizard
+        self.controller_mode = None 
+        self._show_wizard()
 
 
         # Show the wizard and wait for a choice
@@ -3001,6 +3004,7 @@ class ModbusMonitorApp:
             # Use safe flag instead of direct call
             if data['action'] == 'finish' and data.get('params'):
                 self.auto_batch_write_pending = True
+                self.initial_wizard_params = data.get('params', {})
                 
         else:
             self.controller_mode = None
