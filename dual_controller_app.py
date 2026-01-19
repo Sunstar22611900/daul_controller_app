@@ -797,10 +797,17 @@ class RealtimeChartWindow(tk.Toplevel):
         self.app = app_instance # Reference to the main application instance
         self.controller_mode = self.app.controller_mode
 
-        self.title(self.app.get_current_translation("CHART_WINDOW_TITLE"))
+        #self.title(self.app.get_current_translation("CHART_WINDOW_TITLE"))
         # 移除標題列
         self.overrideredirect(True)
-        self.geometry("800x600")
+        self.geometry("800x400")
+
+        # Center the window relative to master
+        x = master.winfo_x() + (master.winfo_width())
+        y = master.winfo_y()
+        self.geometry(f"+{x}+{y}")
+
+
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
 
 
@@ -849,20 +856,21 @@ class RealtimeChartWindow(tk.Toplevel):
         self.save_button.pack(side=tk.BOTTOM, pady=5)
 
     def _create_charts(self):
-        self.figure = Figure(figsize=(8, 5), dpi=100)
+        self.figure = Figure(figsize=(8, 3.5), dpi=100)
+        self.figure.patch.set_facecolor('#2b3e50') # Superhero background
         self.lines = {}
         self.axes = []
 
         if self.controller_mode == 'dual':
-            # Two subplots for dual mode, with explicit x-axis sharing
-            ax1_a = self.figure.add_subplot(211)
+            # Two subplots for dual mode, side-by-side (121, 122)
+            ax1_a = self.figure.add_subplot(121)
             ax2_a = ax1_a.twinx()
             self.axes.append((ax1_a, ax2_a))
             self.lines['a_current'], = ax1_a.plot([], [], color='dodgerblue')
             self.lines['a_signal'], = ax2_a.plot([], [], color='limegreen')
 
-            # Explicitly share the x-axis with the first plot
-            ax1_b = self.figure.add_subplot(212, sharex=ax1_a)
+            # Side-by-side, sharex might technically work but they separate plots.
+            ax1_b = self.figure.add_subplot(122, sharex=ax1_a)
             ax2_b = ax1_b.twinx()
             self.axes.append((ax1_b, ax2_b))
             self.lines['b_current'], = ax1_b.plot([], [], color='dodgerblue')
@@ -874,6 +882,18 @@ class RealtimeChartWindow(tk.Toplevel):
             self.axes.append((ax1_s, ax2_s))
             self.lines['s_current'], = ax1_s.plot([], [], color='dodgerblue')
             self.lines['s_signal'], = ax2_s.plot([], [], color='limegreen')
+
+        # Apply Superhero Styling to all axes
+        for ax1, ax2 in self.axes:
+            ax1.set_facecolor('#2b3e50')
+            ax1.tick_params(colors='white', which='both')
+            ax2.tick_params(colors='white', which='both')
+            for spine in ax1.spines.values(): spine.set_color('white')
+            for spine in ax2.spines.values(): spine.set_color('white')
+            ax1.xaxis.label.set_color('white')
+            ax1.yaxis.label.set_color('white')
+            ax2.yaxis.label.set_color('white')
+            ax1.title.set_color('white')
 
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.chart_frame)
         self.canvas_widget = self.canvas.get_tk_widget()
@@ -1046,13 +1066,13 @@ class ControllerModeChartWindow(tk.Toplevel):
     def __init__(self, master, app_instance):
         super().__init__(master)
         self.app = app_instance
-        self.title(self.app.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
+        #self.title(self.app.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
         self.overrideredirect(True) # Hide title bar
         self.geometry("800x400") # Default size
         
         # Center the window relative to master
-        x = master.winfo_x() + (master.winfo_width() // 2) - 400
-        y = master.winfo_y() + (master.winfo_height() // 2) - 300
+        x = master.winfo_x() + (master.winfo_width())
+        y = master.winfo_y() + (master.winfo_height() // 2)
         self.geometry(f"+{x}+{y}")
 
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
