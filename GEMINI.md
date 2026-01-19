@@ -1060,3 +1060,48 @@
 *   **實作細節 (`dual_controller_app.py`)：**
     *   在 `_on_back` 函數開頭加入檢查：若當前步驟為 3 且 `self.modbus_master` 存在 (即已連線)，則強制呼叫 `self._try_connect()` 來斷開連線。
     *   確保使用者在退回 Step 2 (型號選擇) 之前，連線狀態已完全重置。
+
+## 2026年1月16日 進度更新 (深色主題與無邊框視窗)
+
+### 1. PID 參數調整
+*   **範圍變更：** 將 PID 參數 (0022H ~ 0027H) 的數值範圍從 0-100 擴展至 0-1000。
+*   **介面優化：** 將上述參數的輸入方式從 `Entry` 輸入框改為 `Scale` 拉桿，並顯示當前數值，提供更直觀的操作體驗。
+
+### 2. 深色主題與圖表適配
+*   **主題更換：** 應用程式主題切換為 `cyborg` (深色風格)。
+*   **圖表修正：** 因應深色背景，將圖表 (Canvas) 的座標軸、格線與文字顏色從黑色/灰色改為白色/淺灰色，確保在深色主題下的可視性。解決了 `_tkinter.TclError` 關於 `outline` 屬性的錯誤。
+
+### 3. 無邊框視窗設計
+*   **移除系統邊框：** 啟用 `overrideredirect(True)` 移除 Windows 預設視窗邊框。
+*   **自定義標題列：** 實作了整合於介面內的自定義標題列：
+    *   **拖曳功能：** 支援拖曳標題列移動視窗。
+    *   **視窗控制：** 新增自定義的「最小化」與「關閉」按鈕。
+    *   **標題顯示：** 標題文字會隨模式（單/雙控制器）與語言切換自動更新。
+
+## 2026年1月19日 進度更新 (控制器圖表視窗重構)
+
+### 1. 控制器模式圖表視窗化
+*   **功能重構：** 將原本嵌在主視窗即時監控區下方的「控制器模式圖表區」，獨立移出成為一個浮動視窗。
+*   **目的：** 優化主畫面空間配置，解決在低解析度螢幕上內容可能被截斷的問題。
+*   **介面調整：**
+    *   移除了主視窗底部的圖表 Frame。
+    *   新增了一顆「控制器模式圖表」按鈕 (取代原區域)，點擊後開啟浮動視窗。
+    *   浮動視窗採用 **無邊框設計 (Frameless)**，且支援點擊視窗任一處進行拖曳移動 (與 Real-time Chart 行為一致)。
+
+### 2. 遇到的問題與解決方案
+
+*   **`AttributeError: 'ModbusMonitorApp' object has no attribute 'chart_frame'`**
+    *   **原因：** 重構移除主視窗的 `chart_frame` 後，`_update_all_text` 函式仍嘗試去設定該 Frame 的標題文字。
+    *   **修正：** 修改 `_update_all_text`，移除對 `chart_frame` 的直接引用，改為若按鈕存在則更新按鈕文字，若浮動視窗開啟則更新浮動視窗的標題。
+
+*   **圖表視窗空白 (Empty Window)**
+    *   **原因：** 在程式碼合併過程中，新定義的 `ControllerModeChartWindow` 類別被錯誤地縮排到了 `RealtimeChartWindow` 類別內部，導致兩個視窗類別的結構損壞，無法正確建立。
+    *   **修正：** 將 `ControllerModeChartWindow` 類別移至正確的模組層級 (Module Level)，修復了類別定義。
+
+*   **單組模式啟動錯誤 (`AttributeError: 'NoneType' object has no attribute 'winfo_exists'`)**
+    *   **原因：** 在單組控制器模式 (`single`) 下啟動程式時，`_update_all_text` 會嘗試呼叫 `_draw_single_controller_chart`。此時 `chart_canvas` 尚未被建立 (因為圖表視窗預設未開啟)，導致 `self.chart_canvas` 為 `None`，呼叫 `winfo_exists` 時發生錯誤。
+    *   **修正：** 在 `_draw_single_controller_chart` 函式開頭加入防呆檢查：`if not hasattr(self, 'chart_canvas') or self.chart_canvas is None: return`。
+
+*   **單組模式圖表繪製錯誤 (`KeyError: '000EH'`)**
+    *   **原因：** 單組模式下點擊開啟圖表時，`_draw_chart` 函式預設會去讀取雙組模式專用的寄存器 (如 `000EH`) 來判斷圖表類型，因單組模式的 `writable_entries` 中沒有這些鍵值而報錯。
+    *   **修正：** 修改 `_draw_chart` 函式 (現在作為統一的繪圖入口)，在執行任何邏輯前先檢查 `self.controller_mode`。若是 `'single'` 模式，則直接轉呼叫 `_draw_single_controller_chart()` 並返回；若是 `'dual'` 模式才執行原有的判斷邏輯。

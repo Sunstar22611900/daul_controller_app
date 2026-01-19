@@ -175,6 +175,7 @@ TEXTS = {
         "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "雙組獨立信號-雙組獨立輸出",
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組連動輸出",
         "SINGLE_OUTPUT_MODE_TEXT": "單組輸出",
+        "CONTROLLER_MODE_CHART_BUTTON": "控制器模式圖表",
         
         # --- Auto Reconnect ---
         "RECONNECT_TITLE": "連線中斷",
@@ -502,6 +503,7 @@ TEXTS = {
         "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "Dual Independent Output - Dual Independent Command",
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Linked Output - Single Command",
         "SINGLE_OUTPUT_MODE_TEXT": "Single Output",
+        "CONTROLLER_MODE_CHART_BUTTON": "Controller Mode Chart",
 
         # --- Auto Reconnect ---
         "RECONNECT_TITLE": "Connection Lost",
@@ -801,6 +803,7 @@ class RealtimeChartWindow(tk.Toplevel):
         self.geometry("800x600")
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
 
+
         # 用於記錄滑鼠點擊時的起始座標
         self._drag_start_x = 0
         self._drag_start_y = 0
@@ -981,6 +984,8 @@ class RealtimeChartWindow(tk.Toplevel):
         self.after_cancel(self.after_id) # Stop periodic updates
         self.app.chart_window = None # Clear reference in main app
         self.destroy()
+        if hasattr(self.app, 'chart_button'):
+             self.app.chart_button.config(text=self.app.get_current_translation("SHOW_CHART_BUTTON"), bootstyle="success_toolbutton")
 
     def _update_language(self):
         self.title(self.app.get_current_translation("CHART_WINDOW_TITLE"))
@@ -1036,6 +1041,70 @@ class RealtimeChartWindow(tk.Toplevel):
         
         self.figure.tight_layout()
         self.canvas.draw_idle()
+
+class ControllerModeChartWindow(tk.Toplevel):
+    def __init__(self, master, app_instance):
+        super().__init__(master)
+        self.app = app_instance
+        self.title(self.app.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
+        self.overrideredirect(True) # Hide title bar
+        self.geometry("800x400") # Default size
+        
+        # Center the window relative to master
+        x = master.winfo_x() + (master.winfo_width() // 2) - 400
+        y = master.winfo_y() + (master.winfo_height() // 2) - 300
+        self.geometry(f"+{x}+{y}")
+
+        self.protocol("WM_DELETE_WINDOW", self._on_closing)
+
+        # Dragging variables
+        self._drag_start_x = 0
+        self._drag_start_y = 0
+
+        # Bind mouse events for dragging
+        self.bind('<Button-1>', self.start_drag)
+        self.bind('<B1-Motion>', self.drag_window)
+
+        self._create_widgets()
+        
+    def _create_widgets(self):
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        
+        self.chart_frame = ttk.Frame(self, padding=10)
+        self.chart_frame.grid(row=0, column=0, sticky="nsew")
+        self.chart_frame.grid_rowconfigure(0, weight=1)
+        self.chart_frame.grid_columnconfigure(0, weight=1)
+        
+        self.chart_canvas = tk.Canvas(self.chart_frame, bg='#2b3e50', highlightthickness=0)
+        self.chart_canvas.grid(row=0, column=0, sticky="nsew")
+        
+        # Register this canvas with the app so it can draw on it
+        self.app.chart_canvas = self.chart_canvas
+        
+        # Bind resize event to redraw just in case
+        self.chart_canvas.bind("<Configure>", self._on_resize)
+
+    def start_drag(self, event):
+        """Record start position for dragging."""
+        self._drag_start_x = event.x
+        self._drag_start_y = event.y
+
+    def drag_window(self, event):
+        """Move window on drag."""
+        new_x = event.x_root - self._drag_start_x
+        new_y = event.y_root - self._drag_start_y
+        self.geometry(f"+{new_x}+{new_y}")
+
+    def _on_resize(self, event):
+        # Debounce or just trigger redraw
+        if hasattr(self.app, '_draw_chart'):
+            self.app._draw_chart()
+
+    def _on_closing(self):
+        self.app.chart_canvas = None
+        self.app.controller_mode_chart_window = None
+        self.destroy()
 
 class QuickSetupWizard(tk.Toplevel):
     def __init__(self, master):
@@ -2302,8 +2371,8 @@ class ModbusMonitorApp:
         
         # --- Frameless Window Setup ---
         self.master.overrideredirect(True) # Remove default border
-        self.master.geometry("960x1080") # Set initial size
-        self._center_window(960, 1080)
+        self.master.geometry("960x800") # Set initial size
+        self._center_window(960, 800)
         
         # Determine mode
         self.controller_mode = None 
@@ -2335,6 +2404,12 @@ class ModbusMonitorApp:
         self.current_history_0003 = deque(maxlen=self.MAX_HISTORY_POINTS) # For dual mode B group
         self.signal_history_0004 = deque(maxlen=self.MAX_HISTORY_POINTS) # For dual mode B group
 
+        # Floating Windows
+        self.chart_window = None
+        self.controller_mode_chart_window = None
+        self.chart_canvas = None # Reference to the canvas in the floating window
+
+        # --- 初始化UI ---
         self.auto_batch_write_pending = False # Pending flag for wizard auto-run
         self.is_reconnecting = False # Flag to prevent multiple reconnection windows
 
@@ -2423,6 +2498,22 @@ class ModbusMonitorApp:
             if hasattr(self, 'chart_button'):
                 self.chart_button.config(text=self.get_current_translation("CLOSE_CHART_BUTTON"), bootstyle="success_button")
 
+    def _toggle_controller_mode_chart_window(self):
+        """Toggle the controller mode chart window."""
+        if self.controller_mode_chart_window and self.controller_mode_chart_window.winfo_exists():
+            self.controller_mode_chart_window.destroy()
+            self.controller_mode_chart_window = None
+            self.chart_canvas = None
+            if hasattr(self, 'open_mode_chart_button'):
+                self.open_mode_chart_button.config(text=self.get_current_translation("CONTROLLER_MODE_CHART_BUTTON"), bootstyle="success_toolbutton")
+            # No button text change needed for this one based on requirements, but could be added if desired.
+        else:
+            self.controller_mode_chart_window = ControllerModeChartWindow(self.master, self)
+            # Initial draw
+            self._draw_chart()
+            if hasattr(self, 'open_mode_chart_button'):
+                self.open_mode_chart_button.config(text=self.get_current_translation("CLOSE_CHART_BUTTON"), bootstyle="success_button")
+
     def _center_window(self, width, height):
         self.master.update_idletasks()
         screen_width = self.master.winfo_screenwidth()
@@ -2486,7 +2577,7 @@ class ModbusMonitorApp:
         self.main_content_frame = ttk.Frame(self.master)
         self.main_content_frame.pack(fill=tk.BOTH, expand=True)
         # Fix width to 1000
-        self.main_content_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=960, height=1080)
+        self.main_content_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=960, height=800)
         self.main_content_frame.pack_propagate(False) # Prevent shrinking
 
         # Custom Title Bar
@@ -2617,9 +2708,21 @@ class ModbusMonitorApp:
         self.writable_params_area_frame.grid_rowconfigure(0, weight=1)
         self.writable_params_area_frame.grid_columnconfigure(0, weight=1)
 
-        # 快速設定按鈕, aligned to the right
-        self.quick_setup_btn = ttk.Button(self.dynamic_content_frame, text=self.get_current_translation("QUICK_SETUP_BUTTON"), bootstyle="primary.Outline", command=self._restart_to_wizard)
-        self.quick_setup_btn.grid(row=1, column=0, sticky='ne', padx=10, pady=20)
+        # 快速設定按鈕及模式圖表按鈕, aligned to the right
+        self.area_for_buttons = ttk.Frame(self.dynamic_content_frame)
+        self.area_for_buttons.grid(row=1, column=0, sticky='ne', padx=10, pady=20)
+        
+        self.open_mode_chart_button = ttk.Checkbutton(
+            self.area_for_buttons, 
+            text=self.get_current_translation("CONTROLLER_MODE_CHART_BUTTON"),
+            bootstyle="success_toolbutton", 
+            command=self._toggle_controller_mode_chart_window
+        )
+        self.open_mode_chart_button.grid(row=1, column=0, sticky='ne', padx=10, pady=0)
+
+
+        self.quick_setup_btn = ttk.Button(self.area_for_buttons, text=self.get_current_translation("QUICK_SETUP_BUTTON"), bootstyle="primary.Outline", command=self._restart_to_wizard)
+        self.quick_setup_btn.grid(row=1, column=1, sticky='ne', padx=0, pady=0)
 
         self.writable_params_notebook = ttk.Notebook(self.writable_params_area_frame)
         self.writable_params_notebook.grid(row=0, column=0, sticky="nsew")
@@ -2647,17 +2750,21 @@ class ModbusMonitorApp:
         # --- 底部批量操作按鈕 ---
         self._create_batch_buttons(self.writable_params_area_frame, 1)
 
-        # --- 圖表區 ---
-        self.chart_area_frame = ttk.Frame(self.dynamic_content_frame)
-        self.chart_area_frame.grid(row=2, column=0, sticky='nsew', pady=5)
-        self.chart_area_frame.grid_rowconfigure(0, weight=1)
-        self.chart_area_frame.grid_columnconfigure(0, weight=1)
-        self.chart_frame = ttk.Labelframe(self.chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
-        self.chart_frame.grid(row=0, column=0, sticky="nsew")
-        self.chart_frame.grid_rowconfigure(0, weight=1)
-        self.chart_frame.grid_columnconfigure(0, weight=1)
-        self.chart_canvas = tk.Canvas(self.chart_frame, bg='#2b3e50', highlightthickness=0)
-        self.chart_canvas.grid(row=0, column=0, sticky="nsew")
+        # --- 圖表區 (改為按鈕開啟浮動視窗) ---
+        # 為了不影響前三個區塊的版面，我們在最下方新增一個小的 Frame 來放按鈕
+        #self.chart_control_frame = ttk.Frame(self.dynamic_content_frame)
+        #self.chart_control_frame.grid(row=2, column=0, sticky='ew', pady=(5, 10)) # Use specific padding
+        
+        #self.open_mode_chart_button = ttk.Button(
+        #    self.chart_control_frame, 
+        #    text=self.get_current_translation("CONTROLLER_MODE_CHART_BUTTON"),
+        #    bootstyle="info", 
+        #    command=self._toggle_controller_mode_chart_window
+        #)
+        #self.open_mode_chart_button.pack(side=tk.RIGHT, padx=10)
+
+        # 這裡不再創建 self.chart_area_frame 及 internal chart_canvas
+        # 將由 _toggle_controller_mode_chart_window 動態創建
 
     def _create_single_controller_ui(self):
         """為單組控制器創建GUI元件。"""
@@ -2689,8 +2796,19 @@ class ModbusMonitorApp:
         self.writable_params_area_frame.grid_columnconfigure(0, weight=1)
 
         # 快速設定按鈕, aligned to the right
-        self.quick_setup_btn = ttk.Button(self.dynamic_content_frame, text=self.get_current_translation("QUICK_SETUP_BUTTON"), bootstyle="primary.Outline", command=self._restart_to_wizard)
-        self.quick_setup_btn.grid(row=1, column=0, sticky='ne', padx=10, pady=0)
+        self.area_for_buttons = ttk.Frame(self.dynamic_content_frame)
+        self.area_for_buttons.grid(row=1, column=0, sticky='ne', padx=10, pady=0)
+
+        self.open_mode_chart_button = ttk.Checkbutton(
+            self.area_for_buttons, 
+            text=self.get_current_translation("CONTROLLER_MODE_CHART_BUTTON"),
+            bootstyle="success_toolbutton", 
+            command=self._toggle_controller_mode_chart_window
+        )
+        self.open_mode_chart_button.grid(row=1, column=0, sticky='ne', padx=(0, 10), pady=0)
+        
+        self.quick_setup_btn = ttk.Button(self.area_for_buttons, text=self.get_current_translation("QUICK_SETUP_BUTTON"), bootstyle="primary.Outline", command=self._restart_to_wizard)
+        self.quick_setup_btn.grid(row=1, column=1, sticky='ne', padx=0, pady=0)
 
         canvas = tk.Canvas(self.writable_params_area_frame, borderwidth=0, highlightthickness=0)
         scrollbar = ttk.Scrollbar(self.writable_params_area_frame, orient="vertical", command=canvas.yview)
@@ -2707,17 +2825,14 @@ class ModbusMonitorApp:
 
         self._create_batch_buttons(self.writable_params_area_frame, 1)
 
-        # --- 圖表區 (for single controller) ---
-        self.chart_area_frame = ttk.Frame(self.dynamic_content_frame)
-        self.chart_area_frame.grid(row=2, column=0, sticky='nsew', pady=5)
-        self.chart_area_frame.grid_rowconfigure(0, weight=1)
-        self.chart_area_frame.grid_columnconfigure(0, weight=1)
-        self.chart_frame = ttk.Labelframe(self.chart_area_frame, text=self.get_current_translation("CONTROLLER_MODE_CHART_FRAME_TEXT"))
-        self.chart_frame.grid(row=0, column=0, sticky="nsew")
-        self.chart_frame.grid_rowconfigure(0, weight=1)
-        self.chart_frame.grid_columnconfigure(0, weight=1)
-        self.chart_canvas = tk.Canvas(self.chart_frame, bg='#2b3e50', highlightthickness=0)
-        self.chart_canvas.grid(row=0, column=0, sticky="nsew")
+        self._create_batch_buttons(self.writable_params_area_frame, 1)
+
+        # --- 圖表區 (for single controller) - 改為按鈕開啟浮動視窗 ---
+        #self.chart_control_frame = ttk.Frame(self.dynamic_content_frame)
+        #self.chart_control_frame.grid(row=2, column=0, sticky='ew', pady=(5, 10))
+
+
+        # 這裡不再創建 self.chart_area_frame 及 internal chart_canvas
 
 
     def _create_parameter_controls(self, config, parent_frames):
@@ -3033,7 +3148,6 @@ class ModbusMonitorApp:
         if hasattr(self, 'chart_button'):
             self.chart_button.config(text=self.translations["CLOSE_CHART_BUTTON"]) if self.chart_window and self.chart_window.winfo_exists() else self.chart_button.config(text=self.translations["SHOW_CHART_BUTTON"])
 
-
         # Update mode-specific UI
         if self.controller_mode == 'dual':
             self.monitor_frame_a.config(text=self.translations["MONITOR_AREA_A_FRAME_TEXT"])
@@ -3043,8 +3157,13 @@ class ModbusMonitorApp:
             self.writable_params_notebook.tab(self.a_group_params_frame, text=self.translations["A_GROUP_PARAMS_FRAME_TEXT"])
             self.writable_params_notebook.tab(self.b_group_params_frame, text=self.translations["B_GROUP_PARAMS_FRAME_TEXT"])
             self.writable_params_notebook.tab(self.pid_params_frame, text=self.translations["PID_PARAMS_FRAME_TEXT"])
-            self.chart_frame.config(text=self.translations["CONTROLLER_MODE_CHART_FRAME_TEXT"])
             
+            # Update Controller Mode Chart Button
+            #if hasattr(self, 'open_mode_chart_button'):
+            #    self.open_mode_chart_button.config(text=self.translations["CONTROLLER_MODE_CHART_BUTTON"])
+            if hasattr(self, 'open_mode_chart_button'):
+                self.open_mode_chart_button.config(text=self.translations["CLOSE_CHART_BUTTON"]) if self.controller_mode_chart_window and self.controller_mode_chart_window.winfo_exists() else self.open_mode_chart_button.config(text=self.translations["CONTROLLER_MODE_CHART_BUTTON"])
+
             # Update monitor meter subtext
             self.monitor_display_controls_a['0000H'].configure(subtext=self.translations["OUTPUT_CURRENT_LABEL"])
             self.monitor_display_controls_a['0001H'].configure(subtext=self.translations["INPUT_SIGNAL_LABEL"])
@@ -3069,7 +3188,12 @@ class ModbusMonitorApp:
         elif self.controller_mode == 'single':
             self.monitor_frame_a.config(text=self.translations["MONITOR_AREA_SINGLE_FRAME_TEXT"])
             self.writable_params_area_frame.config(text=self.translations["WRITABLE_PARAMS_FRAME_TEXT"])
-            self.chart_frame.config(text=self.translations["CONTROLLER_MODE_CHART_FRAME_TEXT"])
+            
+            # Update Controller Mode Chart Button
+            #if hasattr(self, 'open_mode_chart_button'):
+            #    self.open_mode_chart_button.config(text=self.translations["CONTROLLER_MODE_CHART_BUTTON"])
+            if hasattr(self, 'open_mode_chart_button'):
+                self.open_mode_chart_button.config(text=self.translations["CLOSE_CHART_BUTTON"]) if self.controller_mode_chart_window and self.controller_mode_chart_window.winfo_exists() else self.open_mode_chart_button.config(text=self.translations["CONTROLLER_MODE_CHART_BUTTON"])
             
             # Update monitor meter subtext
             self.monitor_display_controls_a['0000H'].configure(subtext=self.translations["OUTPUT_CURRENT_LABEL"])
@@ -3132,7 +3256,14 @@ class ModbusMonitorApp:
         return {'title': title, 'min_label': min_label, 'max_label': max_label, 'mid_label': mid_label}
 
     def _draw_single_controller_chart(self):
-        if not hasattr(self, 'chart_canvas') or not self.chart_canvas.winfo_exists():
+        if not hasattr(self, 'chart_canvas') or self.chart_canvas is None:
+            return
+        
+        try:
+            if not self.chart_canvas.winfo_exists():
+                return
+        except tk.TclError:
+            self.chart_canvas = None
             return
         
         self.chart_canvas.delete("all")
@@ -3266,8 +3397,23 @@ class ModbusMonitorApp:
         """
         根據控制器模式和參數繪製圖表。
         """
-        
+        # 如果 Canvas 不存在 (視窗未開啟)，則不進行繪製
+        if self.chart_canvas is None:
+            return
+
+        try:
+            if not self.chart_canvas.winfo_exists():
+                self.chart_canvas = None
+                return
+        except tk.TclError:
+            self.chart_canvas = None
+            return
+            
         self.chart_canvas.delete("all") # 清除舊圖表
+
+        if self.controller_mode == 'single':
+            self._draw_single_controller_chart()
+            return
 
         # 獲取A組和B組的輸入信號選擇值 (顯示文字)
         a_input_signal_selection_str = self.writable_entries['000EH'].get()
