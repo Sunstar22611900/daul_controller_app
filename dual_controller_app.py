@@ -104,6 +104,7 @@ TEXTS = {
         "WARNING_TITLE": "警告",
         "ERROR_TITLE": "錯誤",
         "CONFIRM_TITLE": "確認",
+        "NO_CHANGES_DETECTED": "未檢測到參數變更。",
         "CONFIRM_DELETE_TITLE": "刪除確認",
         "CONFIRM_DELETE_MSG": "您確定要刪除參數方案",
         "DELETE_BUTTON": "刪除",
@@ -432,6 +433,7 @@ TEXTS = {
         "WARNING_TITLE": "Warning",
         "ERROR_TITLE": "Error",
         "CONFIRM_TITLE": "Confirm",
+        "NO_CHANGES_DETECTED": "No parameter changes detected.",
         "CONFIRM_DELETE_TITLE": "Delete Confirmation",
         "CONFIRM_DELETE_MSG": "Are you sure you want to delete parameter set",
         "DELETE_BUTTON": "Delete",
@@ -2404,6 +2406,7 @@ class ModbusMonitorApp:
         self.last_status_code_a = None
         self.last_status_code_b = None
         self.saved_parameters = {}
+        self.last_read_registers_dict = {} # Optimization: Store last read values for batch write comparison
         self.writable_labels, self.writable_entries, self.writable_controls = {}, {}, {}
         self.monitor_labels_info_a, self.monitor_display_controls_a = {}, {}
         self.monitor_labels_info_b, self.monitor_display_controls_b = {}, {}
@@ -3004,6 +3007,7 @@ class ModbusMonitorApp:
             # Use safe flag instead of direct call
             if data['action'] == 'finish' and data.get('params'):
             #    self.auto_batch_write_pending = True
+            #不進行寫入，只更新參數
                 self.initial_wizard_params = data.get('params', {})
                 
         else:
@@ -4084,6 +4088,7 @@ class ModbusMonitorApp:
             
             if register_address_int < len(registers):
                 value_from_register = registers[register_address_int]
+                self.last_read_registers_dict[reg_hex] = value_from_register # Update cache
                 # ... (rest of the update logic is generic and should work)
                 if reg_hex not in self.writable_entries: continue
 
@@ -4306,7 +4311,8 @@ class ModbusMonitorApp:
         self.polling_active = True
         self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
         self.polling_thread.start()
-        messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("FACTORY_RESET_SUCCESS_MSG"))
+        #messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("FACTORY_RESET_SUCCESS_MSG"))
+        #重複的回復出廠設置警告視窗
 
     def _get_parameters_dir(self):
         """根據當前模式和語言獲取參數檔案的儲存目錄。"""
@@ -4541,10 +4547,19 @@ class ModbusMonitorApp:
             elif value_to_write == 'SKIP': # Empty field, skip it
                 continue
             else:
+                # Optimized: Only write if value changed
+                original_value = self.last_read_registers_dict.get(param['reg'])
+                if original_value is not None and original_value == value_to_write:
+                    continue
+                
                 params_to_write.append({'reg': param['reg'], 'value': value_to_write})
         
         if not validation_passed:
             return # Exit if any parameter is invalid
+
+        if not params_to_write:
+             messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("NO_CHANGES_DETECTED"))
+             return
 
         # --- Setup Progress Window ---
         progress_dialog = tk.Toplevel(self.master)
