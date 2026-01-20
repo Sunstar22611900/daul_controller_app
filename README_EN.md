@@ -5,7 +5,7 @@
 ## Introduction
 Designed for the SUNSTAR SY-DPCA series dual proportional coil controllers, this software provides an intuitive graphical interface for users to easily read and write various controller parameters via the Modbus RTU communication protocol (RS-485 interface).
 
-<img width="960" height="1080" alt="Capture" src="https://github.com/user-attachments/assets/c6b06460-6803-493b-a255-68c502a9f7aa" />
+<img width="960" height="800" alt="image" src="https://github.com/user-attachments/assets/e53f0ded-9a5d-49bf-a510-c48e78e50ead" />
 
 ## Features
 *   **Dual Mode Support:** Supports switching between SY-DPCA-*-2 (Dual Controller) and SY-DPCA-*-1 (Single Controller) models.
