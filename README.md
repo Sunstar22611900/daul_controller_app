@@ -5,7 +5,7 @@
 ## 簡介
 本程式專為 SUNSTAR SY-DPCA 系列雙比例線圈控制器設計，提供直觀的圖形化介面，讓使用者能夠透過 Modbus RTU 通訊協定（RS-485 介面）輕鬆讀取與寫入控制器的各項參數。
 
-<img width="960" height="1080" alt="擷取" src="https://github.com/user-attachments/assets/c6b06460-6803-493b-a255-68c502a9f7aa" />
+<img width="960" height="800" alt="image" src="https://github.com/user-attachments/assets/e53f0ded-9a5d-49bf-a510-c48e78e50ead" />
 
 ## 功能特色
 *   **雙模式支援：** 支援 SY-DPCA-*-2（雙控制器）與 SY-DPCA-*-1（單控制器）型號切換。
