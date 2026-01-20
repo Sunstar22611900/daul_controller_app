@@ -3003,7 +3003,7 @@ class ModbusMonitorApp:
             # AUTO-RUN Batch Write if wizard finished (not skipped)
             # Use safe flag instead of direct call
             if data['action'] == 'finish' and data.get('params'):
-                self.auto_batch_write_pending = True
+            #    self.auto_batch_write_pending = True
                 self.initial_wizard_params = data.get('params', {})
                 
         else:
