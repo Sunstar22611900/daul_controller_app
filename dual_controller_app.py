@@ -176,7 +176,7 @@ TEXTS = {
         "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "雙組獨立信號-雙組獨立輸出",
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "單組信號-雙組連動輸出",
         "SINGLE_OUTPUT_MODE_TEXT": "單組輸出",
-        "CONTROLLER_MODE_CHART_BUTTON": "控制器模式圖表",
+        "CONTROLLER_MODE_CHART_BUTTON": "操作模式圖表",
         
         # --- Auto Reconnect ---
         "RECONNECT_TITLE": "連線中斷",
@@ -212,9 +212,9 @@ TEXTS = {
 
         # --- Wizard Dual Advanced ---
         "WIZARD_COIL_CONFIG_LABEL": "請選擇輸出線圈組數:",
-        "WIZARD_INPUT_MODE_LABEL": "請選擇控制模式:",
+        "WIZARD_INPUT_MODE_LABEL": "請選擇操作模式:",
         "WIZARD_STEP_4_TITLE_DUAL": "選擇輸出線圈組數",
-        "WIZARD_STEP_4_TITLE_DUAL_COMBINED": "選擇控制模式",
+        "WIZARD_STEP_4_TITLE_DUAL_COMBINED": "選擇操作模式",
         "WIZARD_MODE_1_LABEL": "模式一\n單組信號 vs 單組輸出",
         "WIZARD_MODE_2_LABEL": "模式二\n雙組獨立信號 vs 雙組獨立輸出",
         "WIZARD_MODE_3_LABEL": "模式三\n單組信號 vs 雙組連動輸出",
@@ -224,7 +224,7 @@ TEXTS = {
         "WIZARD_STEP_7_TITLE_1G_NO_FB": "參數設定",
         "WIZARD_STEP_7_TITLE_1G_FB": "頻率設定",
         
-        "WIZARD_STEP_5_TITLE_2G": "控制模式選擇",
+        "WIZARD_STEP_5_TITLE_2G": "操作模式選擇",
         "WIZARD_STEP_6_TITLE_2G_INDEP": "A組輸入信號選擇",
         "WIZARD_STEP_6S_TITLE": "信號 1 選擇", 
         "WIZARD_STEP_7_TITLE_2G_INDEP": "B組輸入信號選擇",
@@ -505,7 +505,7 @@ TEXTS = {
         "DUAL_OUTPUT_DUAL_SLOPE_MODE_TEXT": "Dual Independent Output - Dual Independent Command",
         "DUAL_OUTPUT_SINGLE_SLOPE_MODE_TEXT": "Dual Linked Output - Single Command",
         "SINGLE_OUTPUT_MODE_TEXT": "Single Output",
-        "CONTROLLER_MODE_CHART_BUTTON": "Controller Mode Chart",
+        "CONTROLLER_MODE_CHART_BUTTON": "Operating Mode Chart",
 
         # --- Auto Reconnect ---
         "RECONNECT_TITLE": "Connection Lost",
@@ -539,9 +539,9 @@ TEXTS = {
         "WIZARD_BTN_QUICK_SETUP": "Quick Setup Wizard",
 
         "WIZARD_COIL_CONFIG_LABEL": "Select Output Coil Config:",
-        "WIZARD_INPUT_MODE_LABEL": "Control Mode Selection:",
+        "WIZARD_INPUT_MODE_LABEL": "Operating Mode Selection:",
         "WIZARD_STEP_4_TITLE_DUAL": "Select Output Coil Config",
-        "WIZARD_STEP_4_TITLE_DUAL_COMBINED": "Select Control Mode",
+        "WIZARD_STEP_4_TITLE_DUAL_COMBINED": "Select Operating Mode",
         "WIZARD_MODE_1_LABEL": "Mode 1\nSingle Command vs Single Output",
         "WIZARD_MODE_2_LABEL": "Mode 2\nDual Indep. Command vs Dual Indep. Output",
         "WIZARD_MODE_3_LABEL": "Mode 3\nSingle Command vs Dual Linked Output",
@@ -551,7 +551,7 @@ TEXTS = {
         "WIZARD_STEP_7_TITLE_1G_NO_FB": "Params Setup",
         "WIZARD_STEP_7_TITLE_1G_FB": "Frequency Setup",
         
-        "WIZARD_STEP_5_TITLE_2G": "Control Mode Selection",
+        "WIZARD_STEP_5_TITLE_2G": "Operating Mode Selection",
         "WIZARD_STEP_6_TITLE_2G_INDEP": "Coil A Command",
         "WIZARD_STEP_6S_TITLE": "Command 1 Selection", 
         "WIZARD_STEP_7_TITLE_2G_INDEP": "Coil B Command",
