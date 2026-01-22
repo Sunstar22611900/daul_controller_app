@@ -2419,6 +2419,7 @@ class ModbusMonitorApp:
 
         # --- Chart Data History ---
         self.MAX_HISTORY_POINTS = 2000 # 400 seconds * 5 samples/second (polling interval is 0.2s)
+        self.MAX_CHART_CURRENT_AMPS = 3.0 # Maximum current for chart Y-axis scaling
         self.time_history = deque(maxlen=self.MAX_HISTORY_POINTS)
         self.current_history_0000 = deque(maxlen=self.MAX_HISTORY_POINTS)
         self.signal_history_0001 = deque(maxlen=self.MAX_HISTORY_POINTS)
@@ -3310,7 +3311,7 @@ class ModbusMonitorApp:
             return # Not all params are available
 
         xaxis_props = self._get_single_controller_chart_xaxis_properties()
-        max_y_val = 3.0
+        max_y_val = self.MAX_CHART_CURRENT_AMPS
         chart_w, chart_h = 250, canvas_height * 0.5
         chart_x_start, chart_y_start = (canvas_width - chart_w) / 2, canvas_height * 0.25
 
@@ -3474,8 +3475,9 @@ class ModbusMonitorApp:
         canvas_width = self.chart_canvas.winfo_width()
         canvas_height = self.chart_canvas.winfo_height()
 
-        # Y軸最大電流值 (3.0A)
-        max_current_value = 3
+
+        # Y軸最大電流值
+        max_current_value = self.MAX_CHART_CURRENT_AMPS
 
         # 固定圖表寬度
         fixed_chart_w = 250 
@@ -3574,8 +3576,9 @@ class ModbusMonitorApp:
         canvas_width = self.chart_canvas.winfo_width()
         canvas_height = self.chart_canvas.winfo_height()
 
-        # Y軸最大電流值 (3.0A)
-        max_current_value = 3
+
+        # Y軸最大電流值
+        max_current_value = self.MAX_CHART_CURRENT_AMPS
 
         # 固定圖表寬度
         fixed_chart_w = 250
@@ -3691,8 +3694,9 @@ class ModbusMonitorApp:
         canvas_width = self.chart_canvas.winfo_width()
         canvas_height = self.chart_canvas.winfo_height()
 
-        # Y軸最大電流值 (3.0A)
-        max_current_value = 3
+
+        # Y軸最大電流值
+        max_current_value = self.MAX_CHART_CURRENT_AMPS
 
         # 固定圖表寬度
         fixed_chart_w = 250
@@ -4305,14 +4309,46 @@ class ModbusMonitorApp:
             self.polling_thread.start()
 
     def _post_reset_actions(self):
-        """恢復出廠設置倒數結束後執行的操作。"""
-        print("Reset countdown finished. Re-reading all registers.")
-        self._read_all_registers_and_update_gui()
-        self.polling_active = True
-        self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
-        self.polling_thread.start()
-        #messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("FACTORY_RESET_SUCCESS_MSG"))
-        #重複的回復出廠設置警告視窗
+        """
+        恢復出廠設置倒數結束後執行的操作。
+        使用 Ping 機制確保設備已準備好，然後再恢復輪詢。
+        """
+        print("Reset countdown finished. Starting ping sequence...")
+        
+        slave_id = int(self.slave_id_spinbox.get())
+        ping_success = False
+        max_retries = 5
+        
+        # Ping loop
+        for i in range(max_retries):
+            try:
+                # 嘗試讀取一個安全的寄存器 (e.g., 0006H for Common Params or 0000H for Monitor)
+                # 這裡使用 0006H 作為測試
+                print(f"Ping attempt {i+1}/{max_retries}...")
+                self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0x0006, 1)
+                ping_success = True
+                print("Ping successful! Device is online.")
+                break
+            except Exception as e:
+                print(f"Ping failed: {e}")
+                time.sleep(0.5) # Wait before retry
+        
+        if ping_success:
+            # 重新讀取所有參數並恢復 GUI 更新
+            self.master.after(0, self._read_all_registers_and_update_gui)
+            
+            # 恢復輪詢
+            self.polling_active = True
+            self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
+            self.polling_thread.start()
+            
+            #messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("FACTORY_RESET_SUCCESS_MSG"))
+        else:
+            # Ping 失敗，可能需要手動重連
+            messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), 
+                                   "Device verification failed after reset. Please check connection manually.")
+            # 這裡可以選擇是否強制斷開連接，或者保持現狀讓使用者手動處理
+            # self._toggle_connection() # Optional: Force disconnect UI update
 
     def _get_parameters_dir(self):
         """根據當前模式和語言獲取參數檔案的儲存目錄。"""
