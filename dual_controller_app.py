@@ -4300,8 +4300,8 @@ class ModbusMonitorApp:
         
         print(f"Sending Factory Reset command to reg {reg_addr:04X}")
         if write_modbus_register(slave_id, reg_addr, 5):
-            # Show countdown window
-            self._show_countdown_window(10, callback=self._post_reset_actions)
+            # Show countdown window and wait for 3 seconds
+            self._show_countdown_window(3, callback=self._post_reset_actions)
         else:
             # If write fails, just restart polling
             self.polling_active = True
