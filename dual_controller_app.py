@@ -2693,19 +2693,26 @@ class ModbusMonitorApp:
 
     def _center_window(self, width, height):
         self.master.update_idletasks()
-        screen_width = self.master.winfo_screenwidth()
-        screen_height = self.master.winfo_screenheight()
-        x = (screen_width // 2) - (width // 2)
-        y = (screen_height // 2) - (height // 2)
-        self.master.geometry(f'{width}x{height}+{x}+{y}')
+        # screen_width = self.master.winfo_screenwidth()
+        # screen_height = self.master.winfo_screenheight()
+        X = 0
+        Y = 0
+        # 改用螢幕左上角當作主視窗位置
+        # x = (screen_width // 2) - (width // 2)
+        # y = (screen_height // 2) - (height // 2)
+        self.master.geometry(f'{width}x{height}+{X}+{Y}')
 
     def _center_toplevel(self, window, width, height):
         """Centers a Toplevel window on the screen."""
         window.update_idletasks()
-        screen_width = window.winfo_screenwidth()
-        screen_height = window.winfo_screenheight()
-        x = (screen_width // 2) - (width // 2)
-        y = (screen_height // 2) - (height // 2)
+        master_x = self.master.winfo_x()
+        master_y = self.master.winfo_y()
+        master_width = self.master.winfo_width()
+        master_height = self.master.winfo_height()
+        #screen_width = window.winfo_screenwidth()
+        #screen_height = window.winfo_screenheight()
+        x = master_x + (master_width // 2) - (width // 2)
+        y = master_y + (master_height // 2) - (height // 2)
         window.geometry(f'{width}x{height}+{x}+{y}')
 
     def _create_custom_title_bar(self):
