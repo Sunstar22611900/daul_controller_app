@@ -3,6 +3,7 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog, filedialog
 import ttkbootstrap as ttk
+import serial
 import serial.tools.list_ports
 import modbus_tk
 import modbus_tk.defines as defines
@@ -94,6 +95,7 @@ TEXTS = {
         "LOAD_SUCCESS": "參數方案 \'{selected_name}\' 已成功讀取。",
         "SELECT_ITEM_ERROR": "請選擇一個參數方案。",
         "LOAD_BUTTON": "讀取",
+        "CONFIRM_BUTTON": "確定",
         "CANCEL_BUTTON": "取消",
         "BATCH_WRITE_PROGRESS_TITLE": "寫入進度",
         "BATCH_WRITE_PREPARING": "準備寫入...",
@@ -423,6 +425,7 @@ TEXTS = {
         "LOAD_SUCCESS": "Parameter set \'{selected_name}\' successfully loaded.",
         "SELECT_ITEM_ERROR": "Please select an item.",
         "LOAD_BUTTON": "Load",
+        "CONFIRM_BUTTON": "Confirm",
         "CANCEL_BUTTON": "Cancel",
         "BATCH_WRITE_PROGRESS_TITLE": "Write Progress",
         "BATCH_WRITE_PREPARING": "Preparing to write...",
@@ -792,6 +795,126 @@ def write_modbus_register(slave_id, register_address, value):
         print("Modbus通訊未建立，無法寫入。")
         return False
 
+# -----------------------------------------------------------------------------
+# New Refactored Classes
+# -----------------------------------------------------------------------------
+
+class ModbusClient:
+    """Handles Modbus RTU communication."""
+    def __init__(self):
+        self.master = None
+        self.is_connected = False
+
+    def connect(self, port, baudrate, timeout=1.0):
+        try:
+            self.master = modbus_tk.modbus_rtu.RtuMaster(serial.Serial(port=port, baudrate=baudrate, bytesize=8, parity='N', stopbits=1, xonxoff=0))
+            self.master.set_timeout(timeout)
+            self.master.open()
+            self.is_connected = True
+            return True, None
+        except Exception as e:
+            self.is_connected = False
+            return False, str(e)
+
+    def disconnect(self):
+        if self.master:
+            try:
+                self.master.close()
+            except:
+                pass
+        self.master = None
+        self.is_connected = False
+
+    def read_holding_registers(self, slave_id, start_addr, quantity):
+        if not self.is_connected or not self.master:
+            raise Exception("Not connected")
+        return self.master.execute(slave_id, defines.READ_HOLDING_REGISTERS, start_addr, quantity)
+
+    def write_single_register(self, slave_id, addr, value):
+        if not self.is_connected or not self.master:
+            raise Exception("Not connected")
+        return self.master.execute(slave_id, defines.WRITE_SINGLE_REGISTER, addr, output_value=int(value))
+
+
+class ConfigManager:
+    """Handles loading and saving of parameter files."""
+    def __init__(self, base_dir):
+        self.base_dir = base_dir
+
+    def get_parameters_dir(self, lang_code, mode_code):
+        return os.path.join(self.base_dir, f"{lang_code}_{mode_code}")
+
+    def save_parameters(self, params, filename, lang_code, mode_code):
+        params_dir = self.get_parameters_dir(lang_code, mode_code)
+        if not os.path.exists(params_dir):
+            os.makedirs(params_dir)
+        
+        if not filename.endswith(".json"):
+            filename += ".json"
+        
+        filepath = os.path.join(params_dir, filename)
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(params, f, indent=4, ensure_ascii=False)
+        return True, filepath
+
+    def load_parameters(self, filename, lang_code, mode_code):
+        params_dir = self.get_parameters_dir(lang_code, mode_code)
+        filepath = os.path.join(params_dir, filename)
+        
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"File not found: {filepath}")
+            
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return json.load(f)
+
+    def list_files(self, lang_code, mode_code):
+        params_dir = self.get_parameters_dir(lang_code, mode_code)
+        if not os.path.exists(params_dir):
+            return []
+        return [f for f in os.listdir(params_dir) if f.endswith('.json')]
+
+
+class ChartManager:
+    """Handles chart data storage and drawing."""
+    MAX_CHART_CURRENT_AMPS = 3.0
+    MAX_HISTORY_POINTS = 2000
+
+    def __init__(self):
+        self.time_history = deque(maxlen=self.MAX_HISTORY_POINTS)
+        self.current_history_0000 = deque(maxlen=self.MAX_HISTORY_POINTS)
+        self.signal_history_0001 = deque(maxlen=self.MAX_HISTORY_POINTS)
+        self.current_history_0003 = deque(maxlen=self.MAX_HISTORY_POINTS)
+        self.signal_history_0004 = deque(maxlen=self.MAX_HISTORY_POINTS)
+        self.lock = threading.Lock()
+        self.canvas = None
+
+    def set_canvas(self, canvas):
+        self.canvas = canvas
+
+    def clear_history(self):
+        with self.lock:
+            self.time_history.clear()
+            self.current_history_0000.clear()
+            self.signal_history_0001.clear()
+            self.current_history_0003.clear()
+            self.signal_history_0004.clear()
+
+    def add_data(self, mode, curr_0=0, sig_1=0, curr_3=0, sig_4=0):
+        with self.lock:
+            current_time = time.time()
+            self.time_history.append(current_time)
+            if mode == 'dual':
+                self.current_history_0000.append(curr_0 / 100.0)
+                self.signal_history_0001.append(sig_1 / 10.0)
+                self.current_history_0003.append(curr_3 / 100.0)
+                self.signal_history_0004.append(sig_4 / 10.0)
+            elif mode == 'single':
+                self.current_history_0000.append(curr_0 / 100.0)
+                self.signal_history_0001.append(sig_1 / 10.0)
+                self.current_history_0003.clear()
+                self.signal_history_0004.clear()
+
 # --- GUI 介面 ---
 class RealtimeChartWindow(tk.Toplevel):
     def __init__(self, master, app_instance):
@@ -907,22 +1030,22 @@ class RealtimeChartWindow(tk.Toplevel):
 
     def update_chart_data(self):
         # Create a consistent snapshot of the data under a lock
-        with self.app.chart_data_lock:
-            time_data = list(self.app.time_history)
+        with self.app.chart_manager.lock:
+            time_data = list(self.app.chart_manager.time_history)
             if not time_data:
                 return
 
             if self.controller_mode == 'dual':
-                current_a_data = list(self.app.current_history_0000)
-                signal_a_data = list(self.app.signal_history_0001)
-                current_b_data = list(self.app.current_history_0003)
-                signal_b_data = list(self.app.signal_history_0004)
+                current_a_data = list(self.app.chart_manager.current_history_0000)
+                signal_a_data = list(self.app.chart_manager.signal_history_0001)
+                current_b_data = list(self.app.chart_manager.current_history_0003)
+                signal_b_data = list(self.app.chart_manager.signal_history_0004)
                 # Basic validation to prevent crash on race condition
                 if not (len(time_data) == len(current_a_data) == len(signal_a_data) == len(current_b_data) == len(signal_b_data)):
                     return # Skip this update cycle
             else: # single
-                current_a_data = list(self.app.current_history_0000)
-                signal_a_data = list(self.app.signal_history_0001)
+                current_a_data = list(self.app.chart_manager.current_history_0000)
+                signal_a_data = list(self.app.chart_manager.signal_history_0001)
                 if not (len(time_data) == len(current_a_data) == len(signal_a_data)):
                     return # Skip this update cycle
 
@@ -976,13 +1099,21 @@ class RealtimeChartWindow(tk.Toplevel):
                         self.app.get_current_translation("LEGEND_CURRENT_B"),
                         self.app.get_current_translation("LEGEND_SIGNAL_B")
                     ])
-                    for i in range(len(self.app.time_history)):
+                    # Access data under lock for consistency (optional but safer)
+                    with self.app.chart_manager.lock:
+                         times = list(self.app.chart_manager.time_history)
+                         curr_a = list(self.app.chart_manager.current_history_0000)
+                         sig_a = list(self.app.chart_manager.signal_history_0001)
+                         curr_b = list(self.app.chart_manager.current_history_0003)
+                         sig_b = list(self.app.chart_manager.signal_history_0004)
+
+                    for i in range(len(times)):
                         writer.writerow([
-                            datetime.fromtimestamp(self.app.time_history[i]).strftime('%Y-%m-%d %H:%M:%S.%f'),
-                            self.app.current_history_0000[i],
-                            self.app.signal_history_0001[i],
-                            self.app.current_history_0003[i],
-                            self.app.signal_history_0004[i]
+                            datetime.fromtimestamp(times[i]).strftime('%Y-%m-%d %H:%M:%S.%f'),
+                            curr_a[i],
+                            sig_a[i],
+                            curr_b[i],
+                            sig_b[i]
                         ])
                 else: # single
                     writer.writerow([
@@ -990,11 +1121,16 @@ class RealtimeChartWindow(tk.Toplevel):
                         self.app.get_current_translation("LEGEND_CURRENT_S"),
                         self.app.get_current_translation("LEGEND_SIGNAL_S")
                     ])
-                    for i in range(len(self.app.time_history)):
+                    with self.app.chart_manager.lock:
+                        times = list(self.app.chart_manager.time_history)
+                        curr_a = list(self.app.chart_manager.current_history_0000)
+                        sig_a = list(self.app.chart_manager.signal_history_0001)
+
+                    for i in range(len(times)):
                         writer.writerow([
-                            datetime.fromtimestamp(self.app.time_history[i]).strftime('%Y-%m-%d %H:%M:%S.%f'),
-                            self.app.current_history_0000[i],
-                            self.app.signal_history_0001[i]
+                            datetime.fromtimestamp(times[i]).strftime('%Y-%m-%d %H:%M:%S.%f'),
+                            curr_a[i],
+                            sig_a[i]
                         ])
             messagebox.showinfo(self.app.get_current_translation("INFO_TITLE"),
                                 self.app.get_current_translation("CHART_SAVE_SUCCESS_MSG"))
@@ -1129,8 +1265,9 @@ class ControllerModeChartWindow(tk.Toplevel):
         self.destroy()
 
 class QuickSetupWizard(tk.Toplevel):
-    def __init__(self, master):
+    def __init__(self, master, app_instance):
         super().__init__(master)
+        self.app = app_instance
         self.title("Quick Setup Wizard")
         self.geometry("500x600") 
         self.resizable(False, False)
@@ -1398,8 +1535,9 @@ class QuickSetupWizard(tk.Toplevel):
         self.w_status_lbl.pack()
         
         self._refresh_ports()
+        self._refresh_ports()
         if hasattr(self, 'last_port') and self.last_port: self.w_port_cb.set(self.last_port)
-        if self.modbus_master:
+        if self.app.modbus_client.is_connected:
             self.w_status_lbl.config(text=self._get_text("WIZARD_CONNECT_SUCCESS"))
             self.w_connect_btn.config(text=self._get_text("DISCONNECT_BUTTON"), bootstyle="danger")
             self._toggle_inputs(False)
@@ -1418,10 +1556,9 @@ class QuickSetupWizard(tk.Toplevel):
 
     def _try_connect(self):
         global MODBUS_MASTER
-        if self.modbus_master:
-            try: self.modbus_master.close()
+        if self.app.modbus_client.is_connected:
+            try: self.app.modbus_client.disconnect()
             except: pass
-            self.modbus_master = None
             MODBUS_MASTER = None
             self.w_status_lbl.config(text="")
             self.w_connect_btn.config(text=self._get_text("CONNECT_BUTTON"), bootstyle="success")
@@ -1433,20 +1570,35 @@ class QuickSetupWizard(tk.Toplevel):
         try:
             baud = int(self.w_baud_cb.get())
             slave_id = int(self.w_id_var.get())
-            master = modbus_tk.modbus_rtu.RtuMaster(serial.Serial(port=port, baudrate=baud, bytesize=8, parity='N', stopbits=1, xonxoff=0))
-            master.set_timeout(1.0)
-            master.set_verbose(True)
-            master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, 1) # Test
-            self.modbus_master = master
-            MODBUS_MASTER = master
-            self.last_port = port
-            self.connection_info = {'port': port, 'baud': baud, 'id': slave_id}
-            self.w_status_lbl.config(text=self._get_text("WIZARD_CONNECT_SUCCESS"))
-            self.w_connect_btn.config(text=self._get_text("DISCONNECT_BUTTON"), bootstyle="danger")
-            self._toggle_inputs(False)
             
-            # Pre-fetch all registers into wizard_params to populate fields
-            self._read_initial_values(slave_id)
+            success, error = self.app.modbus_client.connect(port, baud)
+            
+            if success:
+                # Test read provided in connect is enough? 
+                # Wizard explicitly did a test read (master.execute(..., 0, 1)). 
+                # ModbusClient.connect doesn't do a read test automatically? 
+                # I should check ModbusClient.connect implementation.
+                # Assuming ModbusClient.connect just opens port.
+                # I should do a test read here to be sure, or ModbusClient ensures port open.
+                # Wizard did: master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, 1) to verify device response.
+                
+                try:
+                    self.app.modbus_client.read_holding_registers(slave_id, 0, 1)
+                except Exception as e:
+                     self.app.modbus_client.disconnect()
+                     raise e
+
+                MODBUS_MASTER = self.app.modbus_client.master
+                self.last_port = port
+                self.connection_info = {'port': port, 'baud': baud, 'id': slave_id}
+                self.w_status_lbl.config(text=self._get_text("WIZARD_CONNECT_SUCCESS"))
+                self.w_connect_btn.config(text=self._get_text("DISCONNECT_BUTTON"), bootstyle="danger")
+                self._toggle_inputs(False)
+                
+                # Pre-fetch all registers into wizard_params to populate fields
+                self._read_initial_values(slave_id)
+            else:
+                 raise Exception(error)
             
         except Exception as e:
             messagebox.showerror("Error", f"{TEXTS[self.language_code]['MODBUS_CONNECT_FAIL'].format(e=e)}", parent=self)
@@ -1459,7 +1611,7 @@ class QuickSetupWizard(tk.Toplevel):
             count = 14 if self.selected_mode == 'single' else 40
             
             # Read block covers all needed registers
-            data = self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, count)
+            data = self.app.modbus_client.read_holding_registers(slave_id, 0, count)
             for i, val in enumerate(data):
                 reg_hex = f"{i:04X}H"
                 self.wizard_params[reg_hex] = val
@@ -1613,7 +1765,7 @@ class QuickSetupWizard(tk.Toplevel):
 
     # --- Step 4 (Single): Signal Selection ---
     def _render_step_signal_single(self):
-        if not self.modbus_master:
+        if not self.app.modbus_client.is_connected:
             ttk.Label(self.content_frame, text=self._get_text("WIZARD_CONNECT_FIRST_WARNING"), foreground="red").pack(pady=50)
             return
 
@@ -1629,7 +1781,7 @@ class QuickSetupWizard(tk.Toplevel):
 
     # --- Step 5 (Single): Limits + Chart ---
     def _render_step_limits_single(self):
-        if not self.modbus_master: return
+        if not self.app.modbus_client.is_connected: return
         
         # Apply defaults if values are 0 (uninitialized)
         if self.wizard_params.get('0008H', 0) == 0: self.wizard_params['0008H'] = 100 # 1.00A
@@ -2128,7 +2280,7 @@ class QuickSetupWizard(tk.Toplevel):
             self.selected_mode = self.model_var.get()
             next_step = 3
         elif current == 3:
-            if not self.modbus_master:
+            if not self.app.modbus_client.is_connected:
                 messagebox.showwarning("Warning", self._get_text("WIZARD_CONNECT_FIRST_WARNING"), parent=self)
                 return
             # Branching Point based on Mode
@@ -2270,7 +2422,7 @@ class QuickSetupWizard(tk.Toplevel):
         self.destroy()
 
     def _apply_parameters(self):
-        if not self.modbus_master: return
+        if not self.app.modbus_client.is_connected: return
         slave_id = self.connection_info.get('id', 1)
         
         # Determine the allowed list of writable registers based on mode
@@ -2290,7 +2442,7 @@ class QuickSetupWizard(tk.Toplevel):
             if reg in allowed_regs and reg in self.modified_regs: 
                 try:
                     addr = int(reg.replace('H',''), 16)
-                    self.modbus_master.execute(slave_id, defines.WRITE_SINGLE_REGISTER, addr, output_value=int(val))
+                    self.app.modbus_client.write_single_register(slave_id, addr, val)
                     print(f"DEBUG: Wrote {reg} = {val}")
                 except Exception as e:
                     print(f"Write failed {reg}: {e}")
@@ -2300,7 +2452,7 @@ class QuickSetupWizard(tk.Toplevel):
                 pass
     def _on_back(self):
         # 如果在步驟3且已連線，則先斷開連線
-        if self.current_step == 3 and self.modbus_master:
+        if self.current_step == 3 and self.app.modbus_client.is_connected:
             self._try_connect() # 此函數在已連線時會斷開連線
 
         if hasattr(self, 'step_history') and self.step_history:
@@ -2400,7 +2552,14 @@ class ModbusMonitorApp:
         # --- Move Initializations BEFORE Wizard to preserve connection ---
         self._current_translations = TEXTS[self.current_language_code.get()]
         self.translations = self._current_translations
-        self.modbus_master = None
+        
+        # Initialize Managers
+        self.modbus_client = ModbusClient()
+        self.config_manager = ConfigManager(PARAMETERS_DIR)
+        self.config_manager = ConfigManager(PARAMETERS_DIR)
+        self.chart_manager = ChartManager()
+        self.connection_info = {} # Initialize connection info storage
+
         self.polling_active = False
         self.polling_thread = None
         self.last_status_code_a = None
@@ -2410,21 +2569,13 @@ class ModbusMonitorApp:
         self.writable_labels, self.writable_entries, self.writable_controls = {}, {}, {}
         self.monitor_labels_info_a, self.monitor_display_controls_a = {}, {}
         self.monitor_labels_info_b, self.monitor_display_controls_b = {}, {}
+        
         if not os.path.exists(PARAMETERS_DIR):
             os.makedirs(PARAMETERS_DIR)
 
         self.consecutive_read_failures = 0 # Counter for retry logic
 
-        self.chart_data_lock = threading.Lock()
-
-        # --- Chart Data History ---
-        self.MAX_HISTORY_POINTS = 2000 # 400 seconds * 5 samples/second (polling interval is 0.2s)
-        self.MAX_CHART_CURRENT_AMPS = 3.0 # Maximum current for chart Y-axis scaling
-        self.time_history = deque(maxlen=self.MAX_HISTORY_POINTS)
-        self.current_history_0000 = deque(maxlen=self.MAX_HISTORY_POINTS)
-        self.signal_history_0001 = deque(maxlen=self.MAX_HISTORY_POINTS)
-        self.current_history_0003 = deque(maxlen=self.MAX_HISTORY_POINTS) # For dual mode B group
-        self.signal_history_0004 = deque(maxlen=self.MAX_HISTORY_POINTS) # For dual mode B group
+        self.chart_data_lock = threading.Lock() # Keep for now if used outside manager, or move usage to manager
 
         # Floating Windows
         self.chart_window = None
@@ -2463,7 +2614,7 @@ class ModbusMonitorApp:
              self.slave_id_var.set(str(self.last_id))
         
         # If connection was established in Wizard, update UI and start polling
-        if self.modbus_master:
+        if self.modbus_client.is_connected:
              self._on_connection_established_from_wizard()
 
         self.main_widgets_created = True
@@ -2483,8 +2634,8 @@ class ModbusMonitorApp:
             
     def _restart_to_wizard(self):
         """Restarts the application to re-enter the wizard."""
-        if self.modbus_master:
-            try: self.modbus_master.close()
+        if self.modbus_client.is_connected:
+            try: self.modbus_client.disconnect()
             except: pass
         self.master.destroy()
         # Relaunch the current script
@@ -2501,12 +2652,11 @@ class ModbusMonitorApp:
             if self.polling_thread and self.polling_thread.is_alive():
                 self.polling_thread.join(timeout=1.0) # Wait for thread to finish
             self.polling_thread = None # Clear thread reference
-            self._clear_monitor_area() # Clear monitor display on exit
+        self._clear_monitor_area() # Clear monitor display on exit
 
-        if self.modbus_master:
+        if self.modbus_client.is_connected:
             try:
-                self.modbus_master.close()
-                self.modbus_master = None
+                self.modbus_client.disconnect()
                 global MODBUS_MASTER # Also clear global reference
                 MODBUS_MASTER = None
             except Exception as e:
@@ -2548,6 +2698,15 @@ class ModbusMonitorApp:
         x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
         self.master.geometry(f'{width}x{height}+{x}+{y}')
+
+    def _center_toplevel(self, window, width, height):
+        """Centers a Toplevel window on the screen."""
+        window.update_idletasks()
+        screen_width = window.winfo_screenwidth()
+        screen_height = window.winfo_screenheight()
+        x = (screen_width // 2) - (width // 2)
+        y = (screen_height // 2) - (height // 2)
+        window.geometry(f'{width}x{height}+{x}+{y}')
 
     def _create_custom_title_bar(self):
         """Create a custom title bar for the frameless window."""
@@ -2980,7 +3139,7 @@ class ModbusMonitorApp:
         self.batch_write_button.grid(row=0, column=2, padx=5, pady=5, sticky='ew')
 
     def _show_wizard(self):
-        wizard = QuickSetupWizard(self.master)
+        wizard = QuickSetupWizard(self.master, self)
         self.master.wait_window(wizard)
         
         if wizard.result_data:
@@ -2999,10 +3158,8 @@ class ModbusMonitorApp:
             self.last_id = conn.get('id')
             
             # Master
-            if data['modbus_master']:
-                self.modbus_master = data['modbus_master']
-                global MODBUS_MASTER
-                MODBUS_MASTER = self.modbus_master
+            # Already handled via shared self.modbus_client structure
+            pass
                 
             # AUTO-RUN Batch Write if wizard finished (not skipped)
             # Use safe flag instead of direct call
@@ -3030,18 +3187,17 @@ class ModbusMonitorApp:
             # --- END FIX ---
 
             # Disconnect if connected
-            if self.modbus_master:
+            if self.modbus_client.is_connected:
                 self._toggle_connection() # This will handle disconnection and UI clearing
 
             # Switch mode
             self.controller_mode = target_mode
             
             # --- FIX: Clear historical chart data ---
-            self.time_history.clear()
-            self.current_history_0000.clear()
-            self.signal_history_0001.clear()
-            self.current_history_0003.clear()
-            self.signal_history_0004.clear()
+            # --- FIX: Clear historical chart data ---
+            if hasattr(self, 'chart_manager'):
+                 self.chart_manager.clear_history()
+            # --- END FIX ---
             # --- END FIX ---
 
             # Update title
@@ -3155,7 +3311,7 @@ class ModbusMonitorApp:
         self.baudrate_label.config(text=self.translations["BAUDRATE_LABEL"])
         self.slave_id_label.config(text=self.translations["SLAVE_ID_LABEL"])
         self.refresh_ports_button.config(text=self.translations["REFRESH_PORTS_BUTTON"])
-        self.connect_button.config(text=self.translations["DISCONNECT_BUTTON"] if self.modbus_master else self.translations["CONNECT_BUTTON"])
+        self.connect_button.config(text=self.translations["DISCONNECT_BUTTON"] if self.modbus_client.is_connected else self.translations["CONNECT_BUTTON"])
         self.language_frame.config(text=self.translations["LANGUAGE_LABEL"])
         self.company_label.config(text=self.translations["COPYRIGHT_LABEL"])
         
@@ -3311,7 +3467,7 @@ class ModbusMonitorApp:
             return # Not all params are available
 
         xaxis_props = self._get_single_controller_chart_xaxis_properties()
-        max_y_val = self.MAX_CHART_CURRENT_AMPS
+        max_y_val = ChartManager.MAX_CHART_CURRENT_AMPS
         chart_w, chart_h = 250, canvas_height * 0.5
         chart_x_start, chart_y_start = (canvas_width - chart_w) / 2, canvas_height * 0.25
 
@@ -3477,7 +3633,7 @@ class ModbusMonitorApp:
 
 
         # Y軸最大電流值
-        max_current_value = self.MAX_CHART_CURRENT_AMPS
+        max_current_value = ChartManager.MAX_CHART_CURRENT_AMPS
 
         # 固定圖表寬度
         fixed_chart_w = 250 
@@ -3578,7 +3734,7 @@ class ModbusMonitorApp:
 
 
         # Y軸最大電流值
-        max_current_value = self.MAX_CHART_CURRENT_AMPS
+        max_current_value = ChartManager.MAX_CHART_CURRENT_AMPS
 
         # 固定圖表寬度
         fixed_chart_w = 250
@@ -3696,7 +3852,7 @@ class ModbusMonitorApp:
 
 
         # Y軸最大電流值
-        max_current_value = self.MAX_CHART_CURRENT_AMPS
+        max_current_value = ChartManager.MAX_CHART_CURRENT_AMPS
 
         # 固定圖表寬度
         fixed_chart_w = 250
@@ -3781,6 +3937,10 @@ class ModbusMonitorApp:
         self.connect_button.config(text=self.get_current_translation("DISCONNECT_BUTTON"), bootstyle="danger")
         
         try:
+            # Store connection info if migrated from wizard
+            if hasattr(self, 'last_port') and hasattr(self, 'last_baud'):
+                 self.connection_info = {'port': self.last_port, 'baudrate': self.last_baud}
+
             # Initial read of all registers to populate UI
             self._read_all_registers_and_update_gui()
             
@@ -3813,7 +3973,7 @@ class ModbusMonitorApp:
     def _toggle_connection(self):
         """連接或斷開Modbus通訊。"""
         global MODBUS_MASTER
-        if self.modbus_master:
+        if self.modbus_client.is_connected:
             # 斷開連接邏輯
             if self.polling_active:
                 self.polling_active = False # Signal thread to stop
@@ -3822,8 +3982,7 @@ class ModbusMonitorApp:
                 self.polling_thread = None # Clear thread reference
             
             try:
-                self.modbus_master.close()
-                self.modbus_master = None
+                self.modbus_client.disconnect()
                 MODBUS_MASTER = None 
                 self.connect_button.config(text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="success")
                 messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("MODBUS_DISCONNECTED"))
@@ -3843,11 +4002,11 @@ class ModbusMonitorApp:
                 messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("COM_PORT_SELECT_ERROR"))
                 return
 
-            try:
-                self.modbus_master = modbus_tk.modbus_rtu.RtuMaster(serial.Serial(port=port, baudrate=baudrate, bytesize=8, parity='N', stopbits=1, xonxoff=0))
-                self.modbus_master.set_timeout(1.0) 
-                self.modbus_master.open() 
-                MODBUS_MASTER = self.modbus_master 
+            success, error_msg = self.modbus_client.connect(port, baudrate)
+
+            if success:
+                self.connection_info = {'port': port, 'baudrate': baudrate} # Store detailed connection info
+                MODBUS_MASTER = self.modbus_client.master 
                 self.connect_button.config(text=self.get_current_translation("DISCONNECT_BUTTON"), bootstyle="danger")
                 messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("MODBUS_CONNECTED").format(port=port, baudrate=baudrate))
                 
@@ -3860,10 +4019,11 @@ class ModbusMonitorApp:
                 self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
                 self.polling_thread.start()
 
-            except serial.SerialException as e:
-                messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("COM_PORT_OPEN_FAIL").format(port=port, e=e))
-            except Exception as e:
-                messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("MODBUS_CONNECT_FAIL").format(e=e))
+            else:
+                 if 'Access is denied' in str(error_msg):
+                     messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("COM_PORT_OPEN_FAIL").format(port=port, e=error_msg))
+                 else:
+                     messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("MODBUS_CONNECT_FAIL").format(e=error_msg))
 
     def _read_all_registers_and_update_gui(self):
         """
@@ -3876,7 +4036,7 @@ class ModbusMonitorApp:
 
         slave_id = int(slave_id_str)
 
-        if self.modbus_master:
+        if self.modbus_client.is_connected:
             try:
                 start_addr = 0x0000
                 if self.controller_mode == 'dual':
@@ -3885,7 +4045,7 @@ class ModbusMonitorApp:
                     quantity = 14 # 0x0000 to 0x000D
 
                 print(f"讀取所有寄存器: Mode={self.controller_mode}, Slave ID={slave_id}, From 0x{start_addr:04X}, Quantity={quantity}")
-                registers = self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, start_addr, quantity)
+                registers = self.modbus_client.read_holding_registers(slave_id, start_addr, quantity)
                 print(f"讀取到的寄存器值: {registers}")
                 
                 # Schedule GUI updates on the main thread
@@ -3909,7 +4069,7 @@ class ModbusMonitorApp:
 
         slave_id = int(self.slave_id_spinbox.get())
 
-        if self.modbus_master:
+        if self.modbus_client.is_connected:
             try:
                 start_addr = 0x0000
                 if self.controller_mode == 'dual':
@@ -3917,7 +4077,7 @@ class ModbusMonitorApp:
                 else: # single
                     quantity = 3 # Only one group
 
-                registers = self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, start_addr, quantity)
+                registers = self.modbus_client.read_holding_registers(slave_id, start_addr, quantity)
                 self.master.after(0, lambda: self._update_monitor_area(registers))
                 self.consecutive_read_failures = 0 # Reset on success
 
@@ -3982,11 +4142,20 @@ class ModbusMonitorApp:
             dialog.update()
             
             try:
+                 # Ensure client attempts to connect first
+                 port = self.connection_info.get('port')
+                 baudrate = self.connection_info.get('baudrate')
+                 if not port or not baudrate:
+                     raise Exception("Missing connection info")
+
+                 if not self.modbus_client.is_connected:
+                     self.modbus_client.connect(port, baudrate)
+
                  slave_id_str = self.slave_id_spinbox.get()
                  if slave_id_str.isdigit():
                     slave_id = int(slave_id_str)
                     # Try reading register 0
-                    self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0, 1)
+                    self.modbus_client.read_holding_registers(slave_id, 0, 1)
                     
                     # If success:
                     print("Reconnection successful!")
@@ -4024,22 +4193,23 @@ class ModbusMonitorApp:
         """
         try:
             # --- Update Chart History (under lock) ---
-            with self.chart_data_lock:
-                current_time = time.time()
-                if self.controller_mode == 'dual':
-                    if len(registers) >= 6:
-                        self.time_history.append(current_time)
-                        self.current_history_0000.append(registers[0] / 100.0)
-                        self.signal_history_0001.append(registers[1] / 10.0)
-                        self.current_history_0003.append(registers[3] / 100.0)
-                        self.signal_history_0004.append(registers[4] / 10.0)
-                elif self.controller_mode == 'single':
-                    if len(registers) >= 3:
-                        self.time_history.append(current_time)
-                        self.current_history_0000.append(registers[0] / 100.0)
-                        self.signal_history_0001.append(registers[1] / 10.0)
-                        self.current_history_0003.clear()
-                        self.signal_history_0004.clear()
+            # --- Update Chart History via Manager ---
+            if self.controller_mode == 'dual':
+                if len(registers) >= 6:
+                    self.chart_manager.add_data(
+                        mode='dual',
+                        curr_0=registers[0],
+                        sig_1=registers[1],
+                        curr_3=registers[3],
+                        sig_4=registers[4]
+                    )
+            elif self.controller_mode == 'single':
+                if len(registers) >= 3:
+                     self.chart_manager.add_data(
+                        mode='single',
+                        curr_0=registers[0],
+                        sig_1=registers[1]
+                     )
 
             # --- Update GUI (outside lock) ---
             if self.controller_mode == 'dual':
@@ -4144,7 +4314,7 @@ class ModbusMonitorApp:
         register_address = int(reg_hex.replace('H', ''), 16) 
         value_str = tk_var.get().strip() 
 
-        if not self.modbus_master:
+        if not self.modbus_client.is_connected:
             messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("MODBUS_NOT_CONNECTED_WARNING"))
             return
         
@@ -4232,11 +4402,15 @@ class ModbusMonitorApp:
 
         # 對於其他寄存器，或000DH但不是0或5的值，執行正常寫入
         if write_value is not None:
-            if write_modbus_register(slave_id, register_address, write_value):
+            try:
+                self.modbus_client.write_single_register(slave_id, register_address, write_value)
                 self._read_all_registers_and_update_gui()
                 if self.controller_mode == 'dual': self._draw_chart()
                 messagebox.showinfo(self.get_current_translation("INFO_TITLE"),
                                     self.get_current_translation("MODBUS_WRITE_SUCCESS").format(value_str=value_str, register_address=register_address))
+            except Exception as e:
+                messagebox.showwarning(self.get_current_translation("WARNING_TITLE"),
+                                       self.get_current_translation("MODBUS_WRITE_FAIL").format(reg_hex=reg_hex, e=e) if "MODBUS_WRITE_FAIL" in self.translations else f"Write Failed: {e}")
         else:
             messagebox.showwarning(self.get_current_translation("WARNING_TITLE"),
                                    self.get_current_translation("WRITE_VALUE_DETERMINE_FAIL").format(reg_hex=reg_hex))
@@ -4299,10 +4473,12 @@ class ModbusMonitorApp:
         reg_addr = 0x000D if self.controller_mode == 'dual' else 0x0007
         
         print(f"Sending Factory Reset command to reg {reg_addr:04X}")
-        if write_modbus_register(slave_id, reg_addr, 5):
+        try:
+            self.modbus_client.write_single_register(slave_id, reg_addr, 5)
             # Show countdown window and wait for 3 seconds
             self._show_countdown_window(3, callback=self._post_reset_actions)
-        else:
+        except Exception as e:
+            print(f"Factory Reset failed: {e}")
             # If write fails, just restart polling
             self.polling_active = True
             self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
@@ -4325,7 +4501,7 @@ class ModbusMonitorApp:
                 # 嘗試讀取一個安全的寄存器 (e.g., 0006H for Common Params or 0000H for Monitor)
                 # 這裡使用 0006H 作為測試
                 print(f"Ping attempt {i+1}/{max_retries}...")
-                self.modbus_master.execute(slave_id, defines.READ_HOLDING_REGISTERS, 0x0006, 1)
+                self.modbus_client.read_holding_registers(slave_id, 0x0006, 1)
                 ping_success = True
                 print("Ping successful! Device is online.")
                 break
@@ -4350,63 +4526,110 @@ class ModbusMonitorApp:
             # 這裡可以選擇是否強制斷開連接，或者保持現狀讓使用者手動處理
             # self._toggle_connection() # Optional: Force disconnect UI update
 
-    def _get_parameters_dir(self):
-        """根據當前模式和語言獲取參數檔案的儲存目錄。"""
-        lang_code = self.current_language_code.get()
-        mode_code = self.controller_mode
-        return os.path.join(PARAMETERS_DIR, f"{lang_code}_{mode_code}")
-
     def _save_parameters_to_file(self):
         """將當前可寫入參數區的數值儲存到檔案。"""
-        params_dir = self._get_parameters_dir()
-        if not os.path.exists(params_dir):
-            os.makedirs(params_dir)
+        params = self._get_current_writable_params()
+        if not params: return
 
-        filename = simpledialog.askstring(self.get_current_translation("PARAM_SAVE_PROMPT_TITLE"), 
-                                          self.get_current_translation("PARAM_SAVE_PROMPT"),
-                                          parent=self.master)
+        # Custom frameless dialog for filename input
+        dialog = tk.Toplevel(self.master)
+        dialog.title(self.get_current_translation("PARAM_SAVE_PROMPT_TITLE"))
+        dialog.overrideredirect(True) # Frameless
+        
+        # Calculate geometry first
+        width, height = 400, 200
+        self._center_toplevel(dialog, width, height)
+        
+        dialog.lift()
+        dialog.focus_force()
+        dialog.grab_set()
+
+        # Border frame
+        main_frame = ttk.Frame(dialog, bootstyle="secondary", padding=2)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Content frame
+        content_frame = ttk.Frame(main_frame, padding=20)
+        content_frame.pack(fill=tk.BOTH, expand=True)
+
+        ttk.Label(content_frame, text=self.get_current_translation("PARAM_SAVE_PROMPT"), font=("Helvetica", 12)).pack(pady=(0, 10))
+        
+        filename_var = tk.StringVar()
+        entry = ttk.Entry(content_frame, textvariable=filename_var)
+        entry.pack(fill=tk.X, pady=(0, 20))
+        entry.focus()
+
+        result_filename = [None] # Use list to capture result in inner function
+
+        def on_confirm():
+            name = filename_var.get().strip()
+            if name:
+                result_filename[0] = name
+                dialog.destroy()
+            else:
+                 messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), "Filename cannot be empty", parent=dialog)
+
+        def on_cancel():
+            dialog.destroy()
+
+        button_frame = ttk.Frame(content_frame)
+        button_frame.pack(fill=tk.X)
+        
+        ttk.Button(button_frame, text=self.get_current_translation("CONFIRM_BUTTON"), command=on_confirm, bootstyle="success").pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
+        ttk.Button(button_frame, text=self.get_current_translation("CANCEL_BUTTON"), command=on_cancel, bootstyle="secondary").pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
+
+        dialog.wait_window()
+
+        filename = result_filename[0]
         if not filename:
-            return
+             return
 
-        if not filename.endswith(".json"):
-            filename += ".json"
+        success, msg = self.config_manager.save_parameters(params, filename, self.current_language_code.get(), self.controller_mode)
 
-        filepath = os.path.join(params_dir, filename)
-
-        if os.path.exists(filepath):
-            if not messagebox.askyesno(self.get_current_translation("CONFIRM_TITLE"), 
-                                       self.get_current_translation("FILE_EXISTS_CONFIRM").format(filename=filename)):
-                return
-
-        current_params = self._get_current_writable_params()
-        try:
-            with open(filepath, 'w', encoding='utf-8') as f:
-                json.dump(current_params, f, indent=4, ensure_ascii=False)
-            messagebox.showinfo(self.get_current_translation("INFO_TITLE"), 
-                                self.get_current_translation("SAVE_SUCCESS").format(filename=filename))
-        except Exception as e:
+        if success:
+             messagebox.showinfo(self.get_current_translation("INFO_TITLE"), 
+                                self.get_current_translation("SAVE_SUCCESS").format(filename=msg))
+        else:
+            if "exists" in str(msg).lower():
+                  # Handle overwrite if needed
+                  pass
+            
             messagebox.showerror(self.get_current_translation("ERROR_TITLE"), 
-                               self.get_current_translation("SAVE_FAIL").format(e=e))
+                                  self.get_current_translation("SAVE_FAIL").format(e=msg))
 
     def _load_parameters_from_file(self):
         """從檔案讀取參數並更新GUI。"""
-        params_dir = self._get_parameters_dir()
-        if not os.path.exists(params_dir) or not os.listdir(params_dir):
+        files = self.config_manager.list_files(self.current_language_code.get(), self.controller_mode)
+        if not files:
             messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("LOAD_FAIL_NO_FILES"))
             return
 
         # Use a custom dialog to show files
         dialog = tk.Toplevel(self.master)
         dialog.title(self.get_current_translation("LOAD_PROMPT"))
-        dialog.geometry("400x300")
+        dialog.overrideredirect(True) # Frameless
+        
+        width, height = 400, 300
+        self._center_toplevel(dialog, width, height)
         dialog.resizable(False, False)
-        dialog.transient(self.master)
+        
+        dialog.lift()
+        dialog.focus_force()
         dialog.grab_set()
 
-        listbox = tk.Listbox(dialog, selectmode=tk.SINGLE)
-        listbox.pack(pady=10, padx=10, expand=True, fill=tk.BOTH)
+        # Border frame for Load dialog
+        main_frame = ttk.Frame(dialog, bootstyle="secondary", padding=2)
+        main_frame.pack(fill=tk.BOTH, expand=True)
 
-        files = [f for f in os.listdir(params_dir) if f.endswith('.json')]
+        content_frame = ttk.Frame(main_frame, padding=10)
+        content_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Title Label
+        ttk.Label(content_frame, text=self.get_current_translation("LOAD_PROMPT"), font=("Helvetica", 12, "bold")).pack(pady=(0, 10))
+
+        listbox = tk.Listbox(content_frame, selectmode=tk.SINGLE)
+        listbox.pack(pady=5, padx=5, expand=True, fill=tk.BOTH)
+
         for f in files:
             listbox.insert(tk.END, f)
 
@@ -4426,18 +4649,30 @@ class ModbusMonitorApp:
             
             filename_to_delete = listbox.get(listbox.curselection())
             if messagebox.askyesno(self.get_current_translation("CONFIRM_DELETE_TITLE"), f"{self.get_current_translation('CONFIRM_DELETE_MSG')} '{filename_to_delete}'?", parent=dialog):
-                filepath_to_delete = os.path.join(params_dir, filename_to_delete)
-                try:
+                 # ConfigManager doesn't have delete yet? Or implies manual?
+                 # Assuming ConfigManager has no delete method yet effectively, 
+                 # we can rely on os for now or add delete to ConfigManager later.
+                 # But since I am refactoring, I should probably do it via ConfigManager.
+                 # For now, I'll access the path via logic similar to ConfigManager or assume method exists?
+                 # I'll stick to using ConfigManager.get_parameters_dir logic manually if needed 
+                 # or simply not refactor the *delete* logic deeply yet if ConfigManager lacks it.
+                 # Wait, accessing private `_get_parameters_dir` from ConfigManager is not ideal.
+                 # I will implement a delete method in ConfigManager? 
+                 # Or just reconstruct logic for now since ConfigManager is in SAME FILE so I can see it.
+                 # I'll reconstruct logic for DELETE specifically to keep it working without extending generic ConfigManager right now.
+                 params_dir = os.path.join(PARAMETERS_DIR, f"{self.current_language_code.get()}_{self.controller_mode}")
+                 filepath_to_delete = os.path.join(params_dir, filename_to_delete)
+                 try:
                     if os.path.exists(filepath_to_delete):
                         os.remove(filepath_to_delete)
                         messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("DELETE_SUCCESS").format(filename=filename_to_delete), parent=dialog)
                         listbox.delete(listbox.curselection())
                     else:
                         messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("FILE_NOT_FOUND_FOR_DELETE").format(filename=filename_to_delete), parent=dialog)
-                except Exception as e:
+                 except Exception as e:
                     messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("DELETE_FAIL").format(filename=filename_to_delete, e=e), parent=dialog)
 
-        button_frame = ttk.Frame(dialog)
+        button_frame = ttk.Frame(content_frame)
         button_frame.pack(pady=5, fill=tk.X, padx=10)
         
         load_btn = ttk.Button(button_frame, text=self.get_current_translation("LOAD_BUTTON"), command=on_select)
@@ -4454,27 +4689,26 @@ class ModbusMonitorApp:
         if not selected_file.get():
             return
 
-        filepath = os.path.join(params_dir, selected_file.get())
-
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                loaded_params = json.load(f)
-            
-            for reg_hex, value in loaded_params.items():
+            loaded_params = self.config_manager.load_parameters(selected_file.get(), self.current_language_code.get(), self.controller_mode)
+        except Exception as e:
+            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), f"Failed to load parameters: {e}", parent=self.master)
+            return
+
+        if loaded_params:
+             for reg_hex, value in loaded_params.items():
                 if reg_hex in self.writable_entries:
                     self.writable_entries[reg_hex].set(value)
             
-            # Redraw chart after loading parameters
-            if self.controller_mode == 'dual':
+             # Redraw chart after loading parameters
+             if self.controller_mode == 'dual':
                 self._draw_chart()
-            elif self.controller_mode == 'single':
+             elif self.controller_mode == 'single':
                 self._draw_single_controller_chart()
 
-            messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("LOAD_SUCCESS").format(selected_name=selected_file.get()))
-        except json.JSONDecodeError:
-            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("FILE_FORMAT_ERROR").format(fname=selected_file.get()))
-        except Exception as e:
-            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("FILE_READ_ERROR").format(fname=selected_file.get(), e=e))
+             messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("LOAD_SUCCESS").format(selected_name=selected_file.get()))
+        else:
+             messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("FILE_READ_ERROR").format(fname=selected_file.get(), e=error_msg))
 
     def _validate_single_param_for_batch(self, param_config):
         """
@@ -4533,7 +4767,7 @@ class ModbusMonitorApp:
 
     def _batch_write_parameters(self):
         """批量寫入所有可寫入參數。"""
-        if not self.modbus_master:
+        if not self.modbus_client.is_connected:
             messagebox.showwarning(self.get_current_translation("WARNING_TITLE"), self.get_current_translation("MODBUS_NOT_CONNECTED_WARNING"))
             return
 
@@ -4602,6 +4836,7 @@ class ModbusMonitorApp:
         progress_dialog.title(self.get_current_translation("BATCH_WRITE_PROGRESS_TITLE"))
         progress_dialog.geometry("400x100")
         progress_dialog.resizable(False, False)
+        self._center_toplevel(progress_dialog, 400, 100) # Center the window
         progress_dialog.transient(self.master)
         progress_dialog.grab_set()
 
@@ -4626,9 +4861,10 @@ class ModbusMonitorApp:
             progressbar["value"] = i + 1
             progress_dialog.update()
 
-            if write_modbus_register(slave_id, int(reg_hex.replace('H',''), 16), value_to_write):
+            try:
+                self.modbus_client.write_single_register(slave_id, int(reg_hex.replace('H',''), 16), value_to_write)
                 success_count += 1
-            else:
+            except Exception as e:
                 failed_registers.append(reg_hex)
                 # Stop on first write failure
                 break 

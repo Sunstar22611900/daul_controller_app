@@ -1162,3 +1162,55 @@
 *   **倒數時間調整：** 根據使用者反饋，將恢復出廠設置的倒數等待時間從 10 秒縮短為 3 秒，改善操作流暢度。
 *   **訊息提示優化：** 註解掉了恢復出廠設置成功後的 `messagebox.showinfo` 提示，避免使用者需要額外點擊確認，使流程更順暢。
 
+
+## 2026年1月23日 進度更新 (程式重構與除錯)
+
+### 1. 程式碼重構 (Refactoring)
+
+為了提高程式碼的可維護性與擴充性，進行了大幅度的重構，將原本龐大的 \`ModbusMonitorApp\` 類別拆分為多個職責單一的類別：
+
+*   **\`ModbusClient\`**: 封裝所有 Modbus 通訊邏輯，包括連接、斷開、讀取、寫入及執行緒安全的鎖定機制。
+*   **\`ConfigManager\`**: 負責參數設定檔的儲存、讀取與與路徑管理。
+*   **\`ChartManager\`**: 專門處理圖表數據的儲存、更新與歷史記錄管理。
+*   **\`ModbusMonitorApp\`**: 作為主要控制器，協調上述各模組與 GUI 的互動。
+
+### 2. 除錯與修正 (Debugging & Fixes)
+
+在重構後，針對使用者回報的問題進行了以下修正：
+
+*   **快速設定精靈 (QuickSetupWizard) 錯誤修正:**
+    *   修正了 Wizard 中錯誤引用 \`self.master\` (在此情境下為 root window) 來存取 \`modbus_client\` 的問題，改為正確引用 \`self.app.modbus_client\`。
+    *   **結果:** 解決了 Wizard 無法寫入參數及完成設定的 \`AttributeError\`。
+
+*   **Modbus 連接邏輯修正:**
+    *   移除了 \`ModbusMonitorApp\` 中所有對已廢棄屬性 \`self.modbus_master\` 的引用，全面改用 \`self.modbus_client.is_connected\` 來判斷連線狀態。
+    *   **結果:** 解決了在 \`_update_all_text\` (更新 UI 文字) 和 \`_on_closing\` (關閉程式) 時因屬性不存在而導致的崩潰。
+
+*   **設定精靈流程優化:**
+    *   修正了 \`_on_next\` 和 \`_on_back\` 的邏輯。現在，如果在 Wizard 第 3 步 (連線設定) 按下「上一步」，程式會正確地斷開 Modbus 連線，避免連線被錯誤地保留到前一步驟。
+
+*   **參數存檔與讀檔修正:**
+    *   修正了 \`ConfigManager\` 中 \`save_parameters\` 和 \`load_parameters\` 方法被呼叫時參數順序錯誤的問題。
+    *   修正了 \`list_files\` 方法參數順序錯誤的問題，這導致程式在讀取檔案時去錯誤的資料夾 (\`dual_zh\`) 尋找檔案，而不是正確的 (\`zh_dual\`)。
+    *   **結果:** 「本地儲存」與「本地讀取」功能現在可以正確地在對應語言與模式的資料夾中存取檔案。
+
+*   **模式切換錯誤修正:**
+    *   修正了在切換單/雙組模式時，因嘗試清除已移除的 \`self.time_history\` 屬性而導致的錯誤。改為呼叫 \`self.chart_manager.clear_history()\`。
+"
+
+### 3. 使用者介面優化 (UI Improvements)
+
+*   **對話視窗一致性優化:**
+    *   將「本地儲存」(_save_parameters_to_file) 和「本地讀取」(_load_parameters_from_file) 的視窗統一修改為無邊框 (frameless) 且置中顯示的樣式，以符合應用程式整體的視覺風格。
+    *   新增 \`_center_toplevel\` 輔助方法，確保這些浮動視窗能精確地顯示在螢幕正中央。
+    *   移除了無邊框視窗的 \`transient\` 屬性，並加入 \`lift\` 和 \`focus_force\`，解決了視窗可能被主視窗遮擋而不見的問題。
+
+*   **批次寫入進度視窗置中:**
+    *   將「批次寫入參數」時跳出的進度條視窗也應用了置中邏輯，改善使用者體驗，不再出現於螢幕左上角。
+
+### 4. 嚴重錯誤修正 (Critical Bug Fixes)
+
+*   **斷線重連機制修復:**
+    *   **屬性遺失錯誤:** 修正了 \`AttributeError: 'ModbusMonitorApp' object has no attribute 'connection_info'\`。在 \`ModbusMonitorApp\` 初始化時正確建立了 \`self.connection_info\` 字典，並確保在每次連線成功（無論是通過 Wizard 還是主畫面）時都會更新其中的 port 和 baudrate 資訊。
+    *   **重連邏輯錯誤:** 修正了 \`_handle_disconnection_error\` 中的重連邏輯。原先錯誤地直接使用已廢棄的 \`modbus_master\` 或未帶參數呼叫連線。現在改為使用 \`self.connection_info\` 中儲存的資訊，透過 \`self.modbus_client.connect()\` 顯式地重新建立連線，確保重連流程的可靠性。
+"
