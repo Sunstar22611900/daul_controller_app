@@ -4437,6 +4437,7 @@ class ModbusMonitorApp:
         """
         countdown_dialog = tk.Toplevel(self.master)
         countdown_dialog.title(self.get_current_translation("INFO_TITLE"))
+        countdown_dialog.overrideredirect(True)
         countdown_dialog.resizable(False, False)
         countdown_dialog.grab_set()  # Make it modal
 
@@ -4841,6 +4842,7 @@ class ModbusMonitorApp:
         # --- Setup Progress Window ---
         progress_dialog = tk.Toplevel(self.master)
         progress_dialog.title(self.get_current_translation("BATCH_WRITE_PROGRESS_TITLE"))
+        progress_dialog.overrideredirect(True)
         progress_dialog.geometry("400x100")
         progress_dialog.resizable(False, False)
         self._center_toplevel(progress_dialog, 400, 100) # Center the window
