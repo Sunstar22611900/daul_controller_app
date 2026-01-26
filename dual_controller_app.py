@@ -126,7 +126,7 @@ TEXTS = {
         "FACTORY_RESET_COUNTDOWN_MSG": "控制器重置中，請稍候... {seconds} 秒後將重新讀取參數。",
         "CHART_SAVE_SUCCESS_MSG": "圖表資料已成功儲存。",
         "CHART_SAVE_ERROR_MSG": "儲存圖表資料失敗: {e}",
-        "COPYRIGHT_LABEL": "© 2025 SUNSTAR. All rights reserved.",
+        "COPYRIGHT_LABEL": "© 2026 SUNSTAR. All rights reserved.",
         
         # 新增/修改的可寫入參數區的翻譯鍵
         "COMMON_PARAMS_FRAME_TEXT": "通用參數",
@@ -274,8 +274,8 @@ TEXTS = {
         "CHART_S_TITLE": "單組輸出",
 
         # --- 模式選擇與單組控制器 ---
-        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU 雙控制器監控調整程式 V3.0b",
-        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU 單控制器監控調整程式 V3.0b",
+        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU 雙控制器監控調整程式 V3.1",
+        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU 單控制器監控調整程式 V3.1",
         "QUICK_SETUP_BUTTON": "快速設定精靈",
         "MODE_SELECTION_TITLE": "型號選擇",
         "MODE_SELECTION_PROMPT": "請選擇要操作的控制器型號：",
@@ -456,7 +456,7 @@ TEXTS = {
         "FACTORY_RESET_COUNTDOWN_MSG": "Controller is resetting, please wait... Re-reading parameters in {seconds} seconds.",
         "CHART_SAVE_SUCCESS_MSG": "Chart data saved successfully.",
         "CHART_SAVE_ERROR_MSG": "Failed to save chart data: {e}",
-        "COPYRIGHT_LABEL": "© 2025 SUNSTAR. All rights reserved.",
+        "COPYRIGHT_LABEL": "© 2026 SUNSTAR. All rights reserved.",
         
         # New/Modified writable parameter area translations
         "COMMON_PARAMS_FRAME_TEXT": "Common Parameters",
@@ -602,8 +602,8 @@ TEXTS = {
         "CHART_S_TITLE": "Single Output",
 
         # --- Mode Selection & Single Controller ---
-        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU Dual Controller Setup V3.0b",
-        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU Single Controller Setup V3.0b",
+        "APP_TITLE_DUAL": "SUNSTAR Modbus RTU Dual Controller Setup V3.1",
+        "APP_TITLE_SINGLE": "SUNSTAR Modbus RTU Single Controller Setup V3.1",
         "QUICK_SETUP_BUTTON": "Quick Setup Wizard",
         "MODE_SELECTION_TITLE": "Model Selection",
         "MODE_SELECTION_PROMPT": "Please select the controller model:",

@@ -1213,4 +1213,20 @@
 *   **斷線重連機制修復:**
     *   **屬性遺失錯誤:** 修正了 \`AttributeError: 'ModbusMonitorApp' object has no attribute 'connection_info'\`。在 \`ModbusMonitorApp\` 初始化時正確建立了 \`self.connection_info\` 字典，並確保在每次連線成功（無論是通過 Wizard 還是主畫面）時都會更新其中的 port 和 baudrate 資訊。
     *   **重連邏輯錯誤:** 修正了 \`_handle_disconnection_error\` 中的重連邏輯。原先錯誤地直接使用已廢棄的 \`modbus_master\` 或未帶參數呼叫連線。現在改為使用 \`self.connection_info\` 中儲存的資訊，透過 \`self.modbus_client.connect()\` 顯式地重新建立連線，確保重連流程的可靠性。
-"
+
+## 2026年1月26日 進度更新 (客製化 Messagebox)
+
+### 1. 客製化訊息視窗實作
+
+*   **目標：** 替換原有的 `tkinter.messagebox`，使其風格與主程式 ("superhero") 一致，並能正確置中於主視窗或快速設定精靈。
+
+*   **實作細節 (`CustomMessagebox` 類別)：**
+    *   **無框設計：** 使用 `overrideredirect(True)` 移除視窗標題列。
+    *   **風格統一：** 背景色與按鈕樣式採用與 "superhero" 主題相符的深色系。
+    *   **動態置中：** 使用 `_get_parent()` 邏輯動態偵測當前焦點視窗（主視窗或 Wizard），將訊息視窗置中於該父視窗。
+    *   **按鈕在地化：** `askyesno` (Question) 類型的視窗按鈕會根據應用程式當前語言顯示「是/否」或「Yes/No」。
+
+*   **整合：**
+    *   在 `dual_controller_app.py` 中新增 `CustomMessagebox` 類別。
+    *   將原本的 `messagebox` 匯入替換為 `CustomMessagebox` 類別的別名，確保現有程式碼無需大幅修改即可套用新視窗。
+    *   引入 `GLOBAL_ROOT` 與 `GLOBAL_APP` 全域變數，供 `CustomMessagebox` 存取主視窗參考與應用程式語言設定。
