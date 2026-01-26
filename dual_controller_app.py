@@ -1,7 +1,8 @@
 #根據gemini02版本手動修改排版
 
 import tkinter as tk
-from tkinter import messagebox, simpledialog, filedialog
+from tkinter import simpledialog, filedialog
+# from tkinter import messagebox
 import ttkbootstrap as ttk
 import serial
 import serial.tools.list_ports
@@ -32,6 +33,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.dates import date2num, DateFormatter
 
 # --- 全局變量 ---
+# 用於儲存主視窗引用，供 CustomMessagebox 使用
+GLOBAL_ROOT = None
+# 用於儲存 ModbusMonitorApp 實例，供 CustomMessagebox 獲取語言設定
+GLOBAL_APP = None
 # 用於儲存Modbus Master物件，方便在不同函數中存取
 MODBUS_MASTER = None
 # 控制每秒輪詢是否啟用的標誌 (現在由_toggle_connection管理)
@@ -794,6 +799,171 @@ def write_modbus_register(slave_id, register_address, value):
                                ModbusMonitorApp.get_current_translation("MODBUS_NOT_CONNECTED_WARNING"))
         print("Modbus通訊未建立，無法寫入。")
         return False
+
+
+# -----------------------------------------------------------------------------
+# Custom Messagebox Class
+# -----------------------------------------------------------------------------
+class CustomMessagebox:
+    @staticmethod
+    def _get_parent():
+        """
+        Dynamically determine the parent window.
+        Prioritizes the currently focused window's toplevel.
+        Fallback to GLOBAL_ROOT.
+        """
+        try:
+            # Try to get the window that currently has focus
+            focused = GLOBAL_ROOT.focus_get()
+            if focused:
+                return focused.winfo_toplevel()
+        except Exception:
+            pass
+        
+        # Fallback to GLOBAL_ROOT if established
+        if GLOBAL_ROOT:
+            return GLOBAL_ROOT
+        return None
+
+    @staticmethod
+    def _show(title, message, icon_type="info", parent=None):
+        """
+        Internal method to create and show the custom messagebox.
+        icon_type: 'info', 'warning', 'error', 'question'
+        """
+        parent = parent or CustomMessagebox._get_parent()
+        
+        # Create Toplevel
+        dlg = tk.Toplevel(parent)
+        dlg.withdraw() # Hide initially
+        dlg.overrideredirect(True) # Frameless
+        
+        # Determine colors based on type (Superhero theme approximation)
+        # Info: Blue/Cyan, Warning: Orange, Error: Red, Question: Primary
+        colors = {
+            "info":     {"head": "#4E5D6C", "text": "#FFFFFF", "btn": "info"},
+            "warning":  {"head": "#f0ad4e", "text": "#FFFFFF", "btn": "warning"},
+            "error":    {"head": "#d9534f", "text": "#FFFFFF", "btn": "danger"},
+            "question": {"head": "#4E5D6C", "text": "#FFFFFF", "btn": "primary"}
+        }
+        
+        # Refine colors to match specific requests or defaults better if needed
+        # Using bootsyle names for buttons calls ttkbootstrap's internal mapping usually,
+        # but for the header background we need concrete hex codes often or use style lookups.
+        # Superhero theme details:
+        # Background: #2B3E50 (Dark Blue-Grey)
+        # Content BG: #2B3E50
+        # Text: #FFFFFF
+        
+        theme_bg = "#2B3E50" 
+        theme_fg = "#FFFFFF"
+        
+        style_cfg = colors.get(icon_type, colors["info"])
+        header_bg = style_cfg["head"]
+        
+        # Main Layout
+        main_frame = ttk.Frame(dlg, borderwidth=2, relief="raised")
+        main_frame.pack(fill="both", expand=True)
+        
+        # 1. Header (Title) - Text centered
+        # Remove title bar -> custom header
+        header_frame = tk.Frame(main_frame, bg=theme_bg) # Use tk.Frame for direct bg color control if ttk style is tricky
+        # To match superhero, we might just use a label with styling.
+        # Let's verify standard superhero headers. Usually they just have the window color.
+        # But user asked to put title text inside at the top.
+        
+        header_label = ttk.Label(main_frame, text=title, font=("Helvetica", 12, "bold"), bootstyle="inverse-light")
+        # Adjusting header to look "superhero" compatible.
+        # "inverse-light" might be dark text on light bg. 
+        # In superhero (dark theme), default label is white text.
+        header_label = ttk.Label(main_frame, text=title, font=("Helvetica", 11, "bold"), anchor="center")
+        header_label.pack(side="top", fill="x", pady=(10, 5), padx=10)
+        
+        # 2. Content (Message)
+        msg_label = ttk.Label(main_frame, text=message, font=("Helvetica", 10), justify="center", wraplength=350)
+        msg_label.pack(side="top", expand=True, fill="both", padx=20, pady=20)
+        
+        # 3. Buttons
+        btn_frame = ttk.Frame(main_frame)
+        btn_frame.pack(side="bottom", fill="x", pady=15)
+        
+        result = [None] # Mutable container for result
+        
+        def on_btn(val):
+            result[0] = val
+            dlg.destroy()
+            
+        if icon_type == "question":
+            # Determine labels based on app language if available
+            yes_text = "Yes"
+            no_text = "No"
+            
+            if GLOBAL_APP and hasattr(GLOBAL_APP, 'current_language_code'):
+                lang = GLOBAL_APP.current_language_code.get()
+                if lang == 'zh':
+                    yes_text = "是"
+                    no_text = "否"
+            
+            # Yes / No
+            btn_yes = ttk.Button(btn_frame, text=yes_text, bootstyle="success", width=10, command=lambda: on_btn(True))
+            btn_yes.pack(side="left", expand=True, padx=5)
+            
+            btn_no = ttk.Button(btn_frame, text=no_text, bootstyle="secondary", width=10, command=lambda: on_btn(False))
+            btn_no.pack(side="left", expand=True, padx=5)
+            
+        else:
+            # OK / Close
+            btn_ok = ttk.Button(btn_frame, text="Close", bootstyle=style_cfg["btn"], width=10, command=lambda: on_btn("ok"))
+            btn_ok.pack(side="top", padx=20)
+
+        # Sizes
+        dlg.update_idletasks()
+        width = 400
+        height = max(dlg.winfo_reqheight(), 180)
+        
+        # Center Logic
+        if parent:
+            parent_x = parent.winfo_rootx()
+            parent_y = parent.winfo_rooty()
+            parent_w = parent.winfo_width()
+            parent_h = parent.winfo_height()
+            
+            x = parent_x + (parent_w - width) // 2
+            y = parent_y + (parent_h - height) // 2
+        else:
+            # Screen center fallback
+            screen_width = dlg.winfo_screenwidth()
+            screen_height = dlg.winfo_screenheight()
+            x = (screen_width - width) // 2
+            y = (screen_height - height) // 2
+            
+        dlg.geometry(f"{width}x{height}+{x}+{y}")
+        dlg.deiconify()
+        dlg.grab_set()
+        dlg.focus_force()
+        btn_frame.winfo_children()[0].focus_set() # Focus first button
+        
+        dlg.wait_window()
+        return result[0]
+
+    @staticmethod
+    def showinfo(title, message, parent=None):
+        CustomMessagebox._show(title, message, "info", parent)
+
+    @staticmethod
+    def showwarning(title, message, parent=None):
+        CustomMessagebox._show(title, message, "warning", parent)
+
+    @staticmethod
+    def showerror(title, message, parent=None):
+        CustomMessagebox._show(title, message, "error", parent)
+
+    @staticmethod
+    def askyesno(title, message, parent=None):
+        return CustomMessagebox._show(title, message, "question", parent)
+
+# Replace the module
+messagebox = CustomMessagebox
 
 # -----------------------------------------------------------------------------
 # New Refactored Classes
@@ -2533,6 +2703,8 @@ class ModbusMonitorApp:
         return ModbusMonitorApp._current_translations.get(key, key) # Fallback to key if not found
 
     def __init__(self, master):
+        global GLOBAL_APP
+        GLOBAL_APP = self
         self.master = master
         self.controller_mode = None
         self.main_widgets_created = False
@@ -3192,7 +3364,9 @@ class ModbusMonitorApp:
                 self.chart_window.destroy()
                 self.chart_window = None
             # --- END FIX ---
-
+            if self.controller_mode_chart_window and self.controller_mode_chart_window.winfo_exists():
+                self.controller_mode_chart_window.destroy()
+                self.controller_mode_chart_window = None
             # Disconnect if connected
             if self.modbus_client.is_connected:
                 self._toggle_connection() # This will handle disconnection and UI clearing
@@ -4902,6 +5076,10 @@ if __name__ == "__main__":
         base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
         icon_path = os.path.join(base_path, 'icon', '002.ico')
         root.iconbitmap(icon_path)
+        
+        # Initializing GLOBAL_ROOT for CustomMessagebox
+        GLOBAL_ROOT = root
+        
         app = ModbusMonitorApp(root)
         if app.controller_mode: # Only start mainloop if a mode was selected
             root.mainloop()
