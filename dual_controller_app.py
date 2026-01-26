@@ -189,7 +189,7 @@ TEXTS = {
         "RECONNECT_TITLE": "連線中斷",
         "RECONNECT_MSG": "控制器已斷線，將於 {seconds} 秒後嘗試重新連線...",
         "RECONNECT_ATTEMPT": "正在嘗試重新連線 ({attempt}/{total})...",
-        "RECONNECT_FAIL_FINAL": "目前已斷線，請確認控制器連接狀況。\n請回到主畫面將控制器連線斷開。",
+        "RECONNECT_FAIL_FINAL": "目前已斷線，請確認控制器連接狀況。\n控制器已斷線。",
         "RECONNECT_CLOSE_BTN": "關閉",
 
 
@@ -519,7 +519,7 @@ TEXTS = {
         "RECONNECT_TITLE": "Connection Lost",
         "RECONNECT_MSG": "Controller disconnected. Reconnecting in {seconds} seconds...",
         "RECONNECT_ATTEMPT": "Attempting to reconnect ({attempt}/{total})...",
-        "RECONNECT_FAIL_FINAL": "Connection failed. Please check hardware connection.\nPlease return to main screen and disconnect.",
+        "RECONNECT_FAIL_FINAL": "Connection failed. Please check hardware connection.\nController disconnected.",
         "RECONNECT_CLOSE_BTN": "Close",
 
 
@@ -1701,7 +1701,7 @@ class QuickSetupWizard(tk.Toplevel):
         
         self.w_connect_btn = ttk.Button(self.content_frame, text=self._get_text("CONNECT_BUTTON"), command=self._try_connect, bootstyle="success", width=20)
         self.w_connect_btn.pack(pady=20)
-        self.w_status_lbl = ttk.Label(self.content_frame, text="", font=("", 10), foreground="green")
+        self.w_status_lbl = ttk.Label(self.content_frame, text="", font=("Helvetica", 10), foreground="green")
         self.w_status_lbl.pack()
         
         self._refresh_ports()
@@ -4240,7 +4240,19 @@ class ModbusMonitorApp:
                     self.master.after(10, self._draw_single_controller_chart)
 
             except Exception as e:
-                messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("READ_REGISTERS_FAIL").format(e=e))
+                #先停止輪詢
+                self.polling_active = False # Signal thread to stop
+                if self.polling_thread and self.polling_thread.is_alive():
+                    self.polling_thread.join(timeout=1.0) # Wait for thread to finish
+                self.polling_thread = None # Clear thread reference
+                self.modbus_client.disconnect()
+                MODBUS_MASTER = None 
+                self.connect_button.config(text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="success")
+                self._clear_monitor_area() # Clear monitor display on disconnect
+                self._clear_writable_params()
+                #顯示錯誤訊息
+                messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("READ_REGISTERS_FAIL").format(e=e))              
+
 
     def _read_monitor_registers_only(self):
         """
@@ -4283,9 +4295,10 @@ class ModbusMonitorApp:
         # Create dialog
         dialog = tk.Toplevel(self.master)
         dialog.title(self.get_current_translation("RECONNECT_TITLE"))
+        dialog.overrideredirect(True) # Frameless
         dialog.geometry("400x200")
         dialog.resizable(False, False)
-        dialog.transient(self.master)
+        # dialog.transient(self.master)
         dialog.grab_set()
         
         # Center dialog
@@ -4298,11 +4311,11 @@ class ModbusMonitorApp:
              pass 
         
         # UI Elements
-        lbl_msg = ttk.Label(dialog, text="", padding=20, font=("", 10), wraplength=350, justify="center")
+        lbl_msg = ttk.Label(dialog, borderwidth=2, relief="raised", text="", padding=20, font=("Helvetica", 12), wraplength=350, justify="left")
         lbl_msg.pack(expand=True, fill="both")
         
-        btn_close = ttk.Button(dialog, text=self.get_current_translation("RECONNECT_CLOSE_BTN"), command=dialog.destroy, state="disabled")
-        btn_close.pack(pady=10)
+        btn_close = ttk.Button(lbl_msg, text=self.get_current_translation("RECONNECT_CLOSE_BTN"), command=dialog.destroy, state="disabled")
+        btn_close.pack(side='bottom', pady=20)
         
         def on_dialog_close():
              self.is_reconnecting = False
@@ -4340,6 +4353,7 @@ class ModbusMonitorApp:
                     
                     # If success:
                     print("Reconnection successful!")
+                    self._read_all_registers_and_update_gui()
                     self.consecutive_read_failures = 0 # Reset on success
                     self.polling_active = True
                     self.polling_thread = threading.Thread(target=self._polling_loop, daemon=True)
@@ -4356,6 +4370,11 @@ class ModbusMonitorApp:
                  # Final failure
                  lbl_msg.configure(text=self.get_current_translation("RECONNECT_FAIL_FINAL"))
                  btn_close.configure(state="normal")
+                 self.modbus_client.disconnect()
+                 MODBUS_MASTER = None 
+                 self.connect_button.config(text=self.get_current_translation("CONNECT_BUTTON"), bootstyle="success")
+                 self._clear_monitor_area() # Clear monitor display on disconnect
+                 self._clear_writable_params()
         
         def start_countdown():
             nonlocal countdown_sec
@@ -4627,7 +4646,7 @@ class ModbusMonitorApp:
         y = master_y + (master_h // 2) - (dialog_h // 2)
         countdown_dialog.geometry(f'{dialog_w}x{dialog_h}+{x}+{y}')
 
-        countdown_label = ttk.Label(countdown_dialog, text="", font=("", 12))
+        countdown_label = ttk.Label(countdown_dialog, text="", font=("Helvetica", 12))
         countdown_label.pack(pady=20, padx=20)
 
         remaining = tk.IntVar(value=duration)
@@ -4738,7 +4757,7 @@ class ModbusMonitorApp:
         
         filename_var = tk.StringVar()
         entry = ttk.Entry(content_frame, textvariable=filename_var)
-        entry.pack(fill=tk.X, pady=(0, 20))
+        entry.pack(fill=tk.X, pady=(10, 0))
         entry.focus()
 
         result_filename = [None] # Use list to capture result in inner function
@@ -4755,7 +4774,7 @@ class ModbusMonitorApp:
             dialog.destroy()
 
         button_frame = ttk.Frame(content_frame)
-        button_frame.pack(fill=tk.X)
+        button_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=(0, 0))
         
         ttk.Button(button_frame, text=self.get_current_translation("CONFIRM_BUTTON"), command=on_confirm, bootstyle="success").pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
         ttk.Button(button_frame, text=self.get_current_translation("CANCEL_BUTTON"), command=on_cancel, bootstyle="secondary").pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
