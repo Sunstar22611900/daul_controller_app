@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import simpledialog, filedialog
-# from tkinter import messagebox
+from tkinter import messagebox
 import ttkbootstrap as ttk
 import serial
 import serial.tools.list_ports
@@ -365,12 +365,24 @@ TEXTS = {
             0: "信號 1",
             1: "第一組485"
         },
+        "A_INPUT_SIGNAL_SELECTION_MAP_VALUES_AUTOPID": { # For 000EH
+            1: "第一組485"
+        },
         "B_INPUT_SIGNAL_SELECTION_MAP_VALUES": { # For 0018H
             0: "無輸出",
             1: "信號 1",
             2: "信號 2",
             3: "第一組485",
             4: "第二組485"
+        },
+        "B_INPUT_SIGNAL_SELECTION_MAP_VALUES_AUTOPID": { # For 0018H
+            4: "第二組485"
+        },
+        "FEEDBACK_SIGNAL_MAP_VALUES_AUTOPID_A": { # For 000FH
+            1: "信號 1",
+        },
+        "FEEDBACK_SIGNAL_MAP_VALUES_AUTOPID_B": { # For 0019H
+            2: "信號 2",
         },
         "FEEDBACK_SIGNAL_MAP_VALUES": { # For 000FH, 0019H
             0: "關閉",
@@ -694,6 +706,9 @@ TEXTS = {
             0: "Command 1",
             1: "RS485 Command 1"
         },
+        "A_INPUT_SIGNAL_SELECTION_MAP_VALUES_AUTOPID": { # For 000EH
+            1: "RS485 Command 1"
+        },
         "B_INPUT_SIGNAL_SELECTION_MAP_VALUES": { # For 0018H
             0: "No Output",
             1: "Command 1",
@@ -701,9 +716,18 @@ TEXTS = {
             3: "RS485 Command 1",
             4: "RS485 Command 2"
         },
+        "B_INPUT_SIGNAL_SELECTION_MAP_VALUES_AUTOPID": { # For 0018H
+            4: "RS485 Command 2"
+        },
         "FEEDBACK_SIGNAL_MAP_VALUES": { # For 000FH, 0019H
             0: "Off",
             1: "Command 1",
+            2: "Command 2"
+        },
+        "FEEDBACK_SIGNAL_MAP_VALUES_AUTOPID_A": { # For 000FH
+            1: "Command 1"
+        },
+        "FEEDBACK_SIGNAL_MAP_VALUES_AUTOPID_B": { # For 0019H
             2: "Command 2"
         }
     }
@@ -1150,7 +1174,8 @@ class RealtimeChartWindow(tk.Toplevel):
                                       command=self._save_data)
         self.save_button.pack(side=tk.BOTTOM, pady=5)
 
-    def _create_charts(self):
+
+    def _create_chart_area(self):
         self.figure = Figure(figsize=(8, 3.5), dpi=100)
         self.figure.patch.set_facecolor('#2b3e50') # Superhero background
         self.lines = {}
@@ -2637,6 +2662,490 @@ class QuickSetupWizard(tk.Toplevel):
         self.destroy()
         self.destroy()
 
+class AutoPIDWizard(tk.Toplevel):
+    def __init__(self, master, app_instance):
+        super().__init__(master)
+        self.app = app_instance
+        self.title("Auto PID (BETA)")
+        self.geometry("600x700")
+        self.overrideredirect(True)
+        self.resizable(False, False)
+        
+        # Center window
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width // 2) - (600 // 2)
+        y = (screen_height // 2) - (700 // 2)
+        self.geometry(f"+{x}+{y}")
+        
+        # State
+        self.current_step = 1
+        self.target_group = "A" # Default
+        self.step_amplitude = 50 # Default %
+        self.safety_limit = 1.0 # Default A
+        
+        self.recording_data = {'time': [], 'current': []}
+        self.calculated_pid = {}
+        self.original_pid = {'P': '-', 'I': '-', 'D': '-'} # Placeholders
+        
+        self.is_running = False
+        
+        self.protocol("WM_DELETE_WINDOW", self._on_cancel)
+        self._create_widgets()
+        self._show_step(1)
+
+    def _get_text(self, key):
+        # Fallback to English if key missing
+        return TEXTS[self.app.current_language_code.get()].get(key, key)
+
+    def _create_widgets(self):
+        # Header
+        self.header_frame = ttk.Frame(self, bootstyle="info")
+        self.header_frame.pack(side=tk.TOP, fill=tk.X)
+        self.header_label = ttk.Label(self.header_frame, text="", font=("Arial", 16, "bold"), bootstyle="inverse-info", padding=10)
+        self.header_label.pack(side=tk.LEFT)
+        
+        # Content
+        self.content_frame = ttk.Frame(self, padding=20)
+        self.content_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        
+        # Footer
+        self.footer_frame = ttk.Frame(self, padding=10)
+        self.footer_frame.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        self.back_button = ttk.Button(self.footer_frame, text="< Back", command=self._on_back, width=15)
+        self.back_button.pack(side=tk.LEFT)
+        
+        self.next_button = ttk.Button(self.footer_frame, text="Next >", command=self._on_next, width=15, bootstyle="primary")
+        self.next_button.pack(side=tk.RIGHT)
+
+    def _show_step(self, step):
+        self.current_step = step
+        
+        # Clear content
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+            
+        self.back_button.config(state="normal" if step > 1 else "disabled")
+        
+        # Router
+        if step == 1: self._render_step_setup()
+        elif step == 2: self._render_step_configuration()
+        elif step == 3: self._render_step_warning()
+        elif step == 4: self._render_step_running()
+        elif step == 5: self._render_step_results()
+        
+        # Update Header/Buttons
+        titles = {
+            1: "Auto PID (BETA) - Setup",
+            2: "Auto PID (BETA) - Configuration",
+            3: "Auto PID (BETA) - Ready",
+            4: "Auto PID (BETA) - Tuning...",
+            5: "Auto PID (BETA) - Results"
+        }
+        self.header_label.config(text=titles.get(step, "Auto PID"))
+        
+        if step == 5:
+            self.next_button.config(text="Apply & Finish", bootstyle="success")
+        else:
+            self.next_button.config(text="Next >", bootstyle="primary")
+
+    # --- Step 1: Setup ---
+    def _render_step_setup(self):
+        ttk.Label(self.content_frame, text="Select Target Group:", font=("", 12)).pack(pady=10)
+        
+        self.group_var = tk.StringVar(value=self.target_group)
+        ttk.Radiobutton(self.content_frame, text="Group A", variable=self.group_var, value="A").pack()
+        ttk.Radiobutton(self.content_frame, text="Group B", variable=self.group_var, value="B").pack()
+        
+        ttk.Label(self.content_frame, text="Step Amplitude (%):", font=("", 12)).pack(pady=(20, 5))
+        self.amp_var = tk.DoubleVar(value=self.step_amplitude)
+        ttk.Spinbox(self.content_frame, from_=10, to=100, increment=5, textvariable=self.amp_var).pack()
+        
+        ttk.Label(self.content_frame, text="Max Safety Current (A):", font=("", 12)).pack(pady=(20, 5))
+        self.safe_curr_var = tk.DoubleVar(value=self.safety_limit)
+        ttk.Spinbox(self.content_frame, from_=0.2, to=3.0, increment=0.1, textvariable=self.safe_curr_var).pack()
+        
+        ttk.Label(self.content_frame, text="Ensure load can move safely!", bootstyle="warning").pack(pady=20)
+
+    # --- Step 2: Configuration ---
+    def _render_step_configuration(self):
+        self.target_group = self.group_var.get()
+        self.step_amplitude = self.amp_var.get()
+        self.safety_limit = self.safe_curr_var.get()
+        
+        msg = f"Configuring for Group {self.target_group}..."
+        ttk.Label(self.content_frame, text=msg, font=("", 12, "bold")).pack(pady=10)
+        
+        self.config_vars = {}
+        
+        # Helper to create disabled forced combo
+        def create_forced_row(parent, title, val_text):
+            f = ttk.Frame(parent)
+            f.pack(fill=tk.X, pady=5)
+            ttk.Label(f, text=title, width=25).pack(side=tk.LEFT)
+            ttk.Entry(f, textvariable=tk.StringVar(value=val_text), state="disabled", width=20).pack(side=tk.LEFT)
+            
+        def create_select_row(parent, reg, title_key, map_key):
+            f = ttk.Frame(parent)
+            f.pack(fill=tk.X, pady=5)
+            title = self._get_text(title_key)
+            ttk.Label(f, text=f"{title} ({reg})", width=25).pack(side=tk.TOP)
+            
+            map_vals = TEXTS[self.app.current_language_code.get()].get(map_key, {})
+            var = tk.StringVar()
+            cb = ttk.Combobox(f, textvariable=var, values=list(map_vals.values()), state="readonly", width=18)
+            cb.pack(side=tk.TOP)
+            if map_vals: cb.current(0)
+            self.config_vars[reg] = var
+            self.config_vars[f"{reg}_map"] = map_vals
+
+        if self.target_group == "A":
+            # 000EH (Force 1: RS485 1)
+            create_select_row(self.content_frame, "000EH", "A_INPUT_SIGNAL_SELECTION", "A_INPUT_SIGNAL_SELECTION_MAP_VALUES_AUTOPID")
+            
+            # 000FH (Force 1: Signal 1)
+            create_select_row(self.content_frame, "000FH", "A_FEEDBACK_SIGNAL", "FEEDBACK_SIGNAL_MAP_VALUES_AUTOPID_A")
+            
+            # 0006H (Selectable)
+            create_select_row(self.content_frame, "0006H", "SIGNAL_SELECTION_1", "SIGNAL_SELECTION_MAP_VALUES")
+            
+            ttk.Label(self.content_frame, text="Please connect feedback signal to 'Signal 1' terminal.", foreground="red").pack(pady=20)
+
+        else: # Group B
+            # 0018H (Force 4: RS485 2)
+            create_select_row(self.content_frame, "0018H", "B_INPUT_SIGNAL_SELECTION", "B_INPUT_SIGNAL_SELECTION_MAP_VALUES_AUTOPID")
+            
+            # 0019H (Force 2: Signal 2)
+            create_select_row(self.content_frame, "0019H", "B_FEEDBACK_SIGNAL", "FEEDBACK_SIGNAL_MAP_VALUES_AUTOPID_B")
+            
+            # 0007H (Selectable)
+            create_select_row(self.content_frame, "0007H", "SIGNAL_SELECTION_2", "SIGNAL_SELECTION_MAP_VALUES")
+            
+            ttk.Label(self.content_frame, text="Please connect feedback signal to 'Signal 2' terminal.", foreground="red").pack(pady=20)
+
+        ttk.Label(self.content_frame, text="Click Next to write these configurations.", bootstyle="info").pack(side=tk.BOTTOM, pady=10)
+
+    def _write_configuration(self):
+        # Called when leaving Step 2
+        slave_id = int(self.app.slave_id_var.get())
+        
+        try:
+            if self.target_group == "A":
+                # Write Force Values
+                self.app.modbus_client.write_single_register(slave_id, 0x000E, 1) # First 485
+                self.app.modbus_client.write_single_register(slave_id, 0x000F, 1) # FB Signal 1
+                
+                # Write User Selected 0006H
+                val_str = self.config_vars['0006H'].get()
+                map_vals = self.config_vars['0006H_map']
+                val = list(map_vals.keys())[list(map_vals.values()).index(val_str)]
+                self.app.modbus_client.write_single_register(slave_id, 0x0006, val)
+                
+                # Read Original PID (A)
+                try:
+                    # 0022H (P), 0023H (I), 0024H (D)
+                    rr = self.app.modbus_client.read_holding_registers(slave_id, 0x0022, 3)
+                    self.original_pid = {'P': rr[0], 'I': rr[1], 'D': rr[2]}
+                except:
+                    print("Failed to read original PID for Group A")
+                    self.original_pid = {'P': 'Err', 'I': 'Err', 'D': 'Err'}
+                
+            else: # B
+                # Write Force Values
+                self.app.modbus_client.write_single_register(slave_id, 0x0018, 4) # Second 485
+                self.app.modbus_client.write_single_register(slave_id, 0x0019, 2) # FB Signal 2
+                
+                # Write User Selected 0007H
+                val_str = self.config_vars['0007H'].get()
+                map_vals = self.config_vars['0007H_map']
+                val = list(map_vals.keys())[list(map_vals.values()).index(val_str)]
+                self.app.modbus_client.write_single_register(slave_id, 0x0007, val)
+                
+                # Read Original PID (B)
+                try:
+                    # 0025H (P), 0026H (I), 0027H (D)
+                    rr = self.app.modbus_client.read_holding_registers(slave_id, 0x0025, 3)
+                    self.original_pid = {'P': rr[0], 'I': rr[1], 'D': rr[2]}
+                except:
+                    print("Failed to read original PID for Group B")
+                    self.original_pid = {'P': 'Err', 'I': 'Err', 'D': 'Err'}
+                
+            print(f"Configuration written for Group {self.target_group}")
+            return True
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to configure controller: {e}", parent=self)
+            return False
+
+    # --- Step 3: Warning ---
+    def _render_step_warning(self):
+        ttk.Label(self.content_frame, text="WARNING", font=("", 24, "bold"), foreground="red").pack(pady=20)
+        ttk.Label(self.content_frame, text="The motor WILL MOVE during this test.", font=("", 14)).pack()
+        ttk.Label(self.content_frame, text=f"Target Amplitude: {self.step_amplitude}%", font=("", 12)).pack(pady=10)
+        ttk.Label(self.content_frame, text="Ensure people and equipment are safe.", font=("", 12)).pack()
+        
+        self.next_button.config(text="START TEST", bootstyle="danger")
+
+    # --- Step 4: Running ---
+    def _render_step_running(self):
+        self.next_button.config(state="disabled")
+        self.back_button.config(state="disabled")
+        
+        ttk.Label(self.content_frame, text="Tuning in progress...", font=("", 16)).pack(pady=20)
+        
+        self.progress = ttk.Progressbar(self.content_frame, length=300, mode='indeterminate')
+        self.progress.pack(pady=20)
+        self.progress.start(10)
+        
+        self.status_lbl = ttk.Label(self.content_frame, text="Initializing...")
+        self.status_lbl.pack()
+        
+        # Start thread
+        threading.Thread(target=self._run_tuning_test, daemon=True).start()
+
+    def _run_tuning_test(self):
+        slave_id = int(self.app.slave_id_var.get())
+        
+        # Addresses
+        if self.target_group == "A":
+            cmd_reg = 0x0009 # RS485 1
+            curr_reg = 0x0000 
+            # Note: Input Signal Read Reg for A is 0x0001 (0-1000) or 0x0009 itself?
+            # 0001H is Read Input Signal A.
+        else:
+            cmd_reg = 0x000A # RS485 2
+            curr_reg = 0x0003
+            # 0004H is Read Input Signal B.
+
+        try:
+            # 1. Zero output first
+            self.app.modbus_client.write_single_register(slave_id, cmd_reg, 0)
+            time.sleep(1.0)
+            
+            # 2. Start Recording Loop
+            self.is_running = True
+            self.recording_data = {'time': [], 'signal_cmd': [], 'current': []}
+            start_time = time.time()
+            
+            # 3. Send Step command
+            target_val = int(self.step_amplitude)
+            self.app.modbus_client.write_single_register(slave_id, cmd_reg, target_val)
+            
+            # 4. Poll Loop (3 seconds)
+            duration = 3.0
+            while time.time() - start_time < duration:
+                try:
+                    # Read fast
+                    # Example: Read 0000H~0004H covers everyone
+                    rr = self.app.modbus_client.read_holding_registers(slave_id, 0, 6)
+                    
+                    t = time.time() - start_time
+                    if self.target_group == "A":
+                        c = rr[0] / 100.0
+                        # rr[1] is input signal monitor? Or assume command is constant
+                        s = target_val 
+                    else:
+                        c = rr[3] / 100.0
+                        s = target_val
+                    
+                    self.recording_data['time'].append(t)
+                    self.recording_data['current'].append(c)
+                    self.recording_data['signal_cmd'].append(s)
+                    
+                except Exception as e:
+                    # Ignore occasional errors
+                    pass
+                
+                time.sleep(0.05) # ~20Hz
+            
+            # 5. Stop
+            self.app.modbus_client.write_single_register(slave_id, cmd_reg, 0)
+            
+            # 6. Analyze
+            self._analyze_data()
+            
+            # Go to next step
+            self.after(0, lambda: self._show_step(5))
+            
+        except Exception as e:
+            self.after(0, lambda: messagebox.showerror("Error", f"Tuning failed: {e}", parent=self))
+            self.after(0, self.destroy)
+
+    def _analyze_data(self):
+        """
+        Analyze the recorded step response data to calculate PID parameters.
+        Currently uses a Rise Time-based heuristic for Current Loop control.
+        PID Range: 0~1000 (User specified)
+        """
+        times = self.recording_data['time']
+        currents = self.recording_data['current']
+        
+        if not currents or len(currents) < 10:
+            self.calculated_pid = {'P': 100, 'I': 1, 'D': 0}
+            return
+
+        # 1. Determine Baseline and Steady State
+        baseline_c = min(currents)
+        
+        # Steady State: Average of last 10% of samples
+        num_samples = len(currents)
+        steady_state_samples = int(num_samples * 0.1)
+        if steady_state_samples < 1: steady_state_samples = 1
+        steady_state_c = sum(currents[-steady_state_samples:]) / steady_state_samples
+        
+        delta_c = steady_state_c - baseline_c
+        
+        # 2. Validity Check
+        if delta_c < 0.1: 
+            print("[AutoPID] Response too small (< 0.1A), using fallback.")
+            self.calculated_pid = {'P': 100, 'I': 1, 'D': 1} 
+            return
+
+        # 3. Calculate Rise Time (10% to 90%)
+        # Find time to reach 10%
+        target_10 = baseline_c + 0.1 * delta_c
+        target_90 = baseline_c + 0.9 * delta_c
+        
+        t_10 = None
+        t_90 = None
+        
+        # We search from the beginning
+        for t, c in zip(times, currents):
+            if t_10 is None and c >= target_10:
+                t_10 = t
+            if t_90 is None and c >= target_90:
+                t_90 = t
+                break # Found both
+        
+        if t_10 is None or t_90 is None:
+            # Rise time not found (maybe didn't reach 90%?)
+            print("[AutoPID] Rise time undetermined (didn't reach 90%). using conservative default.")
+            self.calculated_pid = {'P': 300, 'I': 10, 'D': 0} # Conservative fallback
+            return
+            
+        rise_time = t_90 - t_10
+        if rise_time <= 0: rise_time = 0.001 # Prevent zero division or weirdness
+        
+        print(f"[AutoPID] Measured Rise Time (10-90%): {rise_time:.4f}s")
+        
+        # 4. Map Rise Time to P, I, D (Heuristic)
+        # Target Range: 0~1000
+        # Hypothesis: Slower rise time (high inductance) -> Needs higher P driver. 
+        # Faster rise time (low inductance) -> Needs lower P driver.
+        # Let's map RiseTime directly to P with a scalar.
+        # If RiseTime = 0.1s -> P = 600 (within 0-1000 range)
+        # If RiseTime = 0.016s -> P = 100 (fast system)
+        
+        scalar = 5000.0 # Adjusted for 1000 max
+        p_gain = rise_time * scalar
+        
+        # Clamp P to 100~1000
+        if p_gain < 50: p_gain = 50
+        if p_gain > 1000: p_gain = 1000
+        
+        # Derive I from P  (I = P / 15)
+        i_gain = p_gain / 15.0
+        
+        # Clamp I to 1~200
+        if i_gain < 1: i_gain = 1
+        if i_gain > 200: i_gain = 200 # I rarely needs to be huge
+        
+        # D is usually 0 for current loops
+        d_gain = 0
+        
+        self.calculated_pid = {
+            'P': int(p_gain), 
+            'I': int(i_gain), 
+            'D': int(d_gain)
+        }
+        print(f"[AutoPID] Calculated (Range 0-1000): {self.calculated_pid}") 
+
+    # --- Step 5: Results ---
+    def _render_step_results(self):
+        self.next_button.config(state="normal")
+        
+        ttk.Label(self.content_frame, text="Tuning Complete!", font=("", 14, "bold"), foreground="green").pack(pady=10)
+        
+        # Results Frame
+        res_frame = ttk.Frame(self.content_frame)
+        res_frame.pack(pady=10, fill=tk.X)
+        
+        # Comparison Table using Treeview
+        columns = ("param", "original", "calculated")
+        tree = ttk.Treeview(res_frame, columns=columns, show="headings", height=3)
+        
+        tree.heading("param", text="Parameter")
+        tree.heading("original", text="Original")
+        tree.heading("calculated", text="Calculated")
+        
+        tree.column("param", width=100, anchor="center")
+        tree.column("original", width=100, anchor="center")
+        tree.column("calculated", width=100, anchor="center")
+        
+        # Insert Data
+        tree.insert("", "end", values=("P (Proportional)", self.original_pid['P'], self.calculated_pid['P']))
+        tree.insert("", "end", values=("I (Integral)", self.original_pid['I'], self.calculated_pid['I']))
+        tree.insert("", "end", values=("D (Derivative)", self.original_pid['D'], self.calculated_pid['D']))
+        
+        tree.pack(fill=tk.X)
+        
+        # Chart
+        f = Figure(figsize=(5, 3), dpi=100)
+        ax = f.add_subplot(111)
+        ax.plot(self.recording_data['time'], self.recording_data['current'], label='Current')
+        ax.set_title("Step Response")
+        ax.grid(True)
+        
+        canvas = FigureCanvasTkAgg(f, self.content_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+    def _apply_pid(self):
+        slave_id = int(self.app.slave_id_var.get())
+        try:
+            p = self.calculated_pid['P']
+            i = self.calculated_pid['I']
+            d = self.calculated_pid['D']
+            
+            if self.target_group == "A":
+                # 0022H ~ 0024H
+                self.app.modbus_client.write_single_register(slave_id, 0x0022, p)
+                self.app.modbus_client.write_single_register(slave_id, 0x0023, i)
+                self.app.modbus_client.write_single_register(slave_id, 0x0024, d)
+            else:
+                # 0025H ~ 0027H
+                self.app.modbus_client.write_single_register(slave_id, 0x0025, p)
+                self.app.modbus_client.write_single_register(slave_id, 0x0026, i)
+                self.app.modbus_client.write_single_register(slave_id, 0x0027, d)
+                
+            messagebox.showinfo("Success", "PID Parameters Applied!", parent=self)
+            self.app._read_all_registers_and_update_gui() 
+            self.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to apply: {e}", parent=self)
+
+    def _on_next(self):
+        if self.current_step == 2:
+            if not self._write_configuration(): return
+            
+        if self.current_step == 3:
+            # Warning -> Running
+            self._show_step(4)
+            return
+            
+        if self.current_step == 5:
+            self._apply_pid()
+            return
+            
+        self._show_step(self.current_step + 1)
+
+    def _on_back(self):
+        if self.current_step > 1:
+            self._show_step(self.current_step - 1)
+
+    def _on_cancel(self):
+        self.destroy()
+
 class ModbusMonitorApp:
     # 類級變量，用於獲取當前翻譯，以便於輔助函數使用
     _current_translations = TEXTS["zh"] 
@@ -3101,12 +3610,21 @@ class ModbusMonitorApp:
         self.writable_params_notebook.add(self.a_group_params_frame, text=self.get_current_translation("A_GROUP_PARAMS_FRAME_TEXT"))
         self.writable_params_notebook.add(self.b_group_params_frame, text=self.get_current_translation("B_GROUP_PARAMS_FRAME_TEXT"))
         self.writable_params_notebook.add(self.pid_params_frame, text=self.get_current_translation("PID_PARAMS_FRAME_TEXT"))
+        
+        # Add Auto PID Button Area BOTTOM
+        pid_btn_frame = ttk.Frame(self.pid_params_frame)
+        pid_btn_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
+        ttk.Button(pid_btn_frame, text="Auto PID Wizard (BETA)", command=self._open_auto_pid_wizard, bootstyle="warning outline").pack()
+
+        # Add Parameter Area TOP
+        self.pid_params_inner_frame = ttk.Frame(self.pid_params_frame)
+        self.pid_params_inner_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         tab_frames = {
             "common": self.common_params_frame,
             "a_group": self.a_group_params_frame,
             "b_group": self.b_group_params_frame,
-            "pid": self.pid_params_frame,
+            "pid": self.pid_params_inner_frame,
         }
 
         self.writable_labels, self.writable_entries, self.writable_controls = {}, {}, {}
@@ -3316,6 +3834,12 @@ class ModbusMonitorApp:
         self.load_params_button.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
         self.batch_write_button = ttk.Button(buttons_frame, text=self.get_current_translation("BATCH_WRITE_BUTTON"), bootstyle="primary.Outline", command=self._batch_write_parameters, width=15)
         self.batch_write_button.grid(row=0, column=2, padx=5, pady=5, sticky='ew')
+
+    def _open_auto_pid_wizard(self):
+        if not self.modbus_client.is_connected:
+            messagebox.showwarning("Warning", "Please connect to controller first.")
+            return
+        AutoPIDWizard(self.master, self)
 
     def _show_wizard(self):
         wizard = QuickSetupWizard(self.master, self)
