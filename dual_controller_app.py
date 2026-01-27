@@ -336,6 +336,7 @@ TEXTS = {
             2: "不顯示"
         },
         "S_FACTORY_RESET_MAP_VALUES": {
+            0: "無作用",
             5: "恢復出廠設置"
         },
         "SIGNAL_SELECTION_MAP_VALUES": { # For 0006H, 0007H
@@ -465,7 +466,7 @@ TEXTS = {
         "DELETE_FAIL": "Failed to delete file \'{filename}\': {e}",
         "DELETE_SUCCESS": "Parameters successfully deleted as \'{filename}\'.",
         "FACTORY_RESET_CONFIRM_BATCH_MSG": "You are about to factory reset the controller. Are you sure?",
-        "FACTORY_RESET_COUNTDOWN_MSG": "Controller is resetting, please wait... Re-reading parameters in {seconds} seconds.",
+        "FACTORY_RESET_COUNTDOWN_MSG": "Controller is resetting, please wait...\nRe-reading parameters in {seconds} seconds.",
         "CHART_SAVE_SUCCESS_MSG": "Chart data saved successfully.",
         "CHART_SAVE_ERROR_MSG": "Failed to save chart data: {e}",
         "COPYRIGHT_LABEL": "© 2026 SUNSTAR. All rights reserved.",
@@ -531,7 +532,7 @@ TEXTS = {
         "RECONNECT_TITLE": "Connection Lost",
         "RECONNECT_MSG": "Controller disconnected. Reconnecting in {seconds} seconds...",
         "RECONNECT_ATTEMPT": "Attempting to reconnect ({attempt}/{total})...",
-        "RECONNECT_FAIL_FINAL": "Connection failed. Please check hardware connection.\nController disconnected.",
+        "RECONNECT_FAIL_FINAL": "Connection failed. \nPlease check hardware connection.\nController disconnected.",
         "RECONNECT_CLOSE_BTN": "Close",
 
 
@@ -677,6 +678,7 @@ TEXTS = {
             2: "No Display"
         },
         "S_FACTORY_RESET_MAP_VALUES": {
+            0: "No Action",
             5: "Factory Reset"
         },
         "SIGNAL_SELECTION_MAP_VALUES": { # For 0006H, 0007H
@@ -885,8 +887,13 @@ class CustomMessagebox:
         style_cfg = colors.get(icon_type, colors["info"])
         header_bg = style_cfg["head"]
         
+        # boarder frame
+        border_frame = ttk.Frame(dlg, bootstyle="secondary", padding=2)
+        border_frame.pack(fill="both", expand=True)
+        
+        
         # Main Layout
-        main_frame = ttk.Frame(dlg, borderwidth=2, relief="raised")
+        main_frame = ttk.Frame(border_frame, padding=10)
         main_frame.pack(fill="both", expand=True)
         
         # 1. Header (Title) - Text centered
@@ -4834,8 +4841,12 @@ class ModbusMonitorApp:
         except:
              pass 
         
+        # board frame
+        board_frame = ttk.Frame(dialog, bootstyle="secondary", padding=2)
+        board_frame.pack(fill="both", expand=True)
+
         # UI Elements
-        lbl_msg = ttk.Label(dialog, borderwidth=2, relief="raised", text="", padding=20, font=("Helvetica", 12), wraplength=350, justify="left")
+        lbl_msg = ttk.Label(board_frame, text="", padding=20, font=("Helvetica", 12), wraplength=350, justify="left")
         lbl_msg.pack(expand=True, fill="both")
         
         btn_close = ttk.Button(lbl_msg, text=self.get_current_translation("RECONNECT_CLOSE_BTN"), command=dialog.destroy, state="disabled")
@@ -5170,8 +5181,15 @@ class ModbusMonitorApp:
         y = master_y + (master_h // 2) - (dialog_h // 2)
         countdown_dialog.geometry(f'{dialog_w}x{dialog_h}+{x}+{y}')
 
-        countdown_label = ttk.Label(countdown_dialog, text="", font=("Helvetica", 12))
-        countdown_label.pack(pady=20, padx=20)
+        # 視窗框線
+        frame = ttk.Frame(countdown_dialog, bootstyle="secondary", padding=2)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        content_frame = ttk.Frame(frame, padding=10)
+        content_frame.pack(fill=tk.BOTH, expand=True)
+
+        countdown_label = ttk.Label(content_frame, text="", font=("Helvetica", 12))
+        countdown_label.pack(pady=10, side='top', anchor='center')
 
         remaining = tk.IntVar(value=duration)
 
