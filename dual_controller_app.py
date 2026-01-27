@@ -1143,7 +1143,7 @@ class RealtimeChartWindow(tk.Toplevel):
         # self.master.bind('<ButtonRelease-1>', self.stop_drag)
 
         self._create_widgets()
-        self._create_charts() # Creates axes and empty plot lines
+        self._create_chart_area() # Creates axes and empty plot lines
         self._update_language() # Sets initial text and layout
 
         # Start a periodic update for the chart
