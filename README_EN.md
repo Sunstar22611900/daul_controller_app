@@ -5,16 +5,17 @@
 ## Introduction
 Designed for the SUNSTAR SY-DPCA series proportional valve controllers, this software provides an intuitive graphical interface for users to easily read and write various controller parameters via the Modbus RTU communication protocol (RS-485 interface).
 
-<img width="960" height="1080" alt="Capture" src="https://github.com/user-attachments/assets/c6b06460-6803-493b-a255-68c502a9f7aa" />
+<img width="960" height="800" alt="image" src="https://github.com/user-attachments/assets/e53f0ded-9a5d-49bf-a510-c48e78e50ead" />
 
 ## Features
 *   **Dual Mode Support:** Supports switching between SY-DPCA-*-2 (Dual Controller) and SY-DPCA-*-1 (Single Controller) models.
-*   **Quick Setup Wizard (New!):** Guided steps to help users quickly complete basic configuration.
+*   **Quick Setup Wizard:** Guided steps to help users quickly complete basic configuration.
 *   **Real-time Monitoring:** Simultaneously monitor output current, input signals, and fault status for two channels.
 *   **Parameter Adjustment:** Provides complete parameter writing functions, including max/min current, ramp time, PWM frequency, dither parameters, and PID settings.
 *   **Chart Analysis:** Provides real-time data charts to visualize and adjust output curve characteristics.
 *   **Batch Operations:** Supports local saving, reading, and one-click writing of parameters to the controller.
 *   **Multi-language Interface:** Supports switching between Traditional Chinese and English.
+*   **Auto PID (BETA):** Adds automatic PID setting function in dual controller mode, but it is still a BETA version and is not recommended for use.
 
 ## Installation and Usage
 This is a portable version; simply unzip and use.

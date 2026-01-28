@@ -800,6 +800,7 @@
 
 
 
+
 *   **新增 `RealtimeChartWindow` 類別：**
 
     *   實現了一個獨立的彈出視窗，用於顯示即時的「輸出電流 vs 時間」和「輸入信號 vs 時間」圖表。
@@ -1060,3 +1061,236 @@
 *   **實作細節 (`dual_controller_app.py`)：**
     *   在 `_on_back` 函數開頭加入檢查：若當前步驟為 3 且 `self.modbus_master` 存在 (即已連線)，則強制呼叫 `self._try_connect()` 來斷開連線。
     *   確保使用者在退回 Step 2 (型號選擇) 之前，連線狀態已完全重置。
+
+## 2026年1月16日 進度更新 (深色主題與無邊框視窗)
+
+### 1. PID 參數調整
+*   **範圍變更：** 將 PID 參數 (0022H ~ 0027H) 的數值範圍從 0-100 擴展至 0-1000。
+*   **介面優化：** 將上述參數的輸入方式從 `Entry` 輸入框改為 `Scale` 拉桿，並顯示當前數值，提供更直觀的操作體驗。
+
+### 2. 深色主題與圖表適配
+*   **主題更換：** 應用程式主題切換為 `cyborg` (深色風格)。
+*   **圖表修正：** 因應深色背景，將圖表 (Canvas) 的座標軸、格線與文字顏色從黑色/灰色改為白色/淺灰色，確保在深色主題下的可視性。解決了 `_tkinter.TclError` 關於 `outline` 屬性的錯誤。
+
+### 3. 無邊框視窗設計
+*   **移除系統邊框：** 啟用 `overrideredirect(True)` 移除 Windows 預設視窗邊框。
+*   **自定義標題列：** 實作了整合於介面內的自定義標題列：
+    *   **拖曳功能：** 支援拖曳標題列移動視窗。
+    *   **視窗控制：** 新增自定義的「最小化」與「關閉」按鈕。
+    *   **標題顯示：** 標題文字會隨模式（單/雙控制器）與語言切換自動更新。
+
+## 2026年1月19日 進度更新 (控制器圖表視窗重構)
+
+### 1. 控制器模式圖表視窗化
+*   **功能重構：** 將原本嵌在主視窗即時監控區下方的「控制器模式圖表區」，獨立移出成為一個浮動視窗。
+*   **目的：** 優化主畫面空間配置，解決在低解析度螢幕上內容可能被截斷的問題。
+*   **介面調整：**
+    *   移除了主視窗底部的圖表 Frame。
+    *   新增了一顆「控制器模式圖表」按鈕 (取代原區域)，點擊後開啟浮動視窗。
+    *   浮動視窗採用 **無邊框設計 (Frameless)**，且支援點擊視窗任一處進行拖曳移動 (與 Real-time Chart 行為一致)。
+
+### 2. 遇到的問題與解決方案
+
+*   **`AttributeError: 'ModbusMonitorApp' object has no attribute 'chart_frame'`**
+    *   **原因：** 重構移除主視窗的 `chart_frame` 後，`_update_all_text` 函式仍嘗試去設定該 Frame 的標題文字。
+    *   **修正：** 修改 `_update_all_text`，移除對 `chart_frame` 的直接引用，改為若按鈕存在則更新按鈕文字，若浮動視窗開啟則更新浮動視窗的標題。
+
+*   **圖表視窗空白 (Empty Window)**
+    *   **原因：** 在程式碼合併過程中，新定義的 `ControllerModeChartWindow` 類別被錯誤地縮排到了 `RealtimeChartWindow` 類別內部，導致兩個視窗類別的結構損壞，無法正確建立。
+    *   **修正：** 將 `ControllerModeChartWindow` 類別移至正確的模組層級 (Module Level)，修復了類別定義。
+
+*   **單組模式啟動錯誤 (`AttributeError: 'NoneType' object has no attribute 'winfo_exists'`)**
+    *   **原因：** 在單組控制器模式 (`single`) 下啟動程式時，`_update_all_text` 會嘗試呼叫 `_draw_single_controller_chart`。此時 `chart_canvas` 尚未被建立 (因為圖表視窗預設未開啟)，導致 `self.chart_canvas` 為 `None`，呼叫 `winfo_exists` 時發生錯誤。
+    *   **修正：** 在 `_draw_single_controller_chart` 函式開頭加入防呆檢查：`if not hasattr(self, 'chart_canvas') or self.chart_canvas is None: return`。
+
+*   **單組模式圖表繪製錯誤 (`KeyError: '000EH'`)**
+    *   **原因：** 單組模式下點擊開啟圖表時，`_draw_chart` 函式預設會去讀取雙組模式專用的寄存器 (如 `000EH`) 來判斷圖表類型，因單組模式的 `writable_entries` 中沒有這些鍵值而報錯。
+    *   **修正：** 修改 `_draw_chart` 函式 (現在作為統一的繪圖入口)，在執行任何邏輯前先檢查 `self.controller_mode`。若是 `'single'` 模式，則直接轉呼叫 `_draw_single_controller_chart()` 並返回；若是 `'dual'` 模式才執行原有的判斷邏輯。
+
+### 3. 即時趨勢圖優化 (Realtime Chart Optimization)
+
+*   **風格統一 (Theming)**：
+    *   將即時趨勢圖視窗 (`RealtimeChartWindow`) 的背景色與圖表樣式改為與主程式一致的 "superhero" 深色主題 (`#2b3e50`)，文字與座標軸顏色調整為白色以確保可視性。
+
+*   **版面重構 (Layout)**：
+    *   **尺寸調整**：將視窗預設尺寸從 800x600 縮小至 800x400，使畫面更輕量。
+    *   **排列方式**：在雙組控制器模式下，原本上下排列的兩個圖表改為 **左右並排**，更符合寬螢幕的使用習慣。
+
+*   **Bug 修復**：
+    *   **雙組圖表連動失效**：修復了在改為左右排列後，右側圖表 (B組) 無法隨時間軸滾動更新的問題。
+        *   **原因**：左右排列 (`subplot(121), subplot(122)`) 預設未共享 X 軸。
+        *   **修正**：在建立第二個子圖表時明確指定 `sharex=ax1_a`，強制兩者時間軸同步。
+
+## 2026年1月20日 進度更新 (批量寫入優化)
+
+### 1. 批量寫入功能優化 (Batch Write Optimization)
+
+*   **功能改進：** 修改了 `_batch_write_parameters` 函數，實作了「差異寫入」機制。
+    *   **快取機制：** 新增 `self.last_read_registers_dict` 字典，用於快取每次讀取到的最新寄存器數值。
+    *   **寫入判斷：** 在批量寫入時，程式會將介面上的輸入值與快取中的原始值進行比對。
+    *   **效能提升：** 只有當數值確實發生變更（或是使用者清空的欄位）才會被加入寫入列表，未修改的參數將被自動跳過，大幅縮短了與控制器通訊的時間。
+    *   **空操作提示：** 若使用者點擊寫入按鈕但未修改任何參數，程式會直接彈出提示視窗「未檢測到參數變更 (`NO_CHANGES_DETECTED`)」，而不發送任何 Modbus 指令。
+
+*   **新增翻譯鍵：**
+
+    *   `NO_CHANGES_DETECTED`: "未檢測到參數變更。" (zh) / "No parameter changes detected." (en)
+
+## 2026年1月22日 進度更新 (程式碼審查與重構)
+
+### 1. 程式碼審查 (Code Review)
+
+*   **執行審查：** 對 `dual_controller_app.py` 進行了全面的程式碼審查，識別出潛在的維護性和可靠性問題。
+*   **主要發現：**
+    *   **硬編碼限制 (Hardcoded Limits)：** 圖表繪製邏輯中使用了硬編碼的電流上限 (3.0A)，若硬體規格變更將難以維護。
+    *   **恢復出廠設置時序 (Factory Reset Timing)：** 恢復出廠設置後僅依靠固定的睡眠時間 (sleep) 來等待設備重啟，這在不同設備或負載下可能不可靠。
+
+### 2. 重構與優化
+
+根據審查結果，實施了以下改進：
+
+*   **圖表電流上限常數化：**
+    *   在 `ModbusMonitorApp` 類別中新增了 `MAX_CHART_CURRENT_AMPS` 常數（預設為 3.0）。
+    *   更新了所有圖表繪製函數 (`_draw_single_controller_chart`, `_draw_independent_charts`, `_draw_linked_chart`, `_draw_single_output_chart`)，將原本的硬編碼數值替換為使用此常數。這提高了程式碼的可維護性，未來若需調整電流範圍，只需修改一處。
+
+*   **恢復出廠設置可靠性提升 (Ping 機制)：**
+    *   重寫了 `_post_reset_actions` 函數。
+    *   **新增 Ping 機制：** 在恢復出廠設置倒數結束後，不再盲目地立即恢復輪詢，而是進入一個「Ping 迴圈」。
+    *   **邏輯：** 程式會嘗試讀取一個安全的 Modbus 寄存器（最多嘗試 5 次）。只有在成功收到設備回應（代表設備已重啟並上線）後，才會重新讀取所有參數並恢復 GUI 的即時監控輪詢。
+    *   這大幅提升了功能的穩健性，避免了因設備重啟較慢而導致的讀取錯誤。
+
+### 3. 使用者手冊與體驗調整
+
+*   **倒數時間調整：** 根據使用者反饋，將恢復出廠設置的倒數等待時間從 10 秒縮短為 3 秒，改善操作流暢度。
+*   **訊息提示優化：** 註解掉了恢復出廠設置成功後的 `messagebox.showinfo` 提示，避免使用者需要額外點擊確認，使流程更順暢。
+
+
+## 2026年1月23日 進度更新 (程式重構與除錯)
+
+### 1. 程式碼重構 (Refactoring)
+
+為了提高程式碼的可維護性與擴充性，進行了大幅度的重構，將原本龐大的 \`ModbusMonitorApp\` 類別拆分為多個職責單一的類別：
+
+*   **\`ModbusClient\`**: 封裝所有 Modbus 通訊邏輯，包括連接、斷開、讀取、寫入及執行緒安全的鎖定機制。
+*   **\`ConfigManager\`**: 負責參數設定檔的儲存、讀取與與路徑管理。
+*   **\`ChartManager\`**: 專門處理圖表數據的儲存、更新與歷史記錄管理。
+*   **\`ModbusMonitorApp\`**: 作為主要控制器，協調上述各模組與 GUI 的互動。
+
+### 2. 除錯與修正 (Debugging & Fixes)
+
+在重構後，針對使用者回報的問題進行了以下修正：
+
+*   **快速設定精靈 (QuickSetupWizard) 錯誤修正:**
+    *   修正了 Wizard 中錯誤引用 \`self.master\` (在此情境下為 root window) 來存取 \`modbus_client\` 的問題，改為正確引用 \`self.app.modbus_client\`。
+    *   **結果:** 解決了 Wizard 無法寫入參數及完成設定的 \`AttributeError\`。
+
+*   **Modbus 連接邏輯修正:**
+    *   移除了 \`ModbusMonitorApp\` 中所有對已廢棄屬性 \`self.modbus_master\` 的引用，全面改用 \`self.modbus_client.is_connected\` 來判斷連線狀態。
+    *   **結果:** 解決了在 \`_update_all_text\` (更新 UI 文字) 和 \`_on_closing\` (關閉程式) 時因屬性不存在而導致的崩潰。
+
+*   **設定精靈流程優化:**
+    *   修正了 \`_on_next\` 和 \`_on_back\` 的邏輯。現在，如果在 Wizard 第 3 步 (連線設定) 按下「上一步」，程式會正確地斷開 Modbus 連線，避免連線被錯誤地保留到前一步驟。
+
+*   **參數存檔與讀檔修正:**
+    *   修正了 \`ConfigManager\` 中 \`save_parameters\` 和 \`load_parameters\` 方法被呼叫時參數順序錯誤的問題。
+    *   修正了 \`list_files\` 方法參數順序錯誤的問題，這導致程式在讀取檔案時去錯誤的資料夾 (\`dual_zh\`) 尋找檔案，而不是正確的 (\`zh_dual\`)。
+    *   **結果:** 「本地儲存」與「本地讀取」功能現在可以正確地在對應語言與模式的資料夾中存取檔案。
+
+*   **模式切換錯誤修正:**
+    *   修正了在切換單/雙組模式時，因嘗試清除已移除的 \`self.time_history\` 屬性而導致的錯誤。改為呼叫 \`self.chart_manager.clear_history()\`。
+"
+
+### 3. 使用者介面優化 (UI Improvements)
+
+*   **對話視窗一致性優化:**
+    *   將「本地儲存」(_save_parameters_to_file) 和「本地讀取」(_load_parameters_from_file) 的視窗統一修改為無邊框 (frameless) 且置中顯示的樣式，以符合應用程式整體的視覺風格。
+    *   新增 \`_center_toplevel\` 輔助方法，確保這些浮動視窗能精確地顯示在螢幕正中央。
+    *   移除了無邊框視窗的 \`transient\` 屬性，並加入 \`lift\` 和 \`focus_force\`，解決了視窗可能被主視窗遮擋而不見的問題。
+
+*   **批次寫入進度視窗置中:**
+    *   將「批次寫入參數」時跳出的進度條視窗也應用了置中邏輯，改善使用者體驗，不再出現於螢幕左上角。
+
+### 4. 嚴重錯誤修正 (Critical Bug Fixes)
+
+*   **斷線重連機制修復:**
+    *   **屬性遺失錯誤:** 修正了 \`AttributeError: 'ModbusMonitorApp' object has no attribute 'connection_info'\`。在 \`ModbusMonitorApp\` 初始化時正確建立了 \`self.connection_info\` 字典，並確保在每次連線成功（無論是通過 Wizard 還是主畫面）時都會更新其中的 port 和 baudrate 資訊。
+    *   **重連邏輯錯誤:** 修正了 \`_handle_disconnection_error\` 中的重連邏輯。原先錯誤地直接使用已廢棄的 \`modbus_master\` 或未帶參數呼叫連線。現在改為使用 \`self.connection_info\` 中儲存的資訊，透過 \`self.modbus_client.connect()\` 顯式地重新建立連線，確保重連流程的可靠性。
+
+## 2026年1月26日 進度更新 (客製化 Messagebox)
+
+### 1. 客製化訊息視窗實作
+
+*   **目標：** 替換原有的 `tkinter.messagebox`，使其風格與主程式 ("superhero") 一致，並能正確置中於主視窗或快速設定精靈。
+
+*   **實作細節 (`CustomMessagebox` 類別)：**
+    *   **無框設計：** 使用 `overrideredirect(True)` 移除視窗標題列。
+    *   **風格統一：** 背景色與按鈕樣式採用與 "superhero" 主題相符的深色系。
+    *   **動態置中：** 使用 `_get_parent()` 邏輯動態偵測當前焦點視窗（主視窗或 Wizard），將訊息視窗置中於該父視窗。
+    *   **按鈕在地化：** `askyesno` (Question) 類型的視窗按鈕會根據應用程式當前語言顯示「是/否」或「Yes/No」。
+
+*   **整合：**
+    *   在 `dual_controller_app.py` 中新增 `CustomMessagebox` 類別。
+    *   將原本的 `messagebox` 匯入替換為 `CustomMessagebox` 類別的別名，確保現有程式碼無需大幅修改即可套用新視窗。
+    *   引入 `GLOBAL_ROOT` 與 `GLOBAL_APP` 全域變數，供 `CustomMessagebox` 存取主視窗參考與應用程式語言設定。
+
+## 2026年1月27日 進度更新 (Auto-PID 自動整定功能)
+
+### 1. Auto-PID Wizard (BETA) 功能實作
+
+*   **新增 `AutoPIDWizard` 類別：**
+    *   實現了一個完整的嚮導式介面，引導使用者完成 PID 自動整定流程。
+    *   **Step 1 (Setup):** 選擇目標群組 (A/B)、設定階躍幅度 (Step Amplitude) 和最大安全電流 (Safety Limit)。
+    *   **Step 2 (Configuration):** 強制設定控制器寄存器以進行測試（A組: First 485/Signal 1, B組: Second 485/Signal 2），並讓使用者選擇輸入信號源。
+    *   **Step 3 (Warning):** 顯示安全警告，提醒馬達將會移動。
+    *   **Step 4 (Running):** 執行階躍響應測試，發送命令並以 ~20Hz 頻率記錄電流數據。
+    *   **Step 5 (Results):** 顯示電流響應圖表、計算出的 PID 參數，以及與原始參數的對照表。
+    *   **Finish:** 將計算出的參數寫入控制器，並自動更新主視窗。
+
+*   **PID 演算法實作 (Rise Time Method):**
+    *   **捨棄 Mock 數據：** 移除了開發初期的固定 PID 數值。
+    *   **實作啟發式演算法：** 根據階躍響應的 **上升時間 (Rise Time, 10% -> 90%)** 來計算 P 值。
+    *   **負回授邏輯：** 反應越慢 (Rise Time 長) $\rightarrow$ P 值越大；反應越快 (Rise Time 短) $\rightarrow$ P 值越小。
+    *   **參數範圍限制：** 嚴格遵守使用者指定的 **0~1000** 範圍。
+        *   **P Gain:** `RiseTime * 5000` (Clamp: 50~1000)。
+        *   **I Gain:** `P / 15` (Clamp: 1~200)。
+        *   **D Gain:** 固定為 0。
+
+*   **GUI 整合與優化：**
+    *   **入口按鈕：** 在雙組模式的 "PID Parameters" 分頁新增 "Auto PID Wizard (BETA)" 按鈕。
+    *   **對照表 (Comparison Table):** 在結果頁面新增 `Treeview` 表格，並列顯示 **原始值 (Original)** 與 **計算值 (Calculated)**，讓使用者直觀判斷調整方向。
+    *   **同步更新：** `AutoPIDWizard` 關閉時會自動呼叫主程式的 `_read_all_registers_and_update_gui()`，確保主視窗參數即時同步。
+    *   **UI 微調：** 調整了按鈕樣式 (warning outline)、標籤對齊方式 (Top) 以優化視覺體驗。
+
+*   **演算法邏輯：這是一個「負回授 (Negative Feedback)」的過程**
+    *   演算法之所以不需要知道「舊數值」，是因為它透過觀察結果 (上升時間) 來進行修正。這就像雖然我不知道您現在油門踩多深，但我看到車速太快了，就會叫您放開油門；看到車速太慢了，就會叫您踩深一點。
+
+### 1. 邏輯運作方式 (P 正比於 上升時間)
+*   公式是 P_new = RiseTime * Scalar，這會形成一種自然的平衡：
+    *   情況 A：目前的 PID 太弱 (P 很小)
+    *   結果：馬達反應很慢，上升時間 (RiseTime) 很長。
+    *   計算： 很大的上升時間 × 係數 = 很大的 P_new。
+    *   結論： 建議值 > 目前值 $\rightarrow$ 增強 PID。
+    *   情況 B：目前的 PID 太強 (P 很大，可能震盪)
+    *   結果：馬達衝得很快，上升時間 (RiseTime) 很短。
+    *   計算： 很小的上升時間 × 係數 = 很小的 P_new。
+    *   結論： 建議值 < 目前值 $\rightarrow$ 減弱 PID。
+### 2. 這就是為什麼不需要讀取舊值
+*   演算法直接針對「物理特性」做反應：
+    *   如果系統反應慢，它就給強一點的參數。
+    *   如果系統反應快，它就給弱一點的參數。
+    *   最終會收斂到一個「反應適中」的平衡點。
+
+### 關於震盪 (Oscillation) 的處理機制
+*   目前的演算法透過「上升時間 (Rise Time)」的偵測，具備自然抑制震盪的特性：
+    *   震盪的特徵：
+        *   如果系統發生震盪，通常意味著電流反應極快，因為這代表系統慣性很小或當前的 P 值過強，導致電流瞬間衝過頭 (Overshoot)。
+        *   在這種情況下，電流從 10% 上升到 90% 的時間 (Rise Time) 會非常短 (例如 < 0.05秒)。
+    *   演算法的反應 (負回授)：
+        *   公式：P = 上升時間 * 5000。
+        *   當偵測到極短的上升時間時，公式計算出的 P 值會變得很小。
+        *   結果：較小的 P 值會降低系統增益，從而直接抑制震盪。
+    *   极端情况保护：
+        *   如果震盪非常严重导致波形混乱，可能会让 Rise Time 难以计算或异常。
+        *   目前的程式码有保护机制：
+            *   若 Risetime <= 0，強制設為 0.001s (極小)，算出最小 P (50)。
+            *   若無法偵測到 90% 點 (例如震盪一直在 90% 以下)，則採用保守預設值 (P=300)。
+    總結： 這個演算法的設計哲學是「反應越快(越不穩)，給的參數越保守」，因此天生就能處理並收斂震盪的情況。
