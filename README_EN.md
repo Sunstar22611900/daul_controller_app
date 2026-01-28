@@ -9,12 +9,13 @@ Designed for the SUNSTAR SY-DPCA series dual proportional coil controllers, this
 
 ## Features
 *   **Dual Mode Support:** Supports switching between SY-DPCA-*-2 (Dual Controller) and SY-DPCA-*-1 (Single Controller) models.
-*   **Quick Setup Wizard (New!):** Guided steps to help users quickly complete basic configuration.
+*   **Quick Setup Wizard:** Guided steps to help users quickly complete basic configuration.
 *   **Real-time Monitoring:** Simultaneously monitor output current, input signals, and fault status for two channels.
 *   **Parameter Adjustment:** Provides complete parameter writing functions, including max/min current, ramp time, PWM frequency, dither parameters, and PID settings.
 *   **Chart Analysis:** Provides real-time data charts to visualize and adjust output curve characteristics.
 *   **Batch Operations:** Supports local saving, reading, and one-click writing of parameters to the controller.
 *   **Multi-language Interface:** Supports switching between Traditional Chinese and English.
+*   **Auto PID (BETA):** Adds automatic PID setting function in dual controller mode, but it is still a BETA version and is not recommended for use.
 
 ## Installation and Usage
 This is a portable version; simply unzip and use.
