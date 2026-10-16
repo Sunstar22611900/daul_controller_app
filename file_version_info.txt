@@ -16,13 +16,13 @@ VSVersionInfo(
     StringFileInfo([
       StringTable(
         '040904B0',
-        [StringStruct('CompanyName', 'SUNSTAR'),
-         StringStruct('FileDescription', 'SUNSTAR ModbusRTU Dual Controller Setup Tool'),
+        [StringStruct('CompanyName', 'STEED'),
+         StringStruct('FileDescription', 'STEED ModbusRTU Dual Controller Setup Tool'),
          StringStruct('FileVersion', '3.2.0.0'),
          StringStruct('InternalName', 'dual_controller_app'),
-         StringStruct('LegalCopyright', 'Copyright (C) 2026 SUNSTAR'),
+         StringStruct('LegalCopyright', 'Copyright (C) 2026 STEED'),
          StringStruct('OriginalFilename', 'dual_controller_app.exe'),
-         StringStruct('ProductName', 'SUNSTAR ModbusRTU Controller Setup'),
+         StringStruct('ProductName', 'STEED ModbusRTU Controller Setup'),
          StringStruct('ProductVersion', '3.2.0.0')])
     ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
