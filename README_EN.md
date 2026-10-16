@@ -1,6 +1,6 @@
 [English](README_EN.md) | [繁體中文](README.md)
 
-# SUNSTAR Modbus RTU Controller Monitor Software (V3.0)
+# SUNSTAR Modbus RTU Controller Monitor Software (V3.2)
 
 ## Introduction
 Designed for the SUNSTAR SY-DPCA series dual proportional coil controllers, this software provides an intuitive graphical interface for users to easily read and write various controller parameters via the Modbus RTU communication protocol (RS-485 interface).
@@ -21,7 +21,7 @@ Designed for the SUNSTAR SY-DPCA series dual proportional coil controllers, this
 This is a portable version; simply unzip and use.
 
 1.  Enter the `SUNSTAR_dual_controller_app` folder.
-2.  Find and run `SUNSTAR_dual_controller_app_V3.0.exe`.
+2.  Find and run `SUNSTAR_dual_controller_app_V3.2.exe`.
     *   **Note:** To speed up launch times, the program is distributed as a folder. Please ensure the integrity of the entire folder and do not move the `.exe` file individually.
 
 ### Troubleshooting: SmartScreen Warning

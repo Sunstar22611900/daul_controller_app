@@ -1,6 +1,6 @@
 [English](README_EN.md) | [繁體中文](README.md)
 
-# SUNSTAR Modbus RTU 控制器監控軟體 (V3.0)
+# SUNSTAR Modbus RTU 控制器監控軟體 (V3.2)
 
 ## 簡介
 本程式專為 SUNSTAR SY-DPCA 系列雙比例線圈控制器設計，提供直觀的圖形化介面，讓使用者能夠透過 Modbus RTU 通訊協定（RS-485 介面）輕鬆讀取與寫入控制器的各項參數。
@@ -21,7 +21,7 @@
 本程式為免安裝版本，解壓縮後即可使用。
 
 1.  進入 `SUNSTAR_dual_controller_app` 資料夾。
-2.  找到並執行 `SUNSTAR_dual_controller_app_V3.0.exe`。
+2.  找到並執行 `SUNSTAR_dual_controller_app_V3.2.exe`。
     *   **注意：** 為了加快開啟速度，程式採用資料夾形式發布。請確保整個資料夾的完整性，不要單獨移動 `.exe` 檔。
 
 ### 疑難排解：SmartScreen 警告
