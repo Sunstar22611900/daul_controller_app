@@ -20,17 +20,32 @@ from datetime import datetime, timedelta
 import csv
 
 # Matplotlib imports for charting
-import matplotlib
-matplotlib.use("TkAgg")
+# 效能優化：matplotlib (含 numpy/PIL) 載入需 1~3 秒，改為「第一次開啟圖表時才載入」(延遲載入)，
+# 以縮短程式啟動時間。使用前請先呼叫 _ensure_matplotlib()。
+Figure = None
+FigureCanvasTkAgg = None
+date2num = None
+DateFormatter = None
 
-# --- Matplotlib 中文顯示設定 ---
-matplotlib.rcParams['font.sans-serif'] = ['Microsoft YaHei'] # 指定預設字體
-matplotlib.rcParams['axes.unicode_minus'] = False # 解決負號顯示問題
-# ---
 
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.dates import date2num, DateFormatter
+def _ensure_matplotlib():
+    """延遲載入 matplotlib，只在第一次需要圖表時執行一次。"""
+    global Figure, FigureCanvasTkAgg, date2num, DateFormatter
+    if Figure is not None:
+        return
+    import matplotlib
+    matplotlib.use("TkAgg")
+
+    # --- Matplotlib 中文顯示設定 ---
+    matplotlib.rcParams['font.sans-serif'] = ['Microsoft YaHei'] # 指定預設字體
+    matplotlib.rcParams['axes.unicode_minus'] = False # 解決負號顯示問題
+    # ---
+
+    from matplotlib.figure import Figure as _Figure
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg as _FigureCanvasTkAgg
+    from matplotlib.dates import date2num as _date2num, DateFormatter as _DateFormatter
+    Figure, FigureCanvasTkAgg = _Figure, _FigureCanvasTkAgg
+    date2num, DateFormatter = _date2num, _DateFormatter
 
 # --- 全局變量 ---
 # 用於儲存主視窗引用，供 CustomMessagebox 使用
@@ -49,7 +64,7 @@ PARAMETERS_DIR = "modbus_parameters"
 # --- 語言包 ---
 TEXTS = {
     "zh": {
-        "APP_TITLE": "STEED Modbus RTU 雙控制器監控調整程式 V1.0",
+        "APP_TITLE": "STEED Modbus RTU 雙控制器監控調整程式 V3.2",
         "MODBUS_PARAMS_FRAME_TEXT": "Modbus通訊參數設置",
         "COM_PORT_LABEL": "通訊端口",
         "BAUDRATE_LABEL": "鮑率",
@@ -274,8 +289,8 @@ TEXTS = {
         "CHART_S_TITLE": "單組輸出",
 
         # --- 模式選擇與單組控制器 ---
-        "APP_TITLE_DUAL": "STEED Modbus RTU 雙控制器監控調整程式 V3.1",
-        "APP_TITLE_SINGLE": "STEED Modbus RTU 單控制器監控調整程式 V3.1",
+        "APP_TITLE_DUAL": "STEED Modbus RTU 雙控制器監控調整程式 V3.2",
+        "APP_TITLE_SINGLE": "STEED Modbus RTU 單控制器監控調整程式 V3.2",
         "QUICK_SETUP_BUTTON": "快速設定精靈",
         "MODE_SELECTION_TITLE": "型號選擇",
         "MODE_SELECTION_PROMPT": "請選擇要操作的控制器型號：",
@@ -392,7 +407,7 @@ TEXTS = {
         }
     },
     "en": {
-        "APP_TITLE": "STEED Modbus RTU Dual Controller Setup V1.0",
+        "APP_TITLE": "STEED Modbus RTU Dual Controller Setup V3.2",
         "MODBUS_PARAMS_FRAME_TEXT": "Modbus Setting",
         "COM_PORT_LABEL": "Port",
         "BAUDRATE_LABEL": "Baud Rate",
@@ -615,8 +630,8 @@ TEXTS = {
         "CHART_S_TITLE": "Single Output",
 
         # --- Mode Selection & Single Controller ---
-        "APP_TITLE_DUAL": "STEED Modbus RTU Dual Controller Setup V3.1",
-        "APP_TITLE_SINGLE": "STEED Modbus RTU Single Controller Setup V3.1",
+        "APP_TITLE_DUAL": "STEED Modbus RTU Dual Controller Setup V3.2",
+        "APP_TITLE_SINGLE": "STEED Modbus RTU Single Controller Setup V3.2",
         "QUICK_SETUP_BUTTON": "Quick Setup Wizard",
         "MODE_SELECTION_TITLE": "Model Selection",
         "MODE_SELECTION_PROMPT": "Please select the controller model:",
@@ -1183,6 +1198,7 @@ class RealtimeChartWindow(tk.Toplevel):
 
 
     def _create_chart_area(self):
+        _ensure_matplotlib()
         self.figure = Figure(figsize=(8, 3.5), dpi=100)
         self.figure.patch.set_facecolor('#2b3e50') # Superhero background
         self.lines = {}
@@ -3097,6 +3113,7 @@ class AutoPIDWizard(tk.Toplevel):
         tree.pack(fill=tk.X)
         
         # Chart
+        _ensure_matplotlib()
         f = Figure(figsize=(5, 3), dpi=100)
         ax = f.add_subplot(111)
         ax.plot(self.recording_data['time'], self.recording_data['current'], label='Current')
@@ -5435,7 +5452,7 @@ class ModbusMonitorApp:
         try:
             loaded_params = self.config_manager.load_parameters(selected_file.get(), self.current_language_code.get(), self.controller_mode)
         except Exception as e:
-            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), f"Failed to load parameters: {e}", parent=self.master)
+            messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("FILE_READ_ERROR").format(fname=selected_file.get(), e=e), parent=self.master)
             return
 
         if loaded_params:
@@ -5451,7 +5468,7 @@ class ModbusMonitorApp:
 
              messagebox.showinfo(self.get_current_translation("INFO_TITLE"), self.get_current_translation("LOAD_SUCCESS").format(selected_name=selected_file.get()))
         else:
-             messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("FILE_READ_ERROR").format(fname=selected_file.get(), e=error_msg))
+             messagebox.showerror(self.get_current_translation("ERROR_TITLE"), self.get_current_translation("FILE_READ_ERROR").format(fname=selected_file.get(), e="Empty parameter file"))
 
     def _validate_single_param_for_batch(self, param_config):
         """

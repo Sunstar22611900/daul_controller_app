@@ -1,0 +1,30 @@
+# UTF-8
+# EXE 版本資訊 (PyInstaller version file)。
+# 沒有版本資訊的 EXE 較容易被防毒軟體判定為可疑，請依實際情況修改公司名稱/版本。
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(3, 2, 0, 0),
+    prodvers=(3, 2, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo([
+      StringTable(
+        '040904B0',
+        [StringStruct('CompanyName', 'SUNSTAR'),
+         StringStruct('FileDescription', 'SUNSTAR ModbusRTU Dual Controller Setup Tool'),
+         StringStruct('FileVersion', '3.2.0.0'),
+         StringStruct('InternalName', 'dual_controller_app'),
+         StringStruct('LegalCopyright', 'Copyright (C) 2026 SUNSTAR'),
+         StringStruct('OriginalFilename', 'dual_controller_app.exe'),
+         StringStruct('ProductName', 'SUNSTAR ModbusRTU Controller Setup'),
+         StringStruct('ProductVersion', '3.2.0.0')])
+    ]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])
+  ]
+)
