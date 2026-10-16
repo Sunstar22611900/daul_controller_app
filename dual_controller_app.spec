@@ -38,7 +38,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,  # 關閉 UPX：UPX 壓縮常被防毒軟體誤判，且每次啟動需解壓縮
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -46,6 +46,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=['icon\\002.ico'],
+    version='file_version_info.txt',  # EXE 版本資訊，降低被判定為可疑程式的機率
 )
 coll = COLLECT(
     exe,
@@ -56,7 +57,7 @@ coll = COLLECT(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     runtime_tmpdir=None,
 )
